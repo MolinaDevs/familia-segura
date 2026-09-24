@@ -1,0 +1,21 @@
+# Postgres local para desenvolvimento e testes da API.
+# Uso: docker compose up -d db
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: familia-segura-db
+    environment:
+      POSTGRES_USER: familia
+      POSTGRES_PASSWORD: familia
+      POSTGRES_DB: familia_segura
+    ports:
+      - "55432:5432"
+    volumes:
+      - familia-segura-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U familia -d familia_segura"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+volumes:
+  familia-segura-db:

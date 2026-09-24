@@ -24,8 +24,10 @@ import { reloadAppAsync } from 'expo';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
+// EXPO_PUBLIC_API_URL (URL completa) tem prioridade; EXPO_PUBLIC_DOMAIN mantém compatibilidade com o Replit.
+const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
-setBaseUrl(Platform.OS === 'web' ? null : domain ? `https://${domain}` : null);
+setBaseUrl(apiUrl ? apiUrl : Platform.OS === 'web' ? null : domain ? `https://${domain}` : null);
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
