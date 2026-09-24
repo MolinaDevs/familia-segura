@@ -79,3 +79,10 @@ Ambiente fora do Expo Go e do Replit; migrations; testes; CI.
   "Para a criança", termos/suporte/exclusão atualizados; retenção automática de 12 meses implementada;
   rascunho de RIPD em `docs/legal/`. Comercial em `docs/COMERCIAL.md`; textos de loja e Data Safety atualizados.
 - 46 testes de API; bundles Android/iOS gerados. **Telas não verificadas visualmente em aparelho** (exigem Clerk + build nativa).
+
+### Fase 5 ✅ (parte de código) — preparação de lançamento
+- Revisão: limite de corpo JSON (inventário de 600 apps quebrava o limite padrão de 100 KB), cabeçalhos de
+  segurança, observador não cria pedidos de tempo; privacy manifest iOS no `app.json`.
+- Documentos: `docs/DEPLOY.md`, `docs/TESTE_BETA.md` (matriz iPhone↔Android, 10 aparelhos, anti-desinstalação),
+  notas de revisão das lojas com declarações do Google Play, checklist final, README, `replit.md` atualizado.
+- **Pendente do dono** (contas, entitlement Apple, aparelhos, jurídico, envio): `docs/ACOES_DO_DONO.md`.

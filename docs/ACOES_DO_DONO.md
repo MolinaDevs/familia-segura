@@ -1,36 +1,43 @@
 # Ações que só o dono pode fazer
 
-O código não consegue concluir estes itens: exigem contas, contratos, pagamentos ou aparelhos físicos.
+O código das fases 0–5 está pronto. Estes itens exigem contas, contratos, pagamentos, aparelhos físicos ou
+aceite de termos em seu nome — por isso não foram feitos automaticamente.
 
-## Urgente (caminho crítico)
-1. **Conta Apple Developer** (US$ 99/ano) e **pedido do entitlement Family Controls (Distribution)**
-   para `com.familiasegura.app` e as 3 extensões (`ActivityMonitorExtension`, `ShieldAction`,
-   `ShieldConfiguration`). Formulário: developer.apple.com/contact/request/family-controls-distribution.
-   A aprovação costuma levar semanas.
-2. **Conta Expo (EAS)**: `npx eas-cli login` e, dentro de `artifacts/familia-segura`, `npx eas-cli init`
-   (grava o `projectId` no `app.json`).
-3. **Conta Google Play Console** (US$ 25, taxa única) e verificação da conta.
+## 1. Urgente (caminho crítico)
+1. **Conta Apple Developer** (US$ 99/ano) e **pedido do entitlement Family Controls (Distribution)** para
+   `com.familiasegura.app` e as 3 extensões (`ActivityMonitorExtension`, `ShieldAction`, `ShieldConfiguration`).
+   Formulário: developer.apple.com/contact/request/family-controls-distribution. Leva semanas.
+   Depois: Team ID em `expo.ios.appleTeamId` (`artifacts/familia-segura/app.json`).
+2. **Conta Expo (EAS)**: `npx eas-cli login` e, em `artifacts/familia-segura`, `npx eas-cli init`.
+3. **Google Play Console** (US$ 25, taxa única) e verificação da conta.
+4. **Subir o repositório para o GitHub** (o CI em `.github/workflows/ci.yml` compila Kotlin e Swift que não
+   puderam ser compilados nesta máquina). Ex.: criar repositório vazio e `git remote add origin … && git push -u origin main`.
 
-## Para o primeiro teste em aparelho real (Android)
+## 2. Primeiro teste em aparelho real (Android)
 ```bash
 cd artifacts/familia-segura
 npx eas-cli build --platform android --profile development
 ```
-Instale o APK gerado no celular da criança e no do responsável, rode a API (`docs/SETUP_LOCAL.md`) e
-abra o app com `pnpm --filter @workspace/familia-segura run dev:local`.
+Instale o APK, rode a API (`docs/SETUP_LOCAL.md`) e abra com `pnpm --filter @workspace/familia-segura run dev:local`.
+Siga `docs/TESTE_BETA.md`.
 
-## Teste de plataforma cruzada (risco principal)
-- Responsável **sem iPhone** criando uma conta Apple, colocando a criança no Compartilhamento Familiar
-  e autorizando o Family Controls no iPhone da criança. Confirmar se é possível sem nenhum aparelho
-  Apple do adulto.
+## 3. Risco principal a confirmar cedo
+- Responsável **sem iPhone**: criar conta Apple, montar o Compartilhamento Familiar e autorizar o Tempo de Uso
+  no iPhone da criança. Confirmar que funciona sem aparelho Apple do adulto.
 
-## Chaves e serviços
-- Clerk: chaves de produção e provedores de login (Google/Apple).
-- RevenueCat: **Secret API key v2** (`REVENUECAT_SECRET_API_KEY`), produtos nas lojas, oferta `default`.
-- Hospedagem da API + Postgres gerenciado (Replit, Railway, Render, Fly, Supabase etc.).
-- Expo Push: nenhum custo; exige `projectId` do EAS.
+## 4. Chaves e serviços (produção)
+- Clerk: chaves de produção; login Google/Apple.
+- RevenueCat: **Secret API key v2**; produtos nas lojas; oferta `default`.
+- Hospedagem da API + Postgres 15+ (`docs/DEPLOY.md`).
+- Dados do controlador: `LEGAL_CONTROLLER_NAME`, `LEGAL_CONTROLLER_CNPJ`, `LEGAL_DPO_EMAIL`.
 
-## Jurídico e comercial
-- Advogado para Política de Privacidade, Termos, RIPD e consentimento (LGPD art. 14 / ECA Digital).
-- Nome e marca "Família Segura" no INPI; dados do controlador e canal de suporte.
-- Preços finais dos planos.
+## 5. Jurídico e comercial
+- Advogado: Política, Termos, RIPD (`docs/legal/RIPD_RASCUNHO.md`), DPAs com fornecedores, enquadramento no ECA Digital.
+- INPI: nome/marca "Família Segura".
+- Preço final (proposta em `docs/COMERCIAL.md`: R$ 19,90/mês ou R$ 149,90/ano, 7 dias grátis).
+
+## 6. Envio às lojas
+- Declarações do Google Play (Accessibility com vídeo, Device Admin, Data safety) — `docs/ANDROID_PROTECAO.md`.
+- Notas de revisão e conta demo — `artifacts/familia-segura/docs/launch/REVIEW_NOTES.md`.
+- Textos e screenshots — `artifacts/familia-segura/docs/launch/STORE_LISTING_PT_BR.md`.
+- Checklist final — `artifacts/familia-segura/docs/launch/RELEASE_CHECKLIST.md`.

@@ -2,31 +2,49 @@
 
 ## Conta de revisão
 
-Criar uma conta de responsável exclusiva para revisão, com uma família de demonstração e sem dados reais. Registrar usuário e instruções no campo privado da loja, nunca neste repositório.
+Criar uma conta de responsável exclusiva para revisão, com família de demonstração, **PIN definido** e sem dados
+reais. Registrar usuário, senha e o PIN no campo privado da loja ("App Review Information" / "Instruções de
+acesso"), nunca neste repositório. Se possível, deixar um aparelho de teste já pareado.
+
+## Texto sugerido para o campo de notas (colar e ajustar)
+
+> Família Segura is a parental-control app. The parent app (sign in with the demo account) manages children,
+> devices, app limits, schedules and approvals. The child device is set up by choosing "Configurar este aparelho
+> para a criança" on the first screen and entering a pairing code generated in the parent app
+> (Família → Aparelhos → Parear). Guardian PIN for protected actions on the child device: see private field.
+> The child always sees which rules are active and what data is shared; emergency calls are never blocked.
 
 ## Fluxo principal
 
-1. Entrar como responsável.
-2. Abrir Perfil e gerar um código de pareamento.
-3. Em outro aparelho, escolher modo criança e informar o código.
-4. Revisar as permissões nativas explicadas no aplicativo.
-5. No aparelho do responsável, abrir Aplicativos e ajustar um limite Premium.
-6. Abrir Rotinas e ativar uma pausa.
-7. No aparelho infantil, confirmar que as regras estão visíveis.
+1. Entrar como responsável (conta de revisão).
+2. Família → Parear aparelho → gerar código.
+3. Em outro aparelho: primeira tela → "Configurar este aparelho para a criança" → informar o código.
+4. No aparelho da criança: Área do responsável (PIN) → Configurar a proteção → conceder permissões.
+5. No responsável: Apps → Adicionar app → escolher um app e um limite; Rotina → Nova rotina.
+6. No aparelho da criança: conferir as regras visíveis e fazer "Pedir mais tempo".
+7. No responsável: Home → aprovar o pedido ("Liberar hoje"); Relatórios → gráficos.
 
 ## Assinatura
 
-- Abrir Configurações > Família Segura Premium.
-- Os planos mensal e anual vêm da oferta atual da loja.
-- Comprar com conta sandbox.
-- Restaurar a compra no segundo aparelho.
-- Abrir Gerenciar assinatura para cancelamento.
-- Após expiração confirmada, alterações Premium ficam indisponíveis, mas regras existentes não são apagadas.
+- Família → Premium: planos mensal e anual da oferta atual da loja; compra com conta sandbox.
+- Restaurar compra no segundo aparelho; "Gerenciar assinatura" abre a loja.
+- Após expirar, nada é apagado nem desbloqueado; só não é possível adicionar crianças/aparelhos além do plano grátis.
 
-## Observações Android
+## Google Play — declarações
 
-O AccessibilityService é necessário para identificar somente qual aplicativo está em primeiro plano e mostrar o bloqueio no momento correto. O serviço não lê conteúdo da tela e não solicita `QUERY_ALL_PACKAGES`, sobreposição, instalação silenciosa ou privilégios de proprietário do dispositivo.
+- **AccessibilityService** (uso: controle parental): identifica o app em primeiro plano para aplicar limites,
+  bloqueios e rotinas; nas telas de Configurações/instalador verifica apenas se tratam de desligar ou
+  desinstalar o Família Segura ou apps, para exigir o PIN do responsável. Não lê mensagens, senhas nem o que é
+  digitado. Divulgação proeminente exibida antes de abrir as configurações (gravar vídeo dela).
+- **Device Admin**: impede desinstalar o app sem o PIN do responsável. Nenhuma outra política é usada.
+- **Package visibility**: `<queries>` com LAUNCHER; **não** usamos `QUERY_ALL_PACKAGES`.
+- **Usage access** (`PACKAGE_USAGE_STATS`): tempo por app para limites e relatórios.
+- Público-alvo: adultos (responsáveis). O modo criança só funciona após pareamento feito por um adulto.
 
-## Observações iOS
+## Apple — observações
 
-O Family Controls exige aprovação do entitlement pela Apple. A equipe de revisão deve receber dois aparelhos/contas sandbox quando o pareamento e a aplicação real das regras forem validados.
+- Family Controls (Distribution) aprovado para o app e as 3 extensões; autorização do tipo **child**
+  (a criança precisa estar no Compartilhamento Familiar).
+- ManagedSettings usados: bloqueio por app/categoria, rotinas, `denyAppRemoval`, `denyAppInstallation`,
+  filtro de conteúdo adulto. Nenhum dado de uso sai do aparelho além de faixas agregadas de minutos.
+- Para revisar a aplicação real das regras são necessários dois aparelhos (responsável e criança).

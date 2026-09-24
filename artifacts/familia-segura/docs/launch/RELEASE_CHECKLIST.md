@@ -1,5 +1,15 @@
 # Gate de lançamento
 
+## Novo nesta versão (verificar antes do envio)
+
+- [ ] `LEGAL_CONTROLLER_NAME`, `LEGAL_CONTROLLER_CNPJ`, `LEGAL_DPO_EMAIL` preenchidos na API de produção.
+- [ ] Revisão jurídica da Política (`/api/legal/privacy`), Termos e RIPD (`docs/legal/RIPD_RASCUNHO.md`).
+- [ ] Declarações Google Play: Accessibility (vídeo da divulgação), Device Admin, Data safety atualizado.
+- [ ] Apple: privacy manifest (já em `app.json`), App Privacy conforme `STORE_PRIVACY_AND_RATINGS.md`.
+- [ ] `eas init` feito (projectId no `app.json`) — necessário para push.
+- [ ] Matriz de testes de `docs/TESTE_BETA.md` concluída (iPhone↔Android, 10 aparelhos, anti-desinstalação).
+- [ ] CI verde, incluindo `android-native` e `ios-native`.
+
 Itens marcados como externos não podem ser concluídos apenas no código.
 
 ## Comercial e jurídico

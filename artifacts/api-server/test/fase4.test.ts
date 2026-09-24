@@ -34,3 +34,15 @@ describe("jurídico e retenção (Fase 4)", () => {
     expect(res.body.color).toBe("#eb6834");
   });
 });
+
+describe("robustez da API (Fase 5)", () => {
+  it("aceita inventário Android grande (600 apps) e envia cabeçalhos de segurança", async () => {
+    const family = await createFamily();
+    const { deviceToken } = await pairDevice("user_owner", family.children[0].id);
+    const apps = Array.from({ length: 600 }, (_, i) => ({ packageName: `br.com.exemplo.aplicativo.numero${i}`, label: `Aplicativo de exemplo número ${i} com nome comprido` }));
+    const res = await api().post("/api/child/installed-apps").set(asDevice(deviceToken)).send({ snapshot: true, apps });
+    expect(res.status).toBe(200);
+    expect(res.headers["x-content-type-options"]).toBe("nosniff");
+    expect(res.headers["x-powered-by"]).toBeUndefined();
+  });
+});

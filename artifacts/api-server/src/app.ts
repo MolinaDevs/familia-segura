@@ -33,7 +33,15 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
 app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)) }));
 app.set("trust proxy", 1);
-app.use(express.json());
+app.disable("x-powered-by");
+app.use((_req, res, next) => {
+  res.set("X-Content-Type-Options", "nosniff");
+  res.set("Referrer-Policy", "no-referrer");
+  res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  next();
+});
+// Inventário Android (até 600 apps) passa do limite padrão de 100 KB.
+app.use(express.json({ limit: "512kb" }));
 app.use(express.urlencoded({ extended: true }));
 app.use(
   clerkMiddleware((req) => ({

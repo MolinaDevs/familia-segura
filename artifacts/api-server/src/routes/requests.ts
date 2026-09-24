@@ -21,6 +21,7 @@ router.post("/family/time-requests", async (req: AuthedRequest, res): Promise<vo
   if (!device) {
     const clerkId = clerkUserId(req);
     const member = clerkId ? await findMembership(clerkId) : undefined;
+    if (member?.role === "viewer") { fail(res, 403, "Observadores não criam pedidos", "ROLE_FORBIDDEN"); return; }
     familyId = member?.familyId;
   }
   if (!familyId) { fail(res, 401, "Unauthorized"); return; }
