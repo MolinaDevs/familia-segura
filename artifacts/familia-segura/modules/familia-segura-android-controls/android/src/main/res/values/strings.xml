@@ -1,0 +1,11 @@
+<resources>
+  <string name="block_app_generic">Este aplicativo</string>
+  <string name="accessibility_service_label">Proteção Família Segura</string>
+  <string name="accessibility_service_description">Verifica os aplicativos abertos para aplicar limites e rotinas definidos pelos responsáveis.</string>
+  <string name="block_title">Hora de fazer uma pausa</string>
+  <string name="block_reason_permanent">Este aplicativo foi bloqueado pela sua família.</string>
+  <string name="block_reason_routine">Este aplicativo está bloqueado durante a rotina combinada.</string>
+  <string name="block_reason_limit">Você atingiu o limite diário de %1$d minutos em %2$s.</string>
+  <string name="block_return_home">Voltar para a tela inicial</string>
+  <string name="block_request_time">Pedir mais tempo</string>
+</resources>

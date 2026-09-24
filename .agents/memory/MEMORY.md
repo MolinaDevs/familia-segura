@@ -1,0 +1,3 @@
+- [Device trust boundary](device-trust-boundary.md) — native child controls must build on revocable device credentials, never child IDs or guardian sessions.
+- [iOS block-source isolation](ios-block-source-isolation.md) — keep routine downtime independent from per-app permanent and daily-limit blocks.
+- [Expo preview route validation](expo-preview-route-validation.md) — generic browser testers may miss Expo artifact routing; verify with artifact-aware previews.

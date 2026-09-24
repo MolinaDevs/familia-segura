@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "xu8X4wdEgSdJl7xROqSCE"
+uri = "file://downloads/familia-segura-expo-qr.png"
+type = "image"
+title = "QR code — Família Segura"
+description = "Abra com o Expo Go no celular para carregar o preview atual do app."
+logical_id = "d4c9e1f7-b4e3-487b-9bd1-870939ca7e8b"
+content_hash = "sha256:1bc1d4e8bef9b5eb1d6a227ad937a1775f7466732c369a9fd952bde4ef80ebdc"
+size = 8847
+mtime_ms = 1790215266597
+storage_uri = "gcs://replit-rams-assets-picard/rams/assets/repl:cbebd311-f18b-4776-9810-7ba321cfc408/d4c9e1f7-b4e3-487b-9bd1-870939ca7e8b/db4a499c-d7ea-4218-be2a-b2bc2a20e087"
+storage_version_token = "1790215274231165"
+content_type = "image/png"

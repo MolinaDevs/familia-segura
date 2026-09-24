@@ -1,0 +1,24 @@
+kind = "mobile"
+previewPath = "/familia-segura/"
+title = "Família Segura"
+description = "Aplicativo mobile de controle parental para responsáveis acompanharem o uso digital de crianças, configurarem limites por aplicativo e criarem rotinas de descanso com privacidade e transparência."
+version = "1.0.0"
+id = "artifacts/familia-segura"
+router = "expo-domain"
+
+[[services]]
+name = "expo"
+ensurePreviewReachable = "/status"
+paths = [ "/familia-segura/" ]
+localPort = 25461
+
+[services.development]
+run = "pnpm --filter @workspace/familia-segura run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/familia-segura", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/familia-segura", "run", "serve" ]
+
+[services.env]
+PORT = "25461"
+BASE_PATH = "/familia-segura/"
