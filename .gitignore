@@ -54,3 +54,8 @@ Thumbs.db
 *.apk
 *.aab
 *.ipa
+
+# Gerado pelo plugin react-native-device-activity no prebuild (cópia de node_modules)
+artifacts/familia-segura/targets/
+artifacts/familia-segura/ios/
+artifacts/familia-segura/android/

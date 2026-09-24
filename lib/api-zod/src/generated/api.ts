@@ -130,7 +130,10 @@ export const GetFamilyOverviewResponse = zod.object({
   "timezone": zod.string(),
   "offlineLeaseHours": zod.number().int(),
   "quarantineNewApps": zod.boolean(),
-  "hasGuardianPin": zod.boolean()
+  "hasGuardianPin": zod.boolean(),
+  "blockAppInstalls": zod.boolean(),
+  "blockAppRemoval": zod.boolean(),
+  "webFilter": zod.enum(['off', 'adult'])
 }),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
@@ -271,7 +274,10 @@ export const CreateFamilyResponse = zod.object({
   "timezone": zod.string(),
   "offlineLeaseHours": zod.number().int(),
   "quarantineNewApps": zod.boolean(),
-  "hasGuardianPin": zod.boolean()
+  "hasGuardianPin": zod.boolean(),
+  "blockAppInstalls": zod.boolean(),
+  "blockAppRemoval": zod.boolean(),
+  "webFilter": zod.enum(['off', 'adult'])
 }),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
@@ -299,14 +305,20 @@ export const UpdateFamilySettingsBody = zod.object({
   "name": zod.string().min(updateFamilySettingsBodyNameMin).max(updateFamilySettingsBodyNameMax).optional(),
   "timezone": zod.string().min(updateFamilySettingsBodyTimezoneMin).max(updateFamilySettingsBodyTimezoneMax).optional(),
   "offlineLeaseHours": zod.number().int().min(updateFamilySettingsBodyOfflineLeaseHoursMin).max(updateFamilySettingsBodyOfflineLeaseHoursMax).optional(),
-  "quarantineNewApps": zod.boolean().optional()
+  "quarantineNewApps": zod.boolean().optional(),
+  "blockAppInstalls": zod.boolean().optional(),
+  "blockAppRemoval": zod.boolean().optional(),
+  "webFilter": zod.enum(['off', 'adult']).optional()
 })
 
 export const UpdateFamilySettingsResponse = zod.object({
   "timezone": zod.string(),
   "offlineLeaseHours": zod.number().int(),
   "quarantineNewApps": zod.boolean(),
-  "hasGuardianPin": zod.boolean()
+  "hasGuardianPin": zod.boolean(),
+  "blockAppInstalls": zod.boolean(),
+  "blockAppRemoval": zod.boolean(),
+  "webFilter": zod.enum(['off', 'adult'])
 })
 
 
@@ -906,7 +918,10 @@ export const AcceptInviteResponse = zod.object({
   "timezone": zod.string(),
   "offlineLeaseHours": zod.number().int(),
   "quarantineNewApps": zod.boolean(),
-  "hasGuardianPin": zod.boolean()
+  "hasGuardianPin": zod.boolean(),
+  "blockAppInstalls": zod.boolean(),
+  "blockAppRemoval": zod.boolean(),
+  "webFilter": zod.enum(['off', 'adult'])
 }),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
@@ -1144,7 +1159,10 @@ export const ExportFamilyDataResponse = zod.object({
   "timezone": zod.string(),
   "offlineLeaseHours": zod.number().int(),
   "quarantineNewApps": zod.boolean(),
-  "hasGuardianPin": zod.boolean()
+  "hasGuardianPin": zod.boolean(),
+  "blockAppInstalls": zod.boolean(),
+  "blockAppRemoval": zod.boolean(),
+  "webFilter": zod.enum(['off', 'adult'])
 }),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
@@ -1201,6 +1219,9 @@ export const GetChildOverviewResponse = zod.object({
   "policy": zod.object({
   "leaseHours": zod.number().int(),
   "quarantineNewApps": zod.boolean(),
+  "blockAppInstalls": zod.boolean(),
+  "blockAppRemoval": zod.boolean(),
+  "webFilter": zod.enum(['off', 'adult']),
   "timezone": zod.string(),
   "serverTime": zod.coerce.date(),
   "blockedPackages": zod.array(zod.string()),

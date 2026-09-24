@@ -8,6 +8,7 @@ import { checkGuardianPin } from '@/services/guardianPin';
 import { clearChildDevice, loadCachedOverview, runChildSync } from '@/services/childSync';
 import { unregisterChildBackgroundSync } from '@/services/backgroundSync';
 import { removeAndroidDeviceAdmin, setAndroidGuardianUnlock } from '@/services/androidParentalControls';
+import { unlockIosInstallations } from '@/services/iosDeviceProtection';
 
 const UNLOCK_MINUTES = 15;
 
@@ -48,9 +49,14 @@ export default function GuardianAreaScreen() {
     setError('PIN incorreto.');
   };
 
-  const unlockSettings = () => {
+  const unlockSettings = async () => {
+    if (Platform.OS === 'ios') {
+      await unlockIosInstallations(UNLOCK_MINUTES, (await loadCachedOverview())?.policy ?? null);
+      Alert.alert('Liberado', `A instalação de apps fica liberada por ${UNLOCK_MINUTES} minutos.`);
+      return;
+    }
     setAndroidGuardianUnlock(UNLOCK_MINUTES);
-    Alert.alert('Liberado', `As configurações do aparelho ficam liberadas por ${UNLOCK_MINUTES} minutos.`);
+    Alert.alert('Liberado', `As configurações, a loja e a instalação de apps ficam liberadas por ${UNLOCK_MINUTES} minutos.`);
   };
 
   const unpair = () => {
@@ -118,8 +124,13 @@ export default function GuardianAreaScreen() {
             </View>
           )}
           <Option icon="shield" title="Configurar a proteção" detail="Permissões do sistema, administrador e bateria." onPress={() => router.push(Platform.OS === 'ios' ? '/(child)/ios-controls' : '/(child)/android-controls')} />
-          {Platform.OS === 'android' && hasPin && (
-            <Option icon="unlock" title={`Liberar configurações por ${UNLOCK_MINUTES} min`} detail="Permite mexer nas Configurações do Android sem bloqueio." onPress={unlockSettings} />
+          {hasPin && (
+            <Option
+              icon="unlock"
+              title={Platform.OS === 'ios' ? `Liberar instalação de apps por ${UNLOCK_MINUTES} min` : `Liberar configurações por ${UNLOCK_MINUTES} min`}
+              detail={Platform.OS === 'ios' ? 'Permite instalar um app aprovado por você.' : 'Libera Configurações, loja e instalação de apps sem bloqueio.'}
+              onPress={() => void unlockSettings()}
+            />
           )}
           <Option icon="refresh-cw" title="Sincronizar agora" detail="Busca as regras mais recentes da família." onPress={() => void runChildSync().then(() => Alert.alert('Pronto', 'Regras atualizadas.'))} />
           <Option icon="log-out" title="Desvincular este aparelho" detail="Desliga a proteção e remove o aparelho da família." destructive onPress={unpair} />

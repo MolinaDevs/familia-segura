@@ -20,7 +20,8 @@ import {
   isAndroidNative,
   setAndroidGuardianUnlock,
 } from '@/services/androidParentalControls';
-import { applyNativePolicies, getAllowedUsageSamples, getBoundRuleIds, getNativeControlState } from '@/services/iosParentalControls';
+import { applyNativePolicies, getAllowedUsageSamples, getBoundRuleIds, getNativeControlState, loadNativeControls } from '@/services/iosParentalControls';
+import { applyIosDeviceProtection, clearIosDeviceProtection, getIosDeviceProtection } from '@/services/iosDeviceProtection';
 
 export type SyncStatus = 'ok' | 'offline' | 'unpaired' | 'revoked';
 export type SyncResult = { status: SyncStatus; overview: ChildOverview | null };
@@ -55,6 +56,16 @@ export async function clearChildDevice() {
   if (Platform.OS === 'android') {
     clearAndroidPolicies();
     setAndroidGuardianUnlock(0);
+  }
+  if (Platform.OS === 'ios') {
+    clearIosDeviceProtection();
+    const native = await loadNativeControls();
+    try {
+      native?.stopMonitoring();
+      native?.clearAllManagedSettingsStoreSettings();
+    } catch {
+      // sem autorização: nada aplicado
+    }
   }
   await AsyncStorage.removeItem(CHILD_MODE_KEY).catch(() => undefined);
   if (deviceId) await AsyncStorage.removeItem(cacheKey(deviceId)).catch(() => undefined);
@@ -106,10 +117,16 @@ async function syncAndroid(overview: ChildOverview, headers: Record<string, stri
 
 async function syncIos(overview: ChildOverview, headers: Record<string, string>) {
   await applyNativePolicies(overview.apps, overview.routines);
+  await applyIosDeviceProtection(overview.policy);
   const state = await getNativeControlState();
+  const device = getIosDeviceProtection();
+  const issues: string[] = [];
+  if (state !== 'approved') issues.push('Autorização do Tempo de Uso pendente');
+  if (overview.policy.blockAppRemoval && device && !device.denyAppRemoval) issues.push('Bloqueio de apagar apps inativo');
+  if (overview.policy.blockAppInstalls && device && !device.denyAppInstallation) issues.push('Instalação de apps liberada');
   await syncChildProtection({
-    state: state === 'approved' ? 'active' : state === 'unsupported' || state === 'native-build-required' ? 'unavailable' : 'disabled',
-    issues: state === 'approved' ? [] : ['Autorização do Tempo de Uso pendente'],
+    state: state === 'approved' ? (issues.length === 0 ? 'active' : 'partial') : state === 'unsupported' || state === 'native-build-required' ? 'unavailable' : 'disabled',
+    issues,
     boundRuleIds: await getBoundRuleIds(overview.apps),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   }, { headers });
@@ -143,7 +160,10 @@ async function doSync(): Promise<SyncResult> {
     }
     const cached = await loadCachedOverview();
     // iOS: as regras ficam no próprio sistema (Screen Time); reaplicar do cache não estende prazo algum.
-    if (cached && Platform.OS === 'ios') await applyNativePolicies(cached.apps, cached.routines).catch(() => undefined);
+    if (cached && Platform.OS === 'ios') {
+      await applyNativePolicies(cached.apps, cached.routines).catch(() => undefined);
+      await applyIosDeviceProtection(cached.policy).catch(() => undefined);
+    }
     return { status: 'offline', overview: cached };
   }
 

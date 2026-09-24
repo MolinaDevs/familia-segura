@@ -14,6 +14,7 @@ import {
   type NativeControlState,
   type NativePolicyResult,
 } from '@/services/iosParentalControls';
+import { runChildSync } from '@/services/childSync';
 
 type PickerProps = {
   familyActivitySelectionId: string;
@@ -50,6 +51,8 @@ export default function IOSControlsScreen() {
       const native = await loadNativeControls();
       setPicker(() => native?.DeviceActivitySelectionViewPersisted as React.ComponentType<PickerProps> | undefined ?? null);
       if (data) setResult(await applyNativePolicies(data.apps, data.routines));
+      // Aplica também remoção/instalação/filtro web e informa ao responsável quais regras já têm app associado.
+      void runChildSync();
     }
     setBusy(false);
   }, [data]);

@@ -8,6 +8,9 @@
   <string name="block_reason_routine">Os aplicativos estão pausados durante a rotina combinada. Ligações de emergência continuam liberadas.</string>
   <string name="block_reason_limit">Você atingiu o limite diário de %1$d minutos em %2$s.</string>
   <string name="block_reason_pending">Este aplicativo foi instalado agora e está aguardando a aprovação da sua família.</string>
+  <string name="block_reason_store">A loja de aplicativos está bloqueada. Peça ao seu responsável para liberar a instalação.</string>
+  <string name="block_reason_install">Instalar aplicativos está bloqueado neste aparelho. Peça ao seu responsável.</string>
+  <string name="block_reason_removal">Apagar aplicativos está bloqueado neste aparelho. Peça ao seu responsável.</string>
   <string name="block_reason_tamper">Estas configurações protegem o aparelho. Peça ao seu responsável para liberar com o PIN.</string>
   <string name="block_return_home">Voltar para a tela inicial</string>
   <string name="block_request_time">Abrir o Família Segura</string>

@@ -131,20 +131,33 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     }
   }
 
-  /** Detecta telas de Configurações/instalador que desligariam a proteção. Retorna true se bloqueou. */
+  /**
+   * Detecta telas de Configurações/instalador/loja que:
+   * - desligariam a proteção ou desinstalariam o Família Segura (sempre, com PIN definido);
+   * - desinstalariam qualquer app (se a família bloqueou remoção de apps);
+   * - instalariam um APK fora da loja (se a família bloqueou instalações).
+   * Tudo é liberável por 15 min com o PIN do responsável. Retorna true se bloqueou.
+   */
   private fun isTamperScreen(pkg: String): Boolean {
     if (pkg !in SETTINGS_PACKAGES && pkg !in INSTALLER_PACKAGES && pkg != PLAY_STORE) return false
     val policy = PolicyStore.read(this) ?: return false
     if (!PolicyStore.tamperProtectionEnabled(policy) || PolicyStore.guardianUnlocked(this)) return false
     val text = windowText() ?: return false
     val mentionsUs = text.contains(appLabelLower) || text.contains(getString(R.string.accessibility_service_label).lowercase())
-    if (!mentionsUs) return false
-    val dangerous = pkg in INSTALLER_PACKAGES || TAMPER_WORDS.any { text.contains(it) }
-    if (!dangerous) return false
-    val type = if (pkg in INSTALLER_PACKAGES || text.contains("desinstalar") || text.contains("uninstall")) "uninstall_attempt" else "tamper_attempt"
-    PolicyStore.appendEvent(this, type, if (pkg == PLAY_STORE) "Loja de apps" else "Configurações do aparelho")
+    val uninstallText = text.contains("desinstalar") || text.contains("uninstall")
+    val installText = !uninstallText && (text.contains("instalar") || text.contains("install"))
+    val (type, reason) = when {
+      mentionsUs && (pkg in INSTALLER_PACKAGES || TAMPER_WORDS.any { text.contains(it) }) ->
+        (if (uninstallText || pkg in INSTALLER_PACKAGES) "uninstall_attempt" else "tamper_attempt") to getString(R.string.block_reason_tamper)
+      policy.optBoolean("blockAppRemoval", false) && uninstallText ->
+        "uninstall_attempt" to getString(R.string.block_reason_removal)
+      policy.optBoolean("blockAppInstalls", false) && pkg in INSTALLER_PACKAGES && installText ->
+        "tamper_attempt" to getString(R.string.block_reason_install)
+      else -> return false
+    }
+    PolicyStore.appendEvent(this, type, if (pkg == PLAY_STORE) "Loja de apps" else if (pkg in INSTALLER_PACKAGES) "Instalador de apps" else "Configurações do aparelho")
     performGlobalAction(GLOBAL_ACTION_HOME)
-    showBlock(getString(R.string.block_reason_tamper), getString(R.string.block_app_protection), pkg, force = true)
+    showBlock(reason, getString(R.string.block_app_protection), pkg, force = true)
     return true
   }
 
@@ -171,6 +184,8 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val blockedPackages = PolicyStore.packageSet(policy, "blockedPackages")
     val pendingPackages = PolicyStore.packageSet(policy, "pendingPackages") + PolicyStore.localPending(this)
     val reason = when {
+      pkg == PLAY_STORE && policy.optBoolean("blockAppInstalls", false) && !PolicyStore.guardianUnlocked(this) ->
+        getString(R.string.block_reason_store)
       routineActive(policy) -> getString(R.string.block_reason_routine)
       pkg in pendingPackages -> getString(R.string.block_reason_pending)
       pkg in blockedPackages -> getString(R.string.block_reason_permanent)

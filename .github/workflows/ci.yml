@@ -55,3 +55,26 @@ jobs:
       - name: Compilar módulo Kotlin
         working-directory: artifacts/familia-segura/android
         run: ./gradlew :familia-segura-android-controls:compileDebugKotlin --no-daemon --stacktrace
+
+  ios-native:
+    # Compila o app iOS (módulo Swift próprio + extensões Screen Time) para simulador, sem assinatura.
+    runs-on: macos-15
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Prebuild iOS
+        working-directory: artifacts/familia-segura
+        run: npx expo prebuild --platform ios --clean
+      - name: Compilar para simulador
+        working-directory: artifacts/familia-segura/ios
+        run: |
+          WS=$(ls -d *.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Debug -sdk iphonesimulator             -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -50
+          exit ${PIPESTATUS[0]}

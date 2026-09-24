@@ -102,6 +102,7 @@ export async function countFamily(familyId: string, executor: Pick<typeof db, "s
 export const settingsView = (f: Family) => ({
   timezone: f.timezone, offlineLeaseHours: f.offlineLeaseHours, quarantineNewApps: f.quarantineNewApps,
   hasGuardianPin: Boolean(f.guardianPinHash),
+  blockAppInstalls: f.blockAppInstalls, blockAppRemoval: f.blockAppRemoval, webFilter: f.webFilter as "off" | "adult",
 });
 
 export async function familyOverview(familyId: string, currentUserId?: string) {
@@ -169,6 +170,9 @@ export async function childOverview(device: Device) {
     policy: {
       leaseHours: family.offlineLeaseHours,
       quarantineNewApps: family.quarantineNewApps,
+      blockAppInstalls: family.blockAppInstalls,
+      blockAppRemoval: family.blockAppRemoval,
+      webFilter: family.webFilter as "off" | "adult",
       timezone: family.timezone,
       serverTime: new Date(),
       blockedPackages: apps.filter((a) => a.status === "blocked").map((a) => a.packageName),

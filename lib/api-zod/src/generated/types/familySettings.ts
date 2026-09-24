@@ -5,10 +5,14 @@
  * API segura do Família Segura
  * OpenAPI spec version: 0.3.0
  */
+import type { FamilySettingsWebFilter } from './familySettingsWebFilter';
 
 export interface FamilySettings {
   timezone: string;
   offlineLeaseHours: number;
   quarantineNewApps: boolean;
   hasGuardianPin: boolean;
+  blockAppInstalls: boolean;
+  blockAppRemoval: boolean;
+  webFilter: FamilySettingsWebFilter;
 }

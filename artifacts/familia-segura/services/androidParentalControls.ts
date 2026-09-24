@@ -80,6 +80,8 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
     validUntilEpochMs: Date.now() + leaseHours * 60 * 60 * 1000,
     tamperProtection: Boolean(policy?.pinVerifier),
     quarantineNewApps: policy?.quarantineNewApps ?? false,
+    blockAppInstalls: policy?.blockAppInstalls ?? false,
+    blockAppRemoval: policy?.blockAppRemoval ?? false,
     blockedPackages: policy?.blockedPackages ?? [],
     pendingPackages: policy?.pendingPackages ?? [],
     apps,
@@ -99,7 +101,8 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
 
 export function clearAndroidPolicies() {
   AndroidControls?.savePolicies({
-    validUntilEpochMs: 0, tamperProtection: false, quarantineNewApps: false, blockedPackages: [], pendingPackages: [], apps: [], routines: [],
+    validUntilEpochMs: 0, tamperProtection: false, quarantineNewApps: false, blockAppInstalls: false, blockAppRemoval: false,
+    blockedPackages: [], pendingPackages: [], apps: [], routines: [],
   });
 }
 

@@ -43,12 +43,31 @@ export interface FamilyInput {
   timezone?: string;
 }
 
+export type FamilySettingsWebFilter = typeof FamilySettingsWebFilter[keyof typeof FamilySettingsWebFilter];
+
+
+export const FamilySettingsWebFilter = {
+  off: 'off',
+  adult: 'adult',
+} as const;
+
 export interface FamilySettings {
   timezone: string;
   offlineLeaseHours: number;
   quarantineNewApps: boolean;
   hasGuardianPin: boolean;
+  blockAppInstalls: boolean;
+  blockAppRemoval: boolean;
+  webFilter: FamilySettingsWebFilter;
 }
+
+export type FamilySettingsUpdateWebFilter = typeof FamilySettingsUpdateWebFilter[keyof typeof FamilySettingsUpdateWebFilter];
+
+
+export const FamilySettingsUpdateWebFilter = {
+  off: 'off',
+  adult: 'adult',
+} as const;
 
 export interface FamilySettingsUpdate {
   /**
@@ -67,6 +86,9 @@ export interface FamilySettingsUpdate {
      */
   offlineLeaseHours?: number;
   quarantineNewApps?: boolean;
+  blockAppInstalls?: boolean;
+  blockAppRemoval?: boolean;
+  webFilter?: FamilySettingsUpdateWebFilter;
 }
 
 export type FamilyLimitsPlan = typeof FamilyLimitsPlan[keyof typeof FamilyLimitsPlan];
@@ -783,9 +805,20 @@ export interface PinVerifier {
   hash: string;
 }
 
+export type ChildPolicyWebFilter = typeof ChildPolicyWebFilter[keyof typeof ChildPolicyWebFilter];
+
+
+export const ChildPolicyWebFilter = {
+  off: 'off',
+  adult: 'adult',
+} as const;
+
 export interface ChildPolicy {
   leaseHours: number;
   quarantineNewApps: boolean;
+  blockAppInstalls: boolean;
+  blockAppRemoval: boolean;
+  webFilter: ChildPolicyWebFilter;
   timezone: string;
   serverTime: string;
   blockedPackages: string[];

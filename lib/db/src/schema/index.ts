@@ -22,6 +22,12 @@ export const familiesTable = pgTable("families", {
   guardianPinUpdatedAt: timestamp("guardian_pin_updated_at", { withTimezone: true }),
   /** Android: apps instalados depois do pareamento ficam bloqueados até aprovação. */
   quarantineNewApps: boolean("quarantine_new_apps").notNull().default(true),
+  /** iOS: denyAppInstallation. Android: loja e instaladores bloqueados (liberáveis pelo PIN). */
+  blockAppInstalls: boolean("block_app_installs").notNull().default(true),
+  /** iOS: denyAppRemoval. Android: telas de desinstalação de qualquer app bloqueadas. */
+  blockAppRemoval: boolean("block_app_removal").notNull().default(true),
+  /** iOS: filtro de conteúdo adulto da Apple ("adult") ou desligado ("off"). */
+  webFilter: text("web_filter").notNull().default("adult"),
 });
 
 /** Papéis: owner (titular), guardian (co-responsável), viewer (só leitura). */

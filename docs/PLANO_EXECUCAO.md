@@ -53,3 +53,12 @@ Ambiente fora do Expo Go e do Replit; migrations; testes; CI.
 - Prazo offline configurável pela família (12 h a 30 dias).
 - CI compila o Kotlin (job `android-native`); detalhes e declarações do Google Play em `docs/ANDROID_PROTECAO.md`.
 - **Não verificado localmente**: compilação Kotlin e comportamento em aparelho (sem JDK/SDK nesta máquina).
+
+### Fase 3 ✅ — iOS rígido
+- Módulo Swift próprio (`modules/familia-segura-ios-controls`): `denyAppRemoval` e `denyAppInstallation` num
+  ManagedSettingsStore separado; filtro de conteúdo adulto da Apple via biblioteca.
+- Configurações da família `blockAppInstalls`, `blockAppRemoval`, `webFilter` (padrão: tudo ligado), valendo para
+  iOS e Android (Android: loja/instalador de APK e telas de desinstalação de qualquer app bloqueados).
+- Liberação temporária (15 min) pelo PIN; seletor de apps do iPhone só pela Área do responsável.
+- `targets/` (cópias geradas pelo plugin a cada prebuild) saiu do git — fim do `Shared.swift` triplicado.
+- CI compila o iOS para simulador (job `ios-native`). **Não verificado localmente** (sem macOS/Xcode).

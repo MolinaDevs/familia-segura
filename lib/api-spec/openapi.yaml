@@ -758,12 +758,15 @@ components:
         timezone: { type: string, minLength: 3, maxLength: 64 }
     FamilySettings:
       type: object
-      required: [timezone, offlineLeaseHours, quarantineNewApps, hasGuardianPin]
+      required: [timezone, offlineLeaseHours, quarantineNewApps, hasGuardianPin, blockAppInstalls, blockAppRemoval, webFilter]
       properties:
         timezone: { type: string }
         offlineLeaseHours: { type: integer }
         quarantineNewApps: { type: boolean }
         hasGuardianPin: { type: boolean }
+        blockAppInstalls: { type: boolean }
+        blockAppRemoval: { type: boolean }
+        webFilter: { type: string, enum: [off, adult] }
     FamilySettingsUpdate:
       type: object
       properties:
@@ -771,6 +774,9 @@ components:
         timezone: { type: string, minLength: 3, maxLength: 64 }
         offlineLeaseHours: { type: integer, minimum: 12, maximum: 720 }
         quarantineNewApps: { type: boolean }
+        blockAppInstalls: { type: boolean }
+        blockAppRemoval: { type: boolean }
+        webFilter: { type: string, enum: [off, adult] }
     FamilyLimits:
       type: object
       required: [plan, maxChildren, maxDevices, maxGuardians, children, devices, guardians]
@@ -1217,10 +1223,13 @@ components:
         hash: { type: string }
     ChildPolicy:
       type: object
-      required: [leaseHours, quarantineNewApps, blockedPackages, pendingPackages, timezone, serverTime]
+      required: [leaseHours, quarantineNewApps, blockAppInstalls, blockAppRemoval, webFilter, blockedPackages, pendingPackages, timezone, serverTime]
       properties:
         leaseHours: { type: integer }
         quarantineNewApps: { type: boolean }
+        blockAppInstalls: { type: boolean }
+        blockAppRemoval: { type: boolean }
+        webFilter: { type: string, enum: [off, adult] }
         timezone: { type: string }
         serverTime: { type: string, format: date-time }
         blockedPackages:

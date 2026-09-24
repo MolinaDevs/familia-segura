@@ -5,11 +5,15 @@
  * API segura do Família Segura
  * OpenAPI spec version: 0.3.0
  */
+import type { ChildPolicyWebFilter } from './childPolicyWebFilter';
 import type { PinVerifier } from './pinVerifier';
 
 export interface ChildPolicy {
   leaseHours: number;
   quarantineNewApps: boolean;
+  blockAppInstalls: boolean;
+  blockAppRemoval: boolean;
+  webFilter: ChildPolicyWebFilter;
   timezone: string;
   serverTime: Date;
   blockedPackages: string[];

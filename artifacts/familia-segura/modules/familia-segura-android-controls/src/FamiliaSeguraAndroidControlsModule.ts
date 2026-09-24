@@ -19,6 +19,8 @@ export type AndroidPolicy = {
   /** Ativa a proteção contra desligar/desinstalar (só com PIN do responsável definido). */
   tamperProtection: boolean;
   quarantineNewApps: boolean;
+  blockAppInstalls: boolean;
+  blockAppRemoval: boolean;
   blockedPackages: string[];
   pendingPackages: string[];
   apps: Array<{
