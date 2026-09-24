@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { getGetChildOverviewQueryKey, useGetChildOverview, useSyncChildProtection } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import {
   applyAndroidPolicies,
@@ -12,50 +11,41 @@ import {
   openAndroidAccessibilitySettings,
   openAndroidBatterySettings,
   openAndroidUsageSettings,
+  requestAndroidDeviceAdmin,
   type AndroidProtectionSummary,
 } from '@/services/androidParentalControls';
+import { runChildSync } from '@/services/childSync';
 
 const DISCLOSURE_KEY = '@familia-segura/android-accessibility-disclosure';
 
 const stateCopy = {
   active: { title: 'Proteção ativa', detail: 'Uso, limites e pausas estão sendo aplicados neste aparelho.' },
   partial: { title: 'Proteção parcial', detail: 'Uma configuração do sistema ainda limita a proteção.' },
-  disabled: { title: 'Proteção desativada', detail: 'Conclua as duas permissões essenciais para aplicar os combinados.' },
+  disabled: { title: 'Proteção desativada', detail: 'Conclua as permissões abaixo para aplicar os combinados.' },
   unavailable: { title: 'Build nativa necessária', detail: 'O controle Android não funciona no Expo Go ou na web.' },
 };
 
 export default function AndroidControlsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { data, isSuccess, isFetchedAfterMount, dataUpdatedAt } = useGetChildOverview({ query: { queryKey: getGetChildOverviewQueryKey(), retry: false } });
-  const { mutate: syncProtectionState } = useSyncChildProtection();
   const [summary, setSummary] = useState<AndroidProtectionSummary>(() => getAndroidProtectionSummary());
   const [busy, setBusy] = useState(true);
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [policyResult, setPolicyResult] = useState<{ configuredRules: number; configuredRoutines: number; skippedRules: number } | null>(null);
-  const appliedPolicyAt = useRef(0);
 
   const refresh = useCallback(async () => {
     setBusy(true);
-    const next = getAndroidProtectionSummary();
-    setSummary(next);
-    if (Platform.OS === 'android' && !next.nativeBuildRequired) {
-      syncProtectionState({ data: { state: next.state, issues: next.issues } });
+    setSummary(getAndroidProtectionSummary());
+    if (Platform.OS === 'android') {
+      // A sincronização aplica as regras (só com resposta autenticada) e envia o estado da proteção.
+      const result = await runChildSync();
+      if (result.status === 'ok' && result.overview) {
+        setPolicyResult(applyAndroidPolicies(result.overview.apps, result.overview.routines, result.overview.policy));
+      }
+      setSummary(getAndroidProtectionSummary());
     }
     setBusy(false);
-  }, [syncProtectionState]);
-
-  useEffect(() => {
-    if (
-      Platform.OS !== 'android'
-      || !data
-      || !isSuccess
-      || !isFetchedAfterMount
-      || dataUpdatedAt <= appliedPolicyAt.current
-    ) return;
-    setPolicyResult(applyAndroidPolicies(data.apps, data.routines));
-    appliedPolicyAt.current = dataUpdatedAt;
-  }, [data, isSuccess, isFetchedAfterMount, dataUpdatedAt]);
+  }, []);
 
   useEffect(() => {
     AsyncStorage.getItem(DISCLOSURE_KEY).then((value) => setDisclosureAccepted(value === 'accepted'));
@@ -145,7 +135,7 @@ export default function AndroidControlsScreen() {
                 {disclosureAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
               </View>
               <Text style={[styles.disclosureText, { color: colors.foreground }]}>
-                Entendi que o Família Segura identifica o aplicativo em primeiro plano para aplicar limites e pausas. Ele não lê mensagens, senhas, textos ou conteúdo da tela.
+                Entendi que o Família Segura usa o serviço de acessibilidade para identificar o aplicativo em primeiro plano e aplicar limites, pausas e bloqueios, e para impedir que a criança abra as telas de Configurações que desligariam a proteção ou desinstalariam o app (a identificação usa apenas o nome do app nessas telas). Ele não lê mensagens, senhas nem o que é digitado, e nada disso é enviado ao servidor.
               </Text>
             </Pressable>
             <Pressable
@@ -162,11 +152,28 @@ export default function AndroidControlsScreen() {
 
           <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.stepHeader}>
+              <View style={[styles.stepNumber, { backgroundColor: status?.deviceAdminActive ? colors.secondary : colors.muted }]}>
+                <Feather name={status?.deviceAdminActive ? 'check' : 'lock'} size={18} color={status?.deviceAdminActive ? colors.secondaryForeground : colors.foreground} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.stepTitle, { color: colors.foreground }]}>3. Proteção contra desinstalação</Text>
+                <Text style={[styles.stepDetail, { color: colors.mutedForeground }]}>Ativa o Família Segura como administrador do aparelho: ele não pode ser desinstalado sem o PIN do responsável.</Text>
+              </View>
+            </View>
+            <Pressable testID="android-device-admin" disabled={status?.deviceAdminActive} onPress={requestAndroidDeviceAdmin} style={({ pressed }) => [styles.primaryButton, { backgroundColor: status?.deviceAdminActive ? colors.muted : colors.primary }, pressed && styles.pressed]}>
+              <Text style={[styles.primaryButtonText, { color: status?.deviceAdminActive ? colors.mutedForeground : colors.primaryForeground }]}>
+                {status?.deviceAdminActive ? 'Proteção ativa' : 'Ativar proteção contra desinstalação'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, { backgroundColor: status?.batteryOptimizationExempt ? colors.secondary : colors.accent }]}>
                 <Feather name="battery-charging" size={18} color={status?.batteryOptimizationExempt ? colors.secondaryForeground : colors.accentForeground} />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.stepTitle, { color: colors.foreground }]}>3. Bateria</Text>
+                <Text style={[styles.stepTitle, { color: colors.foreground }]}>4. Bateria</Text>
                 <Text style={[styles.stepDetail, { color: colors.mutedForeground }]}>Recomendado em aparelhos que encerram serviços em segundo plano.</Text>
               </View>
             </View>
@@ -186,7 +193,7 @@ export default function AndroidControlsScreen() {
       <View style={[styles.note, { backgroundColor: colors.secondary }]}>
         <Feather name="lock" size={18} color={colors.secondaryForeground} />
         <Text style={[styles.noteText, { color: colors.secondaryForeground }]}>
-          As regras ficam neste aparelho para funcionar offline. O servidor recebe somente estado da proteção e totais de uso dos apps combinados.
+          As regras ficam neste aparelho para funcionar offline. O servidor recebe o estado da proteção, os totais de uso por app e a lista de apps instalados (para o responsável aprovar apps novos).
         </Text>
       </View>
     </ScrollView>

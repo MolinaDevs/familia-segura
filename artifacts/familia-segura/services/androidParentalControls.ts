@@ -1,7 +1,9 @@
 import { Platform } from 'react-native';
-import type { AppRule, Routine } from '@workspace/api-client-react';
+import type { AppRule, ChildPolicy, Routine } from '@workspace/api-client-react';
 import AndroidControls, {
+  type AndroidInstalledApp,
   type AndroidProtectionStatus,
+  type AndroidQueuedEvent,
 } from '@/modules/familia-segura-android-controls/src/FamiliaSeguraAndroidControlsModule';
 
 export type AndroidProtectionState = 'active' | 'partial' | 'disabled' | 'unavailable';
@@ -13,27 +15,24 @@ export type AndroidProtectionSummary = {
   status: AndroidProtectionStatus | null;
 };
 
-const packageAliases: Record<string, string> = {
+const FALLBACK_LEASE_HOURS = 72;
+
+/** Compatibilidade com regras antigas que só tinham o id curto. */
+const legacyAliases: Record<string, string> = {
   youtube: 'com.google.android.youtube',
   instagram: 'com.instagram.android',
   tiktok: 'com.zhiliaoapp.musically',
   whatsapp: 'com.whatsapp',
-  facebook: 'com.facebook.katana',
-  messenger: 'com.facebook.orca',
-  chrome: 'com.android.chrome',
-  netflix: 'com.netflix.mediaclient',
-  spotify: 'com.spotify.music',
-  roblox: 'com.roblox.client',
-  minecraft: 'com.mojang.minecraftpe',
 };
 
-const OFFLINE_POLICY_LEASE_MS = 72 * 60 * 60 * 1000;
-
-export function packageNameForApp(appId: string) {
-  const normalized = appId.trim().toLocaleLowerCase('en-US');
-  if (normalized.includes('.')) return normalized;
-  return packageAliases[normalized] ?? normalized;
+export function packagesForRule(rule: Pick<AppRule, 'appId' | 'androidPackages'>): string[] {
+  if (rule.androidPackages?.length) return rule.androidPackages;
+  const normalized = rule.appId.trim().toLocaleLowerCase('en-US');
+  if (normalized.includes('.')) return [normalized];
+  return legacyAliases[normalized] ? [legacyAliases[normalized]] : [];
 }
+
+export const isAndroidNative = () => Platform.OS === 'android' && Boolean(AndroidControls?.isAvailable());
 
 export function getAndroidProtectionSummary(): AndroidProtectionSummary {
   if (Platform.OS !== 'android') {
@@ -47,8 +46,10 @@ export function getAndroidProtectionSummary(): AndroidProtectionSummary {
   if (!status.usageAccessGranted) issues.push('Acesso ao uso desativado');
   if (!status.accessibilityEnabled) issues.push('Serviço de proteção desativado');
   if (status.accessibilityEnabled && !status.serviceRunning) issues.push('Serviço aguardando inicialização');
+  if (!status.deviceAdminActive) issues.push('Proteção contra desinstalação desativada');
   if (!status.batteryOptimizationExempt) issues.push('Otimização de bateria ativa');
   if (!status.policyLeaseActive) issues.push('Regras precisam ser atualizadas');
+  if (status.guardianUnlockedUntil > Date.now()) issues.push('Liberado temporariamente pelo responsável');
   const corePermissions = status.usageAccessGranted && status.accessibilityEnabled;
   const state: AndroidProtectionState = corePermissions
     ? (issues.length === 0 ? 'active' : 'partial')
@@ -56,30 +57,31 @@ export function getAndroidProtectionSummary(): AndroidProtectionSummary {
   return { state, issues, nativeBuildRequired: false, status };
 }
 
-export function openAndroidUsageSettings() {
-  AndroidControls?.openUsageAccessSettings();
-}
+export const openAndroidUsageSettings = () => AndroidControls?.openUsageAccessSettings();
+export const openAndroidAccessibilitySettings = () => AndroidControls?.openAccessibilitySettings();
+export const openAndroidBatterySettings = () => AndroidControls?.openBatteryOptimizationSettings();
+export const requestAndroidDeviceAdmin = () => AndroidControls?.requestDeviceAdmin(
+  'Impede que o Família Segura seja desinstalado sem o PIN do responsável. Desativar esta proteção avisa a família.',
+);
+export const removeAndroidDeviceAdmin = () => AndroidControls?.removeDeviceAdmin();
+export const setAndroidGuardianUnlock = (minutes: number) => AndroidControls?.setGuardianUnlock(minutes);
 
-export function openAndroidAccessibilitySettings() {
-  AndroidControls?.openAccessibilitySettings();
-}
-
-export function openAndroidBatterySettings() {
-  AndroidControls?.openBatteryOptimizationSettings();
-}
-
-export function applyAndroidPolicies(rules: AppRule[], routines: Routine[]) {
+/** Grava as regras para o serviço nativo. Só deve ser chamado após uma resposta autenticada do servidor. */
+export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], policy?: ChildPolicy) {
   if (!AndroidControls) return { configuredRules: 0, configuredRoutines: 0, skippedRules: rules.length };
-  const apps = rules
-    .map((rule) => ({
-      packageName: packageNameForApp(rule.appId),
-      appName: rule.appName,
-      status: rule.status,
-      dailyLimitMinutes: rule.dailyLimitMinutes,
-    }))
-    .filter((rule) => rule.packageName.includes('.'));
+  const apps = rules.flatMap((rule) => packagesForRule(rule).map((packageName) => ({
+    packageName,
+    appName: rule.appName,
+    status: rule.status,
+    dailyLimitMinutes: rule.dailyLimitMinutes,
+  })));
+  const leaseHours = policy?.leaseHours ?? FALLBACK_LEASE_HOURS;
   AndroidControls.savePolicies({
-    validUntilEpochMs: Date.now() + OFFLINE_POLICY_LEASE_MS,
+    validUntilEpochMs: Date.now() + leaseHours * 60 * 60 * 1000,
+    tamperProtection: Boolean(policy?.pinVerifier),
+    quarantineNewApps: policy?.quarantineNewApps ?? false,
+    blockedPackages: policy?.blockedPackages ?? [],
+    pendingPackages: policy?.pendingPackages ?? [],
     apps,
     routines: routines.map((routine) => ({
       days: routine.days,
@@ -89,22 +91,46 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[]) {
     })),
   });
   return {
-    configuredRules: apps.length,
+    configuredRules: rules.filter((rule) => packagesForRule(rule).length > 0).length,
     configuredRoutines: routines.filter((routine) => routine.enabled).length,
-    skippedRules: rules.length - apps.length,
+    skippedRules: rules.filter((rule) => packagesForRule(rule).length === 0).length,
   };
 }
 
 export function clearAndroidPolicies() {
-  AndroidControls?.savePolicies({ validUntilEpochMs: 0, apps: [], routines: [] });
+  AndroidControls?.savePolicies({
+    validUntilEpochMs: 0, tamperProtection: false, quarantineNewApps: false, blockedPackages: [], pendingPackages: [], apps: [], routines: [],
+  });
 }
 
+const clampMinutes = (value: number) => Math.max(0, Math.min(1440, Math.round(value)));
+
+/**
+ * Uso de hoje: apps com regra (somando os pacotes de cada regra) + demais apps usados,
+ * para o responsável ver o ranking completo nos gráficos.
+ */
 export function getAndroidUsageSamples(rules: AppRule[]) {
   if (!AndroidControls) return [];
-  const mapped = rules.map((rule) => ({ appId: rule.appId, packageName: packageNameForApp(rule.appId) }));
-  const usage = AndroidControls.getUsageToday(mapped.map((item) => item.packageName));
-  return mapped.map((item) => ({
-    appId: item.appId,
-    usageTodayMinutes: Math.max(0, Math.min(1440, Math.round(usage[item.packageName] ?? 0))),
-  }));
+  const all = AndroidControls.getAllUsageToday();
+  const covered = new Set<string>();
+  const samples = rules.map((rule) => {
+    const packages = packagesForRule(rule);
+    packages.forEach((pkg) => covered.add(pkg));
+    const minutes = packages.reduce((sum, pkg) => sum + (all[pkg] ?? 0), 0);
+    return { appId: rule.appId, usageTodayMinutes: clampMinutes(minutes) };
+  });
+  const others = Object.entries(all)
+    .filter(([pkg, minutes]) => !covered.has(pkg) && minutes >= 1)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 150)
+    .map(([pkg, minutes]) => ({ appId: pkg, usageTodayMinutes: clampMinutes(minutes) }));
+  return [...samples, ...others];
+}
+
+export function getAndroidInstalledApps(): AndroidInstalledApp[] {
+  return AndroidControls?.getInstalledApps() ?? [];
+}
+
+export function drainAndroidEvents(): AndroidQueuedEvent[] {
+  return AndroidControls?.drainEvents() ?? [];
 }

@@ -1,9 +1,12 @@
 package expo.modules.familiaseguraandroidcontrols
 
 import android.app.AppOpsManager
+import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
 import android.provider.Settings
@@ -15,6 +18,7 @@ import java.util.Calendar
 
 class FamiliaSeguraAndroidControlsModule : Module() {
   private val context: Context get() = requireNotNull(appContext.reactContext)
+  private val adminComponent: ComponentName get() = ComponentName(context, FamiliaSeguraDeviceAdminReceiver::class.java)
 
   override fun definition() = ModuleDefinition {
     Name("FamiliaSeguraAndroidControls")
@@ -37,7 +41,12 @@ class FamiliaSeguraAndroidControlsModule : Module() {
         "accessibilityEnabled" to accessibilityEnabled,
         "batteryOptimizationExempt" to (Build.VERSION.SDK_INT < 23 || power.isIgnoringBatteryOptimizations(context.packageName)),
         "serviceRunning" to FamiliaSeguraAccessibilityService.running,
-        "policyLeaseActive" to PolicyStore.leaseActive(context)
+        "policyLeaseActive" to PolicyStore.leaseActive(context),
+        "deviceAdminActive" to isAdminActive(),
+        "guardianUnlockedUntil" to PolicyStore.guardianUnlockUntil(context).toDouble(),
+        "model" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
+        "osVersion" to Build.VERSION.RELEASE,
+        "batteryLevel" to batteryLevel(),
       )
     }
 
@@ -47,19 +56,81 @@ class FamiliaSeguraAndroidControlsModule : Module() {
       context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }
 
+    /** Abre a tela oficial do Android pedindo para ativar o administrador (proteção contra desinstalação). */
+    Function("requestDeviceAdmin") { explanation: String ->
+      val intent = Intent(DevicePolicyManager.ACTION_ADD_DEVICE_ADMIN)
+        .putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, adminComponent)
+        .putExtra(DevicePolicyManager.EXTRA_ADD_EXPLANATION, explanation)
+      val activity = appContext.currentActivity
+      if (activity != null) activity.startActivity(intent) else context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
+    /** Só é chamado depois do PIN do responsável (desvincular o aparelho). */
+    Function("removeDeviceAdmin") {
+      val dpm = context.getSystemService(DevicePolicyManager::class.java)
+      if (isAdminActive()) dpm.removeActiveAdmin(adminComponent)
+    }
+
     Function("savePolicies") { policy: ReadableArguments ->
       PolicyStore.save(context, JSONObject(policy.toMap()))
+    }
+
+    Function("setGuardianUnlock") { minutes: Int ->
+      val until = if (minutes <= 0) 0L else System.currentTimeMillis() + minutes.coerceAtMost(60) * 60_000L
+      PolicyStore.setGuardianUnlock(context, until)
+      if (minutes > 0) PolicyStore.appendEvent(context, "protection_disabled", "Proteção liberada pelo responsável por $minutes min")
+    }
+
+    Function("drainEvents") {
+      val events = PolicyStore.drainEvents(context)
+      (0 until events.length()).mapNotNull { index ->
+        val event = events.optJSONObject(index) ?: return@mapNotNull null
+        mapOf("type" to event.optString("type"), "detail" to event.optString("detail"), "at" to event.optLong("at").toDouble())
+      }
+    }
+
+    /** Apps com ícone na tela inicial (o que a criança consegue abrir). */
+    Function("getInstalledApps") {
+      val pm = context.packageManager
+      val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+      pm.queryIntentActivities(launcher, 0)
+        .map { it.activityInfo.applicationInfo }
+        .distinctBy { it.packageName }
+        .filter { it.packageName != context.packageName }
+        .map { info ->
+          val installed = try { pm.getPackageInfo(info.packageName, 0).firstInstallTime } catch (_: Exception) { 0L }
+          mapOf(
+            "packageName" to info.packageName,
+            "label" to pm.getApplicationLabel(info).toString(),
+            "system" to ((info.flags and ApplicationInfo.FLAG_SYSTEM) != 0 && (info.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) == 0),
+            "installedAt" to installed.toDouble(),
+          )
+        }
     }
 
     Function("getUsageToday") { packageNames: List<String> ->
       val manager = context.getSystemService(Context.USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
       val start = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
-      val end = System.currentTimeMillis()
-      val result = packageNames.distinct().associateWith { pkg ->
-        manager.queryAndAggregateUsageStats(start, end).get(pkg)?.totalTimeInForeground?.div(60000L) ?: 0L
-      }
-      result
+      val stats = manager.queryAndAggregateUsageStats(start, System.currentTimeMillis())
+      packageNames.distinct().associateWith { pkg -> stats[pkg]?.totalTimeInForeground?.div(60000L) ?: 0L }
     }
+
+    /** Uso de hoje de todos os apps (para relatórios dos apps sem regra). */
+    Function("getAllUsageToday") {
+      val manager = context.getSystemService(Context.USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
+      val start = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
+      manager.queryAndAggregateUsageStats(start, System.currentTimeMillis())
+        .mapValues { (_, stat) -> stat.totalTimeInForeground / 60000L }
+        .filter { (pkg, minutes) -> minutes > 0 && pkg != context.packageName }
+    }
+  }
+
+  private fun isAdminActive(): Boolean =
+    context.getSystemService(DevicePolicyManager::class.java).isAdminActive(adminComponent)
+
+  private fun batteryLevel(): Int {
+    val manager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
+    return manager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
   }
 
   private fun hasUsageAccess(): Boolean {

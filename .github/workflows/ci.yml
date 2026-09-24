@@ -33,3 +33,25 @@ jobs:
       - run: pnpm run typecheck
       - run: pnpm --filter @workspace/db run migrate
       - run: pnpm --filter @workspace/api-server run test
+
+  android-native:
+    # Compila o módulo nativo Android (Kotlin) do controle parental. Os runners do GitHub já têm o Android SDK.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - run: pnpm install --frozen-lockfile
+      - name: Prebuild Android
+        working-directory: artifacts/familia-segura
+        run: npx expo prebuild --platform android --no-install --clean
+      - name: Compilar módulo Kotlin
+        working-directory: artifacts/familia-segura/android
+        run: ./gradlew :familia-segura-android-controls:compileDebugKotlin --no-daemon --stacktrace

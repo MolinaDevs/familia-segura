@@ -16,6 +16,7 @@ export default function ChildLayout() {
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="ios-controls" options={{ headerShown: false }} />
       <Stack.Screen name="android-controls" options={{ headerShown: false }} />
+      <Stack.Screen name="guardian" options={{ headerShown: false }} />
     </Stack>
   );
 }

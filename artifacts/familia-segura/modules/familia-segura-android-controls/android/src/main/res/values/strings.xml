@@ -1,11 +1,17 @@
 <resources>
   <string name="block_app_generic">Este aplicativo</string>
+  <string name="block_app_protection">Proteção do Família Segura</string>
   <string name="accessibility_service_label">Proteção Família Segura</string>
-  <string name="accessibility_service_description">Verifica os aplicativos abertos para aplicar limites e rotinas definidos pelos responsáveis.</string>
+  <string name="accessibility_service_description">Verifica qual aplicativo está aberto para aplicar os limites, bloqueios e rotinas definidos pelos responsáveis, e impede que a proteção seja desligada sem o PIN do responsável. Não lê mensagens, senhas nem o que é digitado.</string>
   <string name="block_title">Hora de fazer uma pausa</string>
   <string name="block_reason_permanent">Este aplicativo foi bloqueado pela sua família.</string>
-  <string name="block_reason_routine">Este aplicativo está bloqueado durante a rotina combinada.</string>
+  <string name="block_reason_routine">Os aplicativos estão pausados durante a rotina combinada. Ligações de emergência continuam liberadas.</string>
   <string name="block_reason_limit">Você atingiu o limite diário de %1$d minutos em %2$s.</string>
+  <string name="block_reason_pending">Este aplicativo foi instalado agora e está aguardando a aprovação da sua família.</string>
+  <string name="block_reason_tamper">Estas configurações protegem o aparelho. Peça ao seu responsável para liberar com o PIN.</string>
   <string name="block_return_home">Voltar para a tela inicial</string>
-  <string name="block_request_time">Pedir mais tempo</string>
+  <string name="block_request_time">Abrir o Família Segura</string>
+  <string name="device_admin_label">Família Segura — proteção contra desinstalação</string>
+  <string name="device_admin_description">Impede que o Família Segura seja desinstalado sem a autorização do responsável.</string>
+  <string name="device_admin_disable_warning">Desativar esta proteção avisa o responsável e permite desinstalar o controle parental.</string>
 </resources>

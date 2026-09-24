@@ -1,154 +1,86 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert, AppState, Platform } from 'react-native';
+import React, { useCallback, useEffect, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert, AppState, Platform, RefreshControl } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useCreateTimeRequest, useGetChildOverview, getGetChildOverviewQueryKey, useSyncChildUsage, useSyncChildProtection, type ChildOverview } from '@workspace/api-client-react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as SecureStore from 'expo-secure-store';
+import { useCreateTimeRequest, type ChildOverview } from '@workspace/api-client-react';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
-import { applyNativePolicies, getAllowedUsageSamples } from '@/services/iosParentalControls';
-import { applyAndroidPolicies, clearAndroidPolicies, getAndroidProtectionSummary, getAndroidUsageSamples } from '@/services/androidParentalControls';
+import { loadCachedOverview, runChildSync, type SyncStatus } from '@/services/childSync';
+import { registerChildBackgroundSync } from '@/services/backgroundSync';
+import { registerChildPush } from '@/services/push';
+
+const FOREGROUND_REFRESH_MS = 60_000;
 
 export default function ChildDashboard() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const createRequest = useCreateTimeRequest();
-  const syncUsage = useSyncChildUsage();
-  const syncProtection = useSyncChildProtection();
-  
-  const { data: childData, isLoading: isFetching, isError, isSuccess, isFetchedAfterMount, dataUpdatedAt, error, refetch } = useGetChildOverview({
-    query: {
-      queryKey: getGetChildOverviewQueryKey(),
-      retry: false,
-      refetchInterval: 60_000,
-      refetchIntervalInBackground: false,
-    }
-  });
-  
+
+  const [overview, setOverview] = useState<ChildOverview | null>(null);
+  const [status, setStatus] = useState<SyncStatus | 'loading'>('loading');
+  const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [appId, setAppId] = useState('');
   const [minutes, setMinutes] = useState('');
   const [message, setMessage] = useState('');
-  const [cachedData, setCachedData] = useState<ChildOverview | null>(null);
-  const [cacheReady, setCacheReady] = useState(false);
-  const [cacheKey, setCacheKey] = useState<string | null>(null);
-  const appliedAndroidPolicyAt = useRef(0);
 
-  useEffect(() => {
-    SecureStore.getItemAsync('deviceId').then((deviceId) => {
-      const key = deviceId ? `@familia-segura/child-overview_${deviceId}` : null;
-      setCacheKey(key);
-      if (!key) {
-        setCacheReady(true);
-        return;
-      }
-      AsyncStorage.getItem(key)
-        .then((stored) => {
-          if (stored) setCachedData(JSON.parse(stored) as ChildOverview);
-        })
-        .finally(() => setCacheReady(true));
-    });
-  }, []);
-
-  useEffect(() => {
-    if (childData && cacheKey) {
-      setCachedData(childData);
-      AsyncStorage.setItem(cacheKey, JSON.stringify(childData)).catch(() => {});
-    }
-  }, [childData, cacheKey]);
-
-  useEffect(() => {
-    const status = (error as { status?: number } | null)?.status;
-    if (isError && (status === 401 || status === 403)) {
-      if (Platform.OS === 'android') clearAndroidPolicies();
-      AsyncStorage.removeItem('childMode').catch(() => {});
-      if (cacheKey) AsyncStorage.removeItem(cacheKey).catch(() => {});
-      SecureStore.deleteItemAsync('deviceId').catch(() => {});
-      SecureStore.deleteItemAsync('childId').catch(() => {});
-      SecureStore.deleteItemAsync('deviceToken').catch(() => {});
+  const sync = useCallback(async () => {
+    const result = await runChildSync();
+    if (result.status === 'revoked' || result.status === 'unpaired') {
       router.replace('/(child)/pair');
+      return;
     }
-  }, [isError, error, cacheKey, router]);
-
-  const visibleData = childData ?? cachedData;
-  const isOffline = isError && Boolean(cachedData);
-
-  useEffect(() => {
-    if (
-      Platform.OS !== 'android'
-      || !childData
-      || !isSuccess
-      || !isFetchedAfterMount
-      || dataUpdatedAt <= appliedAndroidPolicyAt.current
-    ) return;
-    applyAndroidPolicies(childData.apps, childData.routines);
-    appliedAndroidPolicyAt.current = dataUpdatedAt;
-  }, [childData, isSuccess, isFetchedAfterMount, dataUpdatedAt]);
+    if (result.overview) setOverview(result.overview);
+    setStatus(result.status);
+  }, [router]);
 
   useEffect(() => {
-    if (!visibleData) return;
-    let cancelled = false;
-    const sync = async () => {
-      if (Platform.OS === 'ios') {
-        await applyNativePolicies(visibleData.apps, visibleData.routines);
-      } else if (Platform.OS === 'android') {
-        const protection = getAndroidProtectionSummary();
-        if (!isOffline) syncProtection.mutate({ data: { state: protection.state, issues: protection.issues } });
-      }
-      if (isOffline || cancelled) return;
-      const samples = Platform.OS === 'ios'
-        ? await getAllowedUsageSamples(visibleData.apps)
-        : Platform.OS === 'android'
-          ? getAndroidUsageSamples(visibleData.apps)
-          : [];
-      const now = new Date();
-      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-      if (samples.length > 0 && !cancelled) syncUsage.mutate({ data: { samples, localDate, localHour: now.getHours() } });
-    };
+    let active = true;
+    loadCachedOverview().then((cached) => { if (active && cached) setOverview((current) => current ?? cached); });
     void sync();
-    const subscription = AppState.addEventListener('change', (state) => {
-      if (state === 'active') {
-        void refetch();
-        void sync();
-      }
-    });
+    void registerChildBackgroundSync();
+    void registerChildPush();
+    const subscription = AppState.addEventListener('change', (state) => { if (state === 'active') void sync(); });
+    const interval = setInterval(() => { if (AppState.currentState === 'active') void sync(); }, FOREGROUND_REFRESH_MS);
     return () => {
-      cancelled = true;
+      active = false;
       subscription.remove();
+      clearInterval(interval);
     };
-  }, [visibleData, isOffline, refetch]);
+  }, [sync]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await sync();
+    setRefreshing(false);
+  };
+
+  const isOffline = status === 'offline';
 
   const handleRequestTime = async () => {
-    if (!appId || !minutes || isOffline) return;
+    if (!overview || !appId || !minutes || isOffline) return;
     setLoading(true);
     try {
-      const childId = visibleData?.child.id ?? (await SecureStore.getItemAsync('childId')) ?? '';
       await createRequest.mutateAsync({
-        data: {
-          childId,
-          appId,
-          requestedMinutes: parseInt(minutes, 10),
-          message
-        }
+        data: { childId: overview.child.id, appId, requestedMinutes: parseInt(minutes, 10), message },
       });
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Enviado", "Seu pedido de tempo extra foi enviado para sua família.");
+      Alert.alert('Enviado', 'Seu pedido de tempo extra foi enviado para sua família.');
       setAppId('');
       setMinutes('');
       setMessage('');
-      void refetch();
+      void sync();
     } catch (err) {
-      const status = (err as { status?: number }).status;
-      Alert.alert("Erro", status === 409 ? "Aguarde a resposta dos pedidos anteriores." : "Não foi possível enviar o pedido.");
+      const code = (err as { status?: number }).status;
+      Alert.alert('Erro', code === 409 ? 'Aguarde a resposta dos pedidos anteriores.' : 'Não foi possível enviar o pedido.');
     } finally {
       setLoading(false);
     }
   };
 
-  if ((isFetching || !cacheReady) && !visibleData) {
+  if (!overview && status === 'loading') {
     return (
       <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }}>
         <ActivityIndicator color={colors.primary} />
@@ -156,23 +88,31 @@ export default function ChildDashboard() {
     );
   }
 
-  if (!visibleData) {
+  if (!overview) {
     return (
-      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 16 }}>
         <Feather name="wifi-off" size={30} color={colors.mutedForeground} />
-        <Text style={[styles.subtitle, { color: colors.mutedForeground, textAlign: 'center', marginTop: 12 }]}>
+        <Text style={[styles.subtitle, { color: colors.mutedForeground, textAlign: 'center' }]}>
           Não foi possível carregar seus combinados agora. Tente novamente quando a conexão voltar.
         </Text>
+        <Pressable onPress={() => void sync()} style={[styles.button, { backgroundColor: colors.primary, paddingHorizontal: 24 }]}>
+          <Text style={styles.buttonText}>Tentar de novo</Text>
+        </Pressable>
       </View>
     );
   }
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 }]}>
+    <ScrollView
+      showsVerticalScrollIndicator={false}
+      style={{ backgroundColor: colors.background }}
+      contentContainerStyle={[styles.content, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 40 }]}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+    >
       <View style={styles.header}>
-        <Text style={[styles.greeting, { color: colors.foreground }]}>Olá, {visibleData.child.displayName}</Text>
+        <Text style={[styles.greeting, { color: colors.foreground }]}>Olá, {overview.child.displayName}</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Acompanhe o que você faz e por quanto tempo.</Text>
-        {isOffline && <Text style={[styles.offlineText, { color: colors.mutedForeground }]}>Sem conexão · consulta disponível, alterações pausadas</Text>}
+        {isOffline && <Text style={[styles.offlineText, { color: colors.mutedForeground }]}>Sem conexão · consulta disponível, pedidos pausados</Text>}
       </View>
 
       <View style={[styles.card, { backgroundColor: colors.secondary }]}>
@@ -181,42 +121,22 @@ export default function ChildDashboard() {
           <Text style={[styles.cardTitle, { color: colors.secondaryForeground }]}>Transparência</Text>
         </View>
         <Text style={[styles.cardBody, { color: colors.secondaryForeground }]}>
-          Seu aparelho está vinculado à conta da sua família. Eles podem ver quais aplicativos você usa e definir combinados sobre tempo de tela.
+          Seu aparelho está vinculado à conta da sua família. Eles veem quanto tempo você usa os apps e definem combinados sobre tempo de tela. Ninguém lê suas mensagens.
         </Text>
-        
-        {visibleData.collectedData && visibleData.collectedData.length > 0 && (
-          <View style={{ marginTop: 12 }}>
-            <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: colors.secondaryForeground, marginBottom: 4 }}>Dados compartilhados:</Text>
-            {visibleData.collectedData.map((d, idx) => (
-              <Text key={idx} style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.secondaryForeground }}>• {d}</Text>
-            ))}
-          </View>
-        )}
+        <View style={{ marginTop: 12 }}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: colors.secondaryForeground, marginBottom: 4 }}>O que é compartilhado:</Text>
+          {overview.collectedData.map((item) => (
+            <Text key={item} style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.secondaryForeground }}>• {item}</Text>
+          ))}
+        </View>
       </View>
 
-      <Pressable
-        testID={Platform.OS === 'android' ? 'open-android-controls' : 'open-ios-controls'}
-        onPress={() => router.push(Platform.OS === 'android' ? '/(child)/android-controls' : '/(child)/ios-controls')}
-        style={({ pressed }) => [styles.nativeControlCard, { backgroundColor: colors.card, borderColor: colors.border }, pressed && styles.pressed]}
-      >
-        <View style={[styles.nativeControlIcon, { backgroundColor: colors.muted }]}><Feather name="shield" size={22} color={colors.primary} /></View>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.nativeControlTitle, { color: colors.foreground }]}>
-            {Platform.OS === 'android' ? 'Proteção nativa no Android' : 'Proteção nativa no iPhone'}
-          </Text>
-          <Text style={[styles.nativeControlDetail, { color: colors.mutedForeground }]}>
-            {Platform.OS === 'android' ? 'Configure o acesso ao uso e o serviço de proteção.' : 'Autorize a Apple e associe apps aos seus combinados.'}
-          </Text>
-        </View>
-        <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
-      </Pressable>
-
-      {visibleData.apps.length > 0 && (
+      {overview.apps.length > 0 && (
         <>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Seus Aplicativos</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Seus aplicativos</Text>
           <View style={{ gap: 8, marginBottom: 24 }}>
-            {visibleData.apps.map(app => (
-              <View key={app.id} style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
+            {overview.apps.map((app) => (
+              <View key={app.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card }]}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{app.appName}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
                   {app.status === 'blocked' ? 'Bloqueado pela família' : `${app.usageTodayMinutes} de ${app.dailyLimitMinutes} min hoje`}
@@ -228,12 +148,21 @@ export default function ChildDashboard() {
         </>
       )}
 
-      {visibleData.routines.length > 0 && (
+      {overview.policy.pendingPackages.length > 0 && (
+        <View style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card, marginBottom: 24 }]}>
+          <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>Apps aguardando aprovação</Text>
+          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
+            {overview.policy.pendingPackages.length} app(s) instalado(s) recentemente ficam bloqueados até sua família aprovar.
+          </Text>
+        </View>
+      )}
+
+      {overview.routines.length > 0 && (
         <>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Suas Rotinas</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Suas rotinas</Text>
           <View style={{ gap: 8, marginBottom: 24 }}>
-            {visibleData.routines.map(routine => (
-              <View key={routine.id} style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, opacity: routine.enabled ? 1 : 0.5 }}>
+            {overview.routines.map((routine) => (
+              <View key={routine.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card, opacity: routine.enabled ? 1 : 0.5 }]}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{routine.title}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
                   {routine.startTime} às {routine.endTime} · {formatDays(routine.days)}
@@ -244,77 +173,96 @@ export default function ChildDashboard() {
         </>
       )}
 
-      {visibleData.pendingRequests.length > 0 && (
+      {overview.pendingRequests.length > 0 && (
         <View style={{ gap: 8, marginBottom: 24 }}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Aguardando resposta</Text>
-          {visibleData.pendingRequests.map((request) => (
-            <View key={request.id} style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
+          {overview.pendingRequests.map((request) => (
+            <View key={request.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card }]}>
               <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>+{request.requestedMinutes} min de {request.appName}</Text>
             </View>
           ))}
         </View>
       )}
 
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pedir mais tempo</Text>
-      <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.foreground }]}>Para qual aplicativo?</Text>
-          <View style={styles.chips}>
-            {visibleData.apps.map((app) => (
-              <Pressable
-                key={app.id}
-                testID={`request-app-${app.appId}`}
-                onPress={() => setAppId(app.appId)}
-                style={[styles.chip, { borderColor: appId === app.appId ? colors.primary : colors.border, backgroundColor: appId === app.appId ? colors.secondary : colors.background }]}
-              >
-                <Text style={[styles.chipText, { color: appId === app.appId ? colors.primary : colors.foreground }]}>{app.appName}</Text>
-              </Pressable>
-            ))}
+      {overview.apps.length > 0 && (
+        <>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pedir mais tempo</Text>
+          <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.foreground }]}>Para qual aplicativo?</Text>
+              <View style={styles.chips}>
+                {overview.apps.map((app) => (
+                  <Pressable
+                    key={app.id}
+                    testID={`request-app-${app.appId}`}
+                    onPress={() => setAppId(app.appId)}
+                    style={[styles.chip, { borderColor: appId === app.appId ? colors.primary : colors.border, backgroundColor: appId === app.appId ? colors.secondary : colors.background }]}
+                  >
+                    <Text style={[styles.chipText, { color: appId === app.appId ? colors.primary : colors.foreground }]}>{app.appName}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.foreground }]}>Quantos minutos?</Text>
+              <View style={styles.chips}>
+                {['10', '15', '30', '45', '60'].map((value) => (
+                  <Pressable
+                    key={value}
+                    testID={`request-minutes-${value}`}
+                    onPress={() => setMinutes(value)}
+                    style={[styles.chip, { borderColor: minutes === value ? colors.primary : colors.border, backgroundColor: minutes === value ? colors.secondary : colors.background }]}
+                  >
+                    <Text style={[styles.chipText, { color: minutes === value ? colors.primary : colors.foreground }]}>{value} min</Text>
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={[styles.label, { color: colors.foreground }]}>Motivo (opcional)</Text>
+              <TextInput
+                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+                value={message}
+                onChangeText={setMessage}
+                maxLength={240}
+                placeholder="Preciso terminar um trabalho..."
+                placeholderTextColor={colors.mutedForeground}
+              />
+            </View>
+
+            <Pressable
+              style={({ pressed }) => [styles.button, { backgroundColor: colors.primary }, pressed && styles.pressed, (!appId || !minutes || loading || isOffline) && { opacity: 0.5 }]}
+              onPress={handleRequestTime}
+              disabled={!appId || !minutes || loading || isOffline}
+            >
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Pedir tempo</Text>}
+            </Pressable>
           </View>
-        </View>
+        </>
+      )}
 
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.foreground }]}>Quantos minutos?</Text>
-          <View style={styles.chips}>
-            {['10', '15', '30', '45', '60'].map((value) => (
-              <Pressable
-                key={value}
-                testID={`request-minutes-${value}`}
-                onPress={() => setMinutes(value)}
-                style={[styles.chip, { borderColor: minutes === value ? colors.primary : colors.border, backgroundColor: minutes === value ? colors.secondary : colors.background }]}
-              >
-                <Text style={[styles.chipText, { color: minutes === value ? colors.primary : colors.foreground }]}>{value} min</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.foreground }]}>Motivo (opcional)</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            value={message}
-            onChangeText={setMessage}
-            placeholder="Preciso terminar um vídeo..."
-            placeholderTextColor={colors.mutedForeground}
-          />
-        </View>
-
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: colors.primary },
-            pressed && styles.pressed,
-            (!appId || !minutes || loading || isOffline) && { opacity: 0.5 }
-          ]}
-          onPress={handleRequestTime}
-          disabled={!appId || !minutes || loading || isOffline}
-        >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Pedir tempo</Text>}
-        </Pressable>
-      </View>
+      <Pressable
+        testID="open-guardian-area"
+        onPress={() => router.push('/(child)/guardian')}
+        style={({ pressed }) => [styles.guardianLink, { borderColor: colors.border }, pressed && styles.pressed]}
+      >
+        <Feather name="lock" size={16} color={colors.mutedForeground} />
+        <Text style={[styles.guardianText, { color: colors.mutedForeground }]}>Área do responsável</Text>
+      </Pressable>
+      {Platform.OS !== 'web' && (
+        <Text style={[styles.footnote, { color: colors.mutedForeground }]}>Ligações de emergência nunca são bloqueadas.</Text>
+      )}
     </ScrollView>
   );
+}
+
+const DAY_LABELS: Record<string, string> = { dom: 'dom', seg: 'seg', ter: 'ter', qua: 'qua', qui: 'qui', sex: 'sex', sab: 'sáb' };
+function formatDays(days: string) {
+  const list = days.split(',').map((d) => d.trim()).filter(Boolean);
+  if (list.length === 7) return 'todos os dias';
+  return list.map((d) => DAY_LABELS[d] ?? d).join(', ');
 }
 
 const styles = StyleSheet.create({
@@ -327,10 +275,7 @@ const styles = StyleSheet.create({
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
   cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 18 },
   cardBody: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 21 },
-  nativeControlCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 18, padding: 14, marginTop: -18, marginBottom: 28 },
-  nativeControlIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  nativeControlTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
-  nativeControlDetail: { fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 16, marginTop: 3 },
+  row: { padding: 12, borderRadius: 12, borderWidth: 1, gap: 2 },
   sectionTitle: { fontFamily: 'Inter_700Bold', fontSize: 18, marginBottom: 16 },
   form: { borderRadius: 20, padding: 16, borderWidth: 1, gap: 16 },
   inputGroup: { gap: 8 },
@@ -342,11 +287,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
   chipText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  guardianLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 32, paddingVertical: 14, borderTopWidth: 1 },
+  guardianText: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  footnote: { fontFamily: 'Inter_400Regular', fontSize: 11, textAlign: 'center', marginTop: 4 },
 });
-
-const DAY_LABELS: Record<string, string> = { dom: 'dom', seg: 'seg', ter: 'ter', qua: 'qua', qui: 'qui', sex: 'sex', sab: 'sáb' };
-function formatDays(days: string) {
-  const list = days.split(',').map((d) => d.trim()).filter(Boolean);
-  if (list.length === 7) return 'todos os dias';
-  return list.map((d) => DAY_LABELS[d] ?? d).join(', ');
-}

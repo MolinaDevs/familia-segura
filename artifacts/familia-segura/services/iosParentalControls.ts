@@ -346,3 +346,9 @@ export async function getAllowedUsageSamples(rules: AppRule[]) {
     };
   });
 }
+/** Regras que já têm app/categoria escolhidos no seletor da Apple neste aparelho. */
+export async function getBoundRuleIds(rules: AppRule[]): Promise<string[]> {
+  const native = await loadNativeControls();
+  if (!native) return [];
+  return rules.filter((rule) => Boolean(native.getFamilyActivitySelectionId(selectionIdForRule(rule.id)))).map((rule) => rule.id);
+}

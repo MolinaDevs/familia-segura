@@ -2,38 +2,196 @@ package expo.modules.familiaseguraandroidcontrols
 
 import android.accessibilityservice.AccessibilityService
 import android.app.usage.UsageStatsManager
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.os.PowerManager
 import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
 import org.json.JSONObject
 import java.util.Calendar
 
+/**
+ * Aplica as regras da família no Android:
+ * - bloqueia apps por regra, limite diário, rotina, bloqueio do responsável e quarentena de apps novos;
+ * - reavalia o app em primeiro plano a cada 30 s (o limite vence mesmo sem trocar de app);
+ * - com PIN definido, impede abrir as telas que desligariam a proteção ou desinstalariam o app.
+ * Telefone e emergência nunca são bloqueados.
+ */
 class FamiliaSeguraAccessibilityService : AccessibilityService() {
-  companion object { @Volatile var running = false }
+  companion object {
+    @Volatile var running = false
+    private const val TICK_MS = 30_000L
 
-  override fun onServiceConnected() { running = true }
-  override fun onDestroy() { running = false; super.onDestroy() }
+    private val SETTINGS_PACKAGES = setOf(
+      "com.android.settings", "com.google.android.settings", "com.samsung.android.settings",
+      "com.miui.securitycenter", "com.coloros.safecenter", "com.oplus.safecenter",
+      "com.android.permissioncontroller", "com.google.android.permissioncontroller",
+    )
+    private val INSTALLER_PACKAGES = setOf(
+      "com.android.packageinstaller", "com.google.android.packageinstaller", "com.samsung.android.packageinstaller",
+      "com.miui.packageinstaller",
+    )
+    private const val PLAY_STORE = "com.android.vending"
+
+    /** Nunca bloquear: ligações e emergência (inclusive durante rotinas). */
+    private val ALWAYS_ALLOWED = setOf(
+      "com.android.dialer", "com.google.android.dialer", "com.samsung.android.dialer", "com.android.phone",
+      "com.android.server.telecom", "com.android.emergency", "com.google.android.apps.safetyhub",
+      "com.samsung.android.emergency", "com.android.incallui", "com.samsung.android.incallui",
+    )
+    private val TAMPER_WORDS = listOf(
+      "desinstalar", "uninstall", "forçar parada", "forcar parada", "force stop", "desativar", "deactivate", "disable",
+      "limpar dados", "limpar armazenamento", "clear data", "clear storage", "remover", "turn off", "usar ",
+      "acesso ao uso", "usage access", "permitir", "allow ", "otimização de bateria", "battery optimization",
+    )
+  }
+
+  private val handler = Handler(Looper.getMainLooper())
+  private var foregroundPackage: String? = null
+  private var lastBlockAt = 0L
+  private var lastBlockedPackage: String? = null
+  private var appLabelLower = "família segura"
+
+  private val ticker = object : Runnable {
+    override fun run() {
+      try {
+        val pkg = foregroundPackage
+        val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (pkg != null && power.isInteractive) evaluate(pkg)
+      } finally {
+        handler.postDelayed(this, TICK_MS)
+      }
+    }
+  }
+
+  private val packageReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+      val pkg = intent.data?.schemeSpecificPart ?: return
+      if (pkg == packageName) return
+      val replacing = intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)
+      when (intent.action) {
+        Intent.ACTION_PACKAGE_ADDED -> if (!replacing) {
+          val label = labelOf(pkg)
+          val policy = PolicyStore.read(context)
+          if (policy?.optBoolean("quarantineNewApps", false) == true && !PolicyStore.guardianUnlocked(context)) {
+            PolicyStore.addLocalPending(context, pkg)
+          }
+          PolicyStore.appendEvent(context, "app_installed", label)
+        }
+        Intent.ACTION_PACKAGE_FULLY_REMOVED -> {
+          PolicyStore.removeLocalPending(context, pkg)
+          PolicyStore.appendEvent(context, "app_removed", pkg)
+        }
+      }
+    }
+  }
+
+  override fun onServiceConnected() {
+    running = true
+    appLabelLower = applicationInfo.loadLabel(packageManager).toString().lowercase()
+    val filter = IntentFilter().apply {
+      addAction(Intent.ACTION_PACKAGE_ADDED)
+      addAction(Intent.ACTION_PACKAGE_FULLY_REMOVED)
+      addDataScheme("package")
+    }
+    if (Build.VERSION.SDK_INT >= 33) registerReceiver(packageReceiver, filter, Context.RECEIVER_EXPORTED)
+    else registerReceiver(packageReceiver, filter)
+    handler.postDelayed(ticker, TICK_MS)
+    PolicyStore.appendEvent(this, "protection_enabled", "Serviço de proteção ligado")
+  }
+
+  override fun onDestroy() {
+    running = false
+    handler.removeCallbacks(ticker)
+    try { unregisterReceiver(packageReceiver) } catch (_: Exception) {}
+    PolicyStore.appendEvent(this, "protection_disabled", "Serviço de proteção desligado")
+    super.onDestroy()
+  }
+
   override fun onInterrupt() = Unit
 
   override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-    if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
-    val packageName = event.packageName?.toString() ?: return
-    if (shouldIgnore(packageName)) return
+    if (event == null) return
+    val pkg = event.packageName?.toString() ?: return
+    when (event.eventType) {
+      AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+        if (pkg != packageName && pkg != "com.android.systemui") foregroundPackage = pkg
+        if (isTamperScreen(pkg)) return
+        evaluate(pkg)
+      }
+      AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
+        // Conteúdo muda sem trocar de janela (ex.: rolar até o app em Configurações).
+        if (pkg in SETTINGS_PACKAGES || pkg in INSTALLER_PACKAGES || pkg == PLAY_STORE) isTamperScreen(pkg)
+      }
+    }
+  }
+
+  /** Detecta telas de Configurações/instalador que desligariam a proteção. Retorna true se bloqueou. */
+  private fun isTamperScreen(pkg: String): Boolean {
+    if (pkg !in SETTINGS_PACKAGES && pkg !in INSTALLER_PACKAGES && pkg != PLAY_STORE) return false
+    val policy = PolicyStore.read(this) ?: return false
+    if (!PolicyStore.tamperProtectionEnabled(policy) || PolicyStore.guardianUnlocked(this)) return false
+    val text = windowText() ?: return false
+    val mentionsUs = text.contains(appLabelLower) || text.contains(getString(R.string.accessibility_service_label).lowercase())
+    if (!mentionsUs) return false
+    val dangerous = pkg in INSTALLER_PACKAGES || TAMPER_WORDS.any { text.contains(it) }
+    if (!dangerous) return false
+    val type = if (pkg in INSTALLER_PACKAGES || text.contains("desinstalar") || text.contains("uninstall")) "uninstall_attempt" else "tamper_attempt"
+    PolicyStore.appendEvent(this, type, if (pkg == PLAY_STORE) "Loja de apps" else "Configurações do aparelho")
+    performGlobalAction(GLOBAL_ACTION_HOME)
+    showBlock(getString(R.string.block_reason_tamper), getString(R.string.block_app_protection), pkg, force = true)
+    return true
+  }
+
+  private fun windowText(): String? {
+    val root = try { rootInActiveWindow } catch (_: Exception) { null } ?: return null
+    val builder = StringBuilder()
+    var visited = 0
+    fun walk(node: AccessibilityNodeInfo?) {
+      if (node == null || visited > 400 || builder.length > 8000) return
+      visited++
+      node.text?.let { builder.append(it).append(' ') }
+      node.contentDescription?.let { builder.append(it).append(' ') }
+      for (i in 0 until node.childCount) walk(node.getChild(i))
+    }
+    walk(root)
+    return builder.toString().lowercase()
+  }
+
+  private fun evaluate(pkg: String) {
+    if (shouldIgnore(pkg)) return
     val policy = PolicyStore.read(this) ?: return
-    val app = findApp(policy, packageName)
-    val appName = app?.optString("appName")?.ifBlank { packageName } ?: getString(R.string.block_app_generic)
+    val app = findApp(policy, pkg)
+    val appName = app?.optString("appName")?.ifBlank { null } ?: labelOf(pkg)
+    val blockedPackages = PolicyStore.packageSet(policy, "blockedPackages")
+    val pendingPackages = PolicyStore.packageSet(policy, "pendingPackages") + PolicyStore.localPending(this)
     val reason = when {
-      routineActive(policy) ->
-        getString(R.string.block_reason_routine)
+      routineActive(policy) -> getString(R.string.block_reason_routine)
+      pkg in pendingPackages -> getString(R.string.block_reason_pending)
+      pkg in blockedPackages -> getString(R.string.block_reason_permanent)
       app == null -> return
-      app.optString("status").equals("blocked", true) ->
-        getString(R.string.block_reason_permanent)
+      app.optString("status").equals("blocked", true) -> getString(R.string.block_reason_permanent)
       else -> {
         val limit = app.optInt("dailyLimitMinutes", -1)
-        if (limit < 0 || usageToday(packageName) < limit) return
+        if (limit < 0 || usageToday(pkg) < limit) return
+        PolicyStore.appendEvent(this, "limit_reached", appName)
         getString(R.string.block_reason_limit, limit, appName)
       }
     }
+    performGlobalAction(GLOBAL_ACTION_HOME)
+    showBlock(reason, appName, pkg)
+  }
+
+  private fun showBlock(reason: String, appName: String, pkg: String, force: Boolean = false) {
+    val now = System.currentTimeMillis()
+    if (!force && pkg == lastBlockedPackage && now - lastBlockAt < 1500) return
+    lastBlockAt = now
+    lastBlockedPackage = pkg
     val intent = Intent(this, BlockActivity::class.java)
       .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
       .putExtra(BlockActivity.EXTRA_REASON, reason)
@@ -41,22 +199,25 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     startActivity(intent)
   }
 
-  private fun findApp(policy: JSONObject, packageName: String): JSONObject? {
+  private fun labelOf(pkg: String): String = try {
+    packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+  } catch (_: Exception) { pkg }
+
+  private fun findApp(policy: JSONObject, pkg: String): JSONObject? {
     val apps = PolicyStore.apps(policy)
     for (i in 0 until apps.length()) {
       val item = apps.optJSONObject(i) ?: continue
-      if (item.optString("packageName") == packageName) return item
+      if (item.optString("packageName") == pkg) return item
     }
     return null
   }
 
   private fun shouldIgnore(pkg: String): Boolean {
-    if (pkg == packageName || pkg == "android" || pkg == "com.android.systemui" ||
-      pkg == "com.android.settings" || pkg == "com.google.android.settings") return true
-    val home = packageManager.resolveActivity(
-      Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0
-    )?.activityInfo?.packageName
-    return pkg == home
+    if (pkg == packageName || pkg == "android" || pkg == "com.android.systemui" || pkg in ALWAYS_ALLOWED) return true
+    if (pkg in SETTINGS_PACKAGES || pkg in INSTALLER_PACKAGES) return true
+    val home = packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName
+    val keyboard = android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.DEFAULT_INPUT_METHOD)
+    return pkg == home || (keyboard != null && keyboard.startsWith("$pkg/"))
   }
 
   private fun usageToday(pkg: String): Long {

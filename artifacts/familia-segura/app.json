@@ -15,7 +15,11 @@
       "bundleIdentifier": "com.familiasegura.app",
       "buildNumber": "1",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIBackgroundModes": [
+          "fetch",
+          "remote-notification"
+        ]
       },
       "entitlements": {
         "com.apple.developer.family-controls": true,
@@ -51,7 +55,15 @@
         {
           "appGroup": "group.com.familiasegura.app"
         }
-      ]
+      ],
+      [
+        "expo-notifications",
+        {
+          "color": "#2A5A4A",
+          "defaultChannel": "alertas"
+        }
+      ],
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true,

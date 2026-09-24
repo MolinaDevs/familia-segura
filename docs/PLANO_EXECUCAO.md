@@ -41,3 +41,15 @@ Ambiente fora do Expo Go e do Replit; migrations; testes; CI.
   dia×hora, por aparelho, por criança, cumprimento de regras e saúde da proteção. Dado do iPhone marcado como estimado.
 - **Testes**: 34 casos (API) cobrindo limites, concorrência, papéis, plataformas cruzadas, tempo extra, relatórios,
   quarentena, PIN e push.
+
+### Fase 2 ✅ — Android rígido
+- Device Admin (anti-desinstalação), bloqueio de telas de Configurações/instalador/Play Store que desligariam a
+  proteção (liberável por 15 min com PIN), quarentena imediata de apps instalados, reavaliação do limite a cada
+  30 s, telefone/emergência sempre liberados, fila de eventos nativa (reinício, adulteração, instalação, limite).
+- Área do responsável no aparelho da criança (PIN online + offline scrypt idêntico ao servidor): liberar
+  configurações, configurar proteção, sincronizar, desvincular.
+- Sincronização central (`services/childSync.ts`): primeiro plano, a cada minuto, em segundo plano (~15 min) e por
+  push silencioso; inventário de apps, uso de todos os apps (relatórios), eventos, estado da proteção.
+- Prazo offline configurável pela família (12 h a 30 dias).
+- CI compila o Kotlin (job `android-native`); detalhes e declarações do Google Play em `docs/ANDROID_PROTECAO.md`.
+- **Não verificado localmente**: compilação Kotlin e comportamento em aparelho (sem JDK/SDK nesta máquina).
