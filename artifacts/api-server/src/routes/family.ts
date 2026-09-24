@@ -22,7 +22,8 @@ import { notifyDevicesPolicyChanged } from "../lib/push";
 import { childView, countFamily, familyOverview, settingsView } from "../lib/views";
 
 const router: IRouter = Router();
-const CHILD_COLORS = ["#2A5A4A", "#D97736", "#3B6FB6", "#B04A7A", "#7A5AB5", "#2F8F9D", "#C0892B", "#5B7F2B", "#A8443C", "#4A5568"];
+// Paleta categórica validada (daltonismo e visão normal) — ordem fixa; da 9ª criança em diante repete, sempre com rótulo de nome.
+const CHILD_COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"];
 const INVITE_TTL_MS = 72 * 60 * 60 * 1000;
 
 router.get("/family", requireMember(), async (req: AuthedRequest, res): Promise<void> => {

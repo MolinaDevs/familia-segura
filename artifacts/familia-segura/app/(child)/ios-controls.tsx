@@ -90,7 +90,7 @@ export default function IOSControlsScreen() {
 
       {!busy && (state === 'not-determined' || state === 'denied' || state === 'error') && (
         <Pressable testID="ios-controls-authorize" onPress={authorize} style={({ pressed }) => [styles.primaryButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}>
-          <Text style={styles.primaryButtonText}>Autorizar com a Apple</Text>
+          <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Autorizar com a Apple</Text>
         </Pressable>
       )}
 

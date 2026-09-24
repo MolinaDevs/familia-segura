@@ -144,7 +144,7 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.paywallContainer}>
         <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: 'rgba(239, 107, 91, 0.1)' }]}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.secondary }]}>
             <Feather name="star" size={28} color={colors.primary} />
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>Família Segura Premium</Text>

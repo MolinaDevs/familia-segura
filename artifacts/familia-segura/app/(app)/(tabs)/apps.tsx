@@ -1,96 +1,89 @@
-import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
-import { FlatList, Platform, Pressable, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
 import { AppIcon } from '@/components/AppIcon';
+import { ChildSwitcher } from '@/components/ChildSwitcher';
 import { StatusPill } from '@/components/StatusPill';
+import { Button, Card, EmptyState, Notice, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function AppsScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const { data } = useFamily();
-  const sortedApps = useMemo(() => data.devices.length === 0 ? [] : [...data.apps].sort((a, b) => b.usageToday - a.usageToday), [data.apps, data.devices.length]);
+  const { data, canEdit, refetch, overview } = useFamily();
+  const sortedApps = useMemo(() => [...data.apps].sort((a, b) => b.usageToday - a.usageToday), [data.apps]);
+  const settings = overview?.settings;
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <FlatList
-        data={sortedApps}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={[styles.content, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 16, paddingBottom: Platform.OS === 'web' ? 118 : insets.bottom + 100 }]}
-        showsVerticalScrollIndicator={false}
-        ListHeaderComponent={
-          <View style={styles.header}>
-            <View>
-              <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>CONTROLE DE APPS</Text>
-              <Text style={[styles.title, { color: colors.foreground }]}>Aplicativos</Text>
-            </View>
-            <Pressable testID="apps-settings" onPress={() => router.push('/settings')} style={[styles.iconButton, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <Feather name="sliders" size={20} color={colors.foreground} />
-            </Pressable>
-          </View>
-        }
-        renderItem={({ item }) => {
-          const percent = item.dailyLimit ? Math.min(100, Math.round((item.usageToday / item.dailyLimit) * 100)) : 0;
-          return (
-            <Pressable testID={`app-row-${item.id}`} onPress={() => router.push({ pathname: '/app/[id]', params: { id: item.id } })} style={({ pressed }) => [styles.appCard, { backgroundColor: colors.card, borderColor: colors.border }, pressed && styles.pressed]}>
-              <View style={styles.appTop}>
-                <AppIcon name={item.icon} color={item.iconColor} size={46} />
-                <View style={styles.appInfo}>
-                  <Text style={[styles.appName, { color: colors.foreground }]}>{item.name}</Text>
-                  <Text style={[styles.category, { color: colors.mutedForeground }]}>{item.category}</Text>
+    <Screen tabs eyebrow="Controle de apps" title="Aplicativos" onRefresh={refetch}>
+      <View style={{ height: 16 }} />
+      <ChildSwitcher />
+
+      {settings && (
+        <Card style={{ gap: 6 }} onPress={canEdit ? () => router.push('/(app)/settings') : undefined}>
+          <Text style={[styles.protTitle, { color: colors.foreground }]}>Proteções do aparelho</Text>
+          <Text style={[styles.protItem, { color: colors.mutedForeground }]}>
+            {settings.blockAppInstalls ? '✓ Instalar apps exige sua liberação' : '• Instalação de apps liberada'}
+          </Text>
+          <Text style={[styles.protItem, { color: colors.mutedForeground }]}>
+            {settings.blockAppRemoval ? '✓ Apagar apps exige sua liberação' : '• Remoção de apps liberada'}
+          </Text>
+          <Text style={[styles.protItem, { color: colors.mutedForeground }]}>
+            {settings.quarantineNewApps ? '✓ Apps novos ficam bloqueados até você aprovar (Android)' : '• Apps novos liberados automaticamente'}
+          </Text>
+        </Card>
+      )}
+
+      <SectionTitle action={canEdit ? '+ Adicionar' : undefined} onAction={() => router.push('/(app)/add-app')}>Regras de {data.childName}</SectionTitle>
+      {sortedApps.length === 0 ? (
+        <EmptyState icon="grid" title="Nenhum app com regra" detail="Escolha os apps que precisam de limite ou bloqueio."
+          action={canEdit ? <Button label="Adicionar app" onPress={() => router.push('/(app)/add-app')} style={{ alignSelf: 'stretch', marginTop: 8 }} /> : undefined} />
+      ) : (
+        <View style={{ gap: 12 }}>
+          {sortedApps.map((item) => {
+            const percent = item.effectiveLimit ? Math.min(100, Math.round((item.usageToday / item.effectiveLimit) * 100)) : 0;
+            return (
+              <Card key={item.id} testID={`app-row-${item.id}`} onPress={() => router.push({ pathname: '/app/[id]', params: { id: item.id } })}>
+                <View style={styles.top}>
+                  <AppIcon name={item.icon} color={item.iconColor} size={44} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.name, { color: colors.foreground }]}>{item.name}</Text>
+                    <Text style={[styles.category, { color: colors.mutedForeground }]}>{item.category}</Text>
+                  </View>
+                  <StatusPill status={item.status} />
                 </View>
-                <StatusPill status={item.status} />
-              </View>
-              <View style={styles.usageLine}>
-                <Text style={[styles.usageText, { color: colors.foreground }]}>{item.usageToday} min hoje</Text>
-                <Text style={[styles.limitText, { color: colors.mutedForeground }]}>{item.dailyLimit ? `limite de ${item.dailyLimit} min` : 'acesso restrito'}</Text>
-              </View>
-              <View style={[styles.track, { backgroundColor: colors.muted }]}>
-                <View style={[styles.progress, { width: `${percent}%`, backgroundColor: percent > 90 ? colors.destructive : colors.primary }]} />
-              </View>
-            </Pressable>
-          );
-        }}
-        ListEmptyComponent={
-          <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Feather name="grid" size={32} color={colors.mutedForeground} style={{ marginBottom: 16 }} />
-            <Text style={[styles.emptyStateTitle, { color: colors.foreground }]}>Nenhum app monitorado</Text>
-            <Text style={[styles.emptyStateText, { color: colors.mutedForeground }]}>
-              {data.devices.length === 0 ? `Vincule um aparelho para começar a acompanhar o uso de ${data.childName}.` : 'O monitoramento estará visível assim que os apps forem detectados.'}
-            </Text>
-          </View>
-        }
-      />
-    </View>
+                <View style={styles.usageLine}>
+                  <Text style={[styles.usage, { color: colors.foreground }]}>{item.usageToday} min hoje</Text>
+                  <Text style={[styles.limit, { color: colors.mutedForeground }]}>
+                    {item.status === 'bloqueado' ? (item.extraToday ? `+${item.extraToday} min liberados hoje` : 'bloqueado') : `limite ${item.dailyLimit} min${item.extraToday ? ` +${item.extraToday}` : ''}`}
+                  </Text>
+                </View>
+                <View style={[styles.track, { backgroundColor: colors.muted }]}>
+                  <View style={[styles.progress, { width: `${percent}%`, backgroundColor: percent >= 100 ? colors.destructive : colors.primary }]} />
+                </View>
+              </Card>
+            );
+          })}
+        </View>
+      )}
+      {data.devices.some((d) => d.platform === 'ios') && sortedApps.length > 0 && (
+        <View style={{ marginTop: 16 }}>
+          <Notice icon="smartphone">iPhone/iPad: cada regra nova precisa ser associada ao app no próprio aparelho (Área do responsável → Configurar a proteção).</Notice>
+        </View>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { paddingHorizontal: 20, gap: 14 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  eyebrow: { fontFamily: 'Inter_600SemiBold', fontSize: 13, letterSpacing: 1.2, marginBottom: 4 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 32, letterSpacing: -1.2 },
-  iconButton: { width: 48, height: 48, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  
-  appCard: { borderRadius: 24, borderWidth: 1, padding: 20 },
-  appTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  appInfo: { flex: 1 },
-  appName: { fontFamily: 'Inter_700Bold', fontSize: 16, marginBottom: 4 },
-  category: { fontFamily: 'Inter_500Medium', fontSize: 13 },
-  
-  usageLine: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 24, marginBottom: 10 },
-  usageText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
-  limitText: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  protTitle: { fontFamily: 'Inter_700Bold', fontSize: 15, marginBottom: 2 },
+  protItem: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  name: { fontFamily: 'Inter_700Bold', fontSize: 16 },
+  category: { fontFamily: 'Inter_500Medium', fontSize: 13, marginTop: 2 },
+  usageLine: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, marginBottom: 8 },
+  usage: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  limit: { fontFamily: 'Inter_500Medium', fontSize: 13 },
   track: { height: 8, borderRadius: 8, overflow: 'hidden' },
   progress: { height: '100%', borderRadius: 8 },
-
-  emptyState: { padding: 32, borderRadius: 24, borderWidth: 1, alignItems: 'center', marginTop: 10 },
-  emptyStateTitle: { fontFamily: 'Inter_700Bold', fontSize: 18, marginBottom: 8 },
-  emptyStateText: { fontFamily: 'Inter_500Medium', fontSize: 14, textAlign: 'center', lineHeight: 22 },
-  
-  pressed: { opacity: 0.82, transform: [{ scale: 0.98 }] },
 });

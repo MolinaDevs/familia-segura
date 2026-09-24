@@ -1,0 +1,129 @@
+import React, { useState } from 'react';
+import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import {
+  getListDeviceAppsQueryKey, useListDeviceApps, useRevokeDevice, useUpdateDevice, useUpdateDeviceApp,
+} from '@workspace/api-client-react';
+import { Button, Card, Chip, Divider, EmptyState, Notice, Row, Screen, SectionTitle } from '@/components/ui';
+import { useFamily } from '@/context/AppContext';
+import { useColors } from '@/hooks/useColors';
+import { showApiError } from '@/lib/apiErrors';
+
+const STATE: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
+  active: { label: 'Proteção ativa', tone: 'success' },
+  partial: { label: 'Proteção incompleta', tone: 'warning' },
+  disabled: { label: 'Proteção desligada', tone: 'danger' },
+  unavailable: { label: 'Aparelho sem suporte', tone: 'danger' },
+  unknown: { label: 'Aguardando o aparelho enviar o estado', tone: 'neutral' },
+};
+
+export default function DeviceScreen() {
+  const colors = useColors();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const { data, canEdit, refetch } = useFamily();
+  const device = data.allDevices.find((d) => d.id === id);
+  const [name, setName] = useState(device?.name ?? '');
+  const [filter, setFilter] = useState<'all' | 'pending' | 'blocked'>('all');
+  const updateDevice = useUpdateDevice();
+  const revokeDevice = useRevokeDevice();
+  const updateApp = useUpdateDeviceApp();
+  const apps = useListDeviceApps(id ?? '', { query: { queryKey: getListDeviceAppsQueryKey(id ?? ''), enabled: Boolean(id) && device?.platform === 'android' } });
+
+  if (!device) {
+    return <Screen back><EmptyState icon="smartphone" title="Aparelho não encontrado" detail="Ele pode ter sido revogado." /></Screen>;
+  }
+  const child = data.children.find((c) => c.id === device.childId);
+  const state = STATE[device.protectionState] ?? STATE.unknown;
+  const done = { onSuccess: () => { refetch(); }, onError: (error: unknown) => showApiError(error) };
+
+  const revoke = () => Alert.alert('Revogar aparelho?', 'As regras param de valer neste aparelho e ele sai da família. Para voltar, gere um novo código.', [
+    { text: 'Cancelar', style: 'cancel' },
+    { text: 'Revogar', style: 'destructive', onPress: () => revokeDevice.mutate({ deviceId: device.id }, { onSuccess: () => { refetch(); router.back(); }, onError: (e) => showApiError(e) }) },
+  ]);
+
+  const list = (apps.data ?? []).filter((a) => filter === 'all' || a.status === filter);
+
+  return (
+    <Screen back title={device.name} subtitle={`${device.platform === 'ios' ? 'iPhone/iPad' : 'Android'} de ${child?.displayName ?? ''}${device.model ? ` · ${device.model}` : ''}`}>
+      <View style={{ height: 16 }} />
+      <Notice icon={state.tone === 'success' ? 'shield' : 'alert-triangle'} tone={state.tone}>
+        {state.label}{device.online ? '' : ' · sem contato recente'}
+      </Notice>
+      {device.protectionIssues.length > 0 && (
+        <Card style={{ marginTop: 12, gap: 4 }}>
+          {device.protectionIssues.map((issue) => <Text key={issue} style={[styles.issue, { color: colors.foreground }]}>• {issue}</Text>)}
+          <Text style={[styles.hint, { color: colors.mutedForeground }]}>Resolva no aparelho: Área do responsável → Configurar a proteção.</Text>
+        </Card>
+      )}
+
+      <Card style={{ marginTop: 12 }}>
+        <Row icon="clock" title="Último contato" detail={new Date(device.lastSeenAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} />
+        <Divider />
+        <Row icon="battery" title="Bateria" detail={device.batteryLevel != null ? `${device.batteryLevel}%` : 'Não informado'} />
+        <Divider />
+        <Row icon="cpu" title="Sistema" detail={`${device.platform === 'ios' ? 'iOS' : 'Android'} ${device.osVersion ?? ''} · app ${device.appVersion ?? '—'}`} />
+      </Card>
+
+      {canEdit && (
+        <>
+          <SectionTitle>Nome do aparelho</SectionTitle>
+          <View style={styles.inline}>
+            <TextInput value={name} onChangeText={setName} maxLength={80} style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.foreground }]} />
+            <Button label="Salvar" variant="secondary" disabled={!name.trim() || name === device.name}
+              onPress={() => updateDevice.mutate({ deviceId: device.id, data: { name: name.trim() } }, done)} />
+          </View>
+
+          {data.children.length > 1 && (
+            <>
+              <SectionTitle>Pertence a</SectionTitle>
+              <View style={styles.chips}>
+                {data.children.map((c) => (
+                  <Chip key={c.id} label={c.displayName} selected={c.id === device.childId}
+                    onPress={() => c.id !== device.childId && updateDevice.mutate({ deviceId: device.id, data: { childId: c.id } }, done)} />
+                ))}
+              </View>
+            </>
+          )}
+        </>
+      )}
+
+      {device.platform === 'android' && (
+        <>
+          <SectionTitle>Apps instalados</SectionTitle>
+          <View style={[styles.chips, { marginBottom: 12 }]}>
+            <Chip label="Todos" selected={filter === 'all'} onPress={() => setFilter('all')} />
+            <Chip label="Aguardando" selected={filter === 'pending'} onPress={() => setFilter('pending')} />
+            <Chip label="Bloqueados" selected={filter === 'blocked'} onPress={() => setFilter('blocked')} />
+          </View>
+          {apps.isLoading && <ActivityIndicator color={colors.primary} />}
+          <Card style={{ paddingVertical: 4 }}>
+            {list.map((app, index) => (
+              <View key={app.id}>
+                {index > 0 && <Divider />}
+                <Row title={app.label} detail={app.status === 'pending' ? 'Novo · aguardando você' : app.status === 'blocked' ? 'Bloqueado' : 'Liberado'}
+                  right={canEdit ? (
+                    <Switch accessibilityLabel={`${app.label} liberado`} value={app.status === 'approved'}
+                      onValueChange={(on) => updateApp.mutate({ deviceId: device.id, packageName: app.packageName, data: { status: on ? 'approved' : 'blocked' } }, {
+                        onSuccess: () => { void apps.refetch(); refetch(); }, onError: (e) => showApiError(e),
+                      })}
+                      trackColor={{ false: colors.border, true: colors.primary }} thumbColor={colors.card} />
+                  ) : undefined} />
+              </View>
+            ))}
+            {!apps.isLoading && list.length === 0 && <Text style={[styles.hint, { color: colors.mutedForeground, padding: 16, textAlign: 'center' }]}>Nada por aqui.</Text>}
+          </Card>
+        </>
+      )}
+
+      {canEdit && <Button label="Revogar aparelho" variant="destructive" onPress={revoke} style={{ marginTop: 28 }} />}
+    </Screen>
+  );
+}
+
+const styles = StyleSheet.create({
+  issue: { fontFamily: 'Inter_500Medium', fontSize: 14 },
+  hint: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 6 },
+  inline: { flexDirection: 'row', gap: 10, alignItems: 'center' },
+  input: { flex: 1, height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, fontFamily: 'Inter_500Medium', fontSize: 15 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+});

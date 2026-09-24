@@ -96,7 +96,7 @@ export default function ChildDashboard() {
           Não foi possível carregar seus combinados agora. Tente novamente quando a conexão voltar.
         </Text>
         <Pressable onPress={() => void sync()} style={[styles.button, { backgroundColor: colors.primary, paddingHorizontal: 24 }]}>
-          <Text style={styles.buttonText}>Tentar de novo</Text>
+          <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Tentar de novo</Text>
         </Pressable>
       </View>
     );
@@ -237,7 +237,7 @@ export default function ChildDashboard() {
               onPress={handleRequestTime}
               disabled={!appId || !minutes || loading || isOffline}
             >
-              {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Pedir tempo</Text>}
+              {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Pedir tempo</Text>}
             </Pressable>
           </View>
         </>

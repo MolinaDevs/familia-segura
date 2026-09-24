@@ -6,12 +6,12 @@ import { useColors } from '@/hooks/useColors';
 export function StatusPill({ status }: { status: AppStatus }) {
   const colors = useColors();
   const config = {
-    permitido: { label: 'Permitido', icon: 'check-circle', color: '#3b9b69', background: '#e5f4eb' },
-    atenção: { label: 'Atenção', icon: 'clock', color: '#b57c1b', background: '#fff3d4' },
-    bloqueado: { label: 'Bloqueado', icon: 'slash', color: colors.destructive, background: '#fde8e5' },
+    permitido: { label: 'Permitido', icon: 'check-circle', color: colors.success, background: colors.successSoft },
+    atenção: { label: 'Atenção', icon: 'clock', color: colors.warning, background: colors.warningSoft },
+    bloqueado: { label: 'Bloqueado', icon: 'slash', color: colors.destructive, background: colors.dangerSoft },
   }[status];
   return (
-    <View style={[styles.pill, { backgroundColor: config.background }]}>
+    <View style={[styles.pill, { backgroundColor: config.background }]} accessibilityLabel={`Status: ${config.label}`}>
       <Feather name={config.icon as keyof typeof Feather.glyphMap} size={12} color={config.color} />
       <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
     </View>

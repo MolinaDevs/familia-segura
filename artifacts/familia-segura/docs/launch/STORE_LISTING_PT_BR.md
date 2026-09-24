@@ -2,58 +2,69 @@
 
 ## Identidade
 
-- Nome: Família Segura
-- Subtítulo iOS: Combinados digitais em família
-- Descrição curta Android: Limites e rotinas digitais claros para responsáveis e crianças.
-- Categoria principal sugerida: Estilo de vida
-- Categoria secundária sugerida: Educação
-- Palavras-chave iOS: família,tempo de tela,rotina,crianças,limites,controle parental,bem-estar
+- Nome: Família Segura: Controle Parental
+- Subtítulo iOS (30): Tempo de tela e apps sob controle
+- Descrição curta Android (80): Controle parental para iPhone e Android: limites, rotinas e bloqueio de apps.
+- Categoria principal: Estilo de vida (Android: Parentalidade)
+- Categoria secundária: Educação
+- Palavras-chave iOS (100): controle parental,tempo de tela,bloquear apps,filhos,rotina,limite,eca digital,familia
 
 ## Descrição completa
 
-Família Segura ajuda responsáveis e crianças a construírem combinados digitais claros.
+Família Segura é o controle parental brasileiro para quem quer regras firmes e conversa aberta com os filhos.
 
-Defina limites de tempo para aplicativos, organize pausas na rotina e acompanhe o uso permitido pelo sistema. A criança vê quais regras estão ativas e pode pedir tempo adicional com uma mensagem para a família.
+Funciona com iPhone e Android em qualquer combinação: você pode ter iPhone e seu filho Android, ou o contrário.
+Até 10 crianças e 10 aparelhos na mesma família, com o outro responsável convidado para ajudar.
 
-RECURSOS
+CONTROLE DE VERDADE
+- Limite diário por aplicativo e bloqueio total
+- Rotinas de sono, escola e refeição (ligações de emergência sempre liberadas)
+- Instalar ou apagar apps só com a sua liberação
+- Apps novos ficam bloqueados até você aprovar (Android)
+- Proteção contra desinstalação com PIN do responsável
+- Alerta imediato se alguém tentar desligar a proteção
 
-- Limites diários por aplicativo
-- Rotinas para sono, estudo e momentos em família
-- Pedidos transparentes de tempo adicional
-- Pareamento seguro de dispositivos
-- Estado da proteção e permissões em um só lugar
-- Funcionamento temporário offline com regras protegidas no aparelho
-- Exportação e exclusão dos dados da família
+TRANSPARÊNCIA PARA A CRIANÇA
+- A criança vê as regras ativas e o que é compartilhado
+- Pedido de tempo extra com um toque; você aprova de onde estiver
+- Sugestões por idade, com mais autonomia conforme ela cresce
 
-PRIVACIDADE E TRANSPARÊNCIA
+RELATÓRIOS
+- Tempo de tela por dia com o limite do dia
+- Apps mais usados e horários de maior uso
+- Comparação entre filhos e entre aparelhos
+- Saúde da proteção de cada aparelho
 
-O Família Segura não lê mensagens, senhas ou o conteúdo da tela. O aplicativo trata apenas os dados necessários para aplicar os combinados e mostrar o tempo dos aplicativos configurados.
+PRIVACIDADE
+Não lemos mensagens, fotos, senhas nem o que é digitado, e não usamos localização. Sem anúncios.
+Dados tratados conforme a LGPD e o ECA Digital, com exportação e exclusão no próprio app.
 
-ASSINATURA
+PLANOS
+Grátis: 1 criança e 1 aparelho com todas as proteções. Premium: até 10 crianças, 10 aparelhos, 4 responsáveis
+e 12 meses de relatórios. Preços exibidos pela App Store ou Google Play antes da compra.
 
-Os planos mensal e anual e seus preços são apresentados pela App Store ou Google Play antes da compra. A assinatura pode ser restaurada e gerenciada nas configurações do aplicativo.
-
-O funcionamento de alguns controles depende das permissões e capacidades oferecidas pelo sistema do aparelho.
+Alguns controles dependem das permissões do sistema do aparelho (no iPhone, Tempo de Uso e Compartilhamento
+Familiar; no Android, acessibilidade, acesso ao uso e administrador do dispositivo).
 
 ## Texto promocional iOS
 
-Combinados digitais transparentes, limites por aplicativo e rotinas que continuam protegendo a família mesmo quando a conexão oscila.
+Controle parental para iPhone e Android na mesma família: limites, rotinas, bloqueio de instalar e apagar apps.
 
 ## Notas de versão 1.0
 
-Primeira versão do Família Segura, com pareamento de dispositivos, limites por aplicativo, rotinas, pedidos de tempo adicional, controles nativos e assinatura Premium mensal ou anual.
+Primeira versão: famílias com até 10 crianças e 10 aparelhos, limites e bloqueios por app, rotinas,
+aprovação de apps, proteção contra desinstalação com PIN, pedidos de tempo e relatórios.
 
-## Screenshots obrigatórios
+## Screenshots obrigatórios (aparelho real, sem dados pessoais)
 
-Capturar em aparelho real, sem dados pessoais:
+1. Home — primeiros passos concluídos, pedido de tempo e alerta de proteção.
+2. Relatórios — gráfico diário com limite e apps mais usados.
+3. Relatórios — mapa de horários e comparação entre filhos.
+4. Apps — regras com uso do dia e proteções do aparelho.
+5. Rotinas — sono e escola.
+6. Família — crianças, aparelhos iPhone e Android.
+7. Aparelho da criança — transparência e pedido de tempo.
+8. (Android) Configuração da proteção com a divulgação da acessibilidade.
+9. Premium — preços reais da loja.
 
-1. Home do responsável — visão do dia e estado da proteção.
-2. Aplicativos — lista com uso e limites.
-3. Detalhe de aplicativo — opções de limite diário.
-4. Rotinas — pausa noturna ativa.
-5. Perfil — dispositivo vinculado e transparência.
-6. Premium — planos mensal e anual com preços reais da loja.
-7. Dispositivo infantil — regras visíveis para a criança.
-8. Android — onboarding das permissões, somente na ficha Google Play.
-
-Não incluir notificações, e-mails, códigos de pareamento, IDs de dispositivo ou preços simulados nas imagens finais.
+Não incluir notificações pessoais, códigos de pareamento/convite, IDs de aparelho ou preços simulados.

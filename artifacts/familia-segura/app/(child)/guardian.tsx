@@ -108,7 +108,7 @@ export default function GuardianAreaScreen() {
           />
           {error && <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text>}
           <Pressable disabled={pin.length < 4 || checking} onPress={submit} style={[styles.primary, { backgroundColor: colors.primary, opacity: pin.length < 4 || checking ? 0.5 : 1 }]}>
-            {checking ? <ActivityIndicator color="#fff" /> : <Text style={styles.primaryText}>Entrar</Text>}
+            {checking ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.primaryText, { color: colors.primaryForeground }]}>Entrar</Text>}
           </Pressable>
         </View>
       )}

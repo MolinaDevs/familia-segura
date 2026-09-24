@@ -1,180 +1,205 @@
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { useMemo } from 'react';
-import { Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import React, { useMemo } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
+import * as Haptics from 'expo-haptics';
+import { useResolveTimeRequest, useUpdateDeviceApp } from '@workspace/api-client-react';
 import { AppIcon } from '@/components/AppIcon';
-import { SectionHeader } from '@/components/SectionHeader';
+import { ChildSwitcher } from '@/components/ChildSwitcher';
 import { StatusPill } from '@/components/StatusPill';
+import { Button, Card, formatMinutes, Notice, Row, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { showApiError } from '@/lib/apiErrors';
+
+const EVENT_LABEL: Record<string, string> = {
+  protection_disabled: 'Proteção desligada',
+  tamper_attempt: 'Tentativa de mexer na proteção',
+  uninstall_attempt: 'Tentativa de desinstalar',
+  pin_failed: 'PIN errado no aparelho',
+};
 
 export default function HomeScreen() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
-  const { data, totalUsage, usagePercent } = useFamily();
-  const attentionApps = useMemo(() => data.apps.filter((app) => app.status === 'atenção' || app.status === 'bloqueado').slice(0, 3), [data.apps]);
-  const hourLabel = `${Math.floor(totalUsage / 60)}h ${totalUsage % 60}min`;
+  const { data, overview, totalUsage, usagePercent, canEdit, refetch, isOffline } = useFamily();
+  const resolveRequest = useResolveTimeRequest();
+  const updateDeviceApp = useUpdateDeviceApp();
+  const attentionApps = useMemo(() => data.apps.filter((app) => app.status !== 'permitido' || (app.effectiveLimit > 0 && app.usageToday >= app.effectiveLimit * 0.8)).slice(0, 3), [data.apps]);
   const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
   const activeRoutine = data.routines.find((routine) => routine.enabled);
+  const pendingRequests = data.timeRequests.filter((r) => r.status === 'pending');
+  const deviceName = (id: string) => data.allDevices.find((d) => d.id === id)?.name ?? 'aparelho';
+  const childName = (deviceId: string) => {
+    const device = data.allDevices.find((d) => d.id === deviceId);
+    return data.children.find((c) => c.id === device?.childId)?.displayName ?? '';
+  };
+  const unhealthy = data.allDevices.filter((d) => d.protectionState === 'disabled' || d.protectionState === 'partial' || !d.online);
+  const alerts = data.recentEvents.filter((e) => EVENT_LABEL[e.type] && Date.now() - new Date(e.occurredAt).getTime() < 48 * 3600_000).slice(0, 3);
+
+  const steps = [
+    { done: Boolean(overview?.settings.hasGuardianPin), title: 'Definir o PIN do responsável', detail: 'Necessário para impedir desinstalação.', go: () => router.push('/(app)/settings') },
+    { done: data.allDevices.length > 0, title: 'Parear o aparelho da criança', detail: 'iPhone ou Android.', go: () => router.push('/(app)/pair-device') },
+    { done: data.apps.length > 1, title: 'Escolher os apps e limites', detail: 'Use o catálogo ou os apps instalados.', go: () => router.push('/(app)/add-app') },
+  ];
+  const showSteps = canEdit && steps.some((s) => !s.done);
+
+  const resolve = (requestId: string, status: 'approved' | 'denied') => {
+    void Haptics.selectionAsync();
+    resolveRequest.mutate({ requestId, data: { status } }, { onSuccess: () => refetch(), onError: (e) => showApiError(e) });
+  };
+  const decideApp = (deviceId: string, packageName: string, status: 'approved' | 'blocked') => {
+    void Haptics.selectionAsync();
+    updateDeviceApp.mutate({ deviceId, packageName, data: { status } }, { onSuccess: () => refetch(), onError: (e) => showApiError(e) });
+  };
 
   return (
-    <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 16, paddingBottom: Platform.OS === 'web' ? 118 : insets.bottom + 100 }]}>
-      <View style={styles.header}>
-        <View>
-          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>{today}</Text>
-          <Text style={[styles.greeting, { color: colors.foreground }]}>Olá, família.</Text>
-        </View>
-        <Pressable testID="home-profile" onPress={() => router.push('/settings')} style={({ pressed }) => [styles.profileButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}>
-          <Text style={[styles.profileLetter, { color: colors.primaryForeground }]}>{data.guardianName ? data.guardianName[0] : 'M'}</Text>
-          <View style={[styles.onlineDot, { borderColor: colors.primary }]} />
-        </Pressable>
-      </View>
+    <Screen tabs eyebrow={today} title="Olá, família." onRefresh={refetch}
+      right={undefined}>
+      <View style={{ height: 16 }} />
+      <ChildSwitcher />
+      {isOffline && <View style={{ marginBottom: 12 }}><Notice icon="wifi-off" tone="warning">Sem conexão. Mostrando os últimos dados salvos; alterações ficam pausadas.</Notice></View>}
 
-      {data.devices.length === 0 ? (
-        <View style={[styles.setupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.setupIconArea, { backgroundColor: colors.secondary }]}>
-            <Feather name="smartphone" size={28} color={colors.secondaryForeground} />
-          </View>
-          <Text style={[styles.setupTitle, { color: colors.foreground }]}>Espaço de {data.childName}</Text>
-          <Text style={[styles.setupCopy, { color: colors.mutedForeground }]}>
-            Para acompanhar o bem-estar digital e ativar proteções, precisamos conectar o dispositivo de {data.childName}.
-          </Text>
-          <View style={[styles.setupNotice, { backgroundColor: colors.background }]}>
-            <Feather name="info" size={16} color={colors.mutedForeground} />
-            <Text style={[styles.setupNoticeText, { color: colors.mutedForeground }]}>Lembre-se: os limites só funcionam após a configuração no aparelho real.</Text>
-          </View>
-          <Pressable
-            testID="home-pair-device"
-            accessibilityRole="button"
-            onPress={() => router.push('/(app)/(tabs)/profile')}
-            style={({ pressed }) => [styles.setupButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}
-          >
-            <Text style={[styles.setupButtonText, { color: colors.primaryForeground }]}>Vincular dispositivo</Text>
-            <Feather name="arrow-right" size={18} color={colors.primaryForeground} />
-          </Pressable>
-        </View>
-      ) : (
-      <>
-        <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
-          <View style={styles.heroTop}>
-            <View>
-              <Text style={[styles.heroEyebrow, { color: 'rgba(255,255,255,0.7)' }]}>HOJE</Text>
-              <Text style={[styles.heroTitle, { color: colors.primaryForeground }]}>Uso de {data.childName}</Text>
-            </View>
-            <View style={[styles.heroShield, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-              <Feather name="activity" size={22} color={colors.primaryForeground} />
-            </View>
-          </View>
-          <View style={styles.usageRow}>
-            <View>
-              <Text style={[styles.usageLabel, { color: 'rgba(255,255,255,0.7)' }]}>TEMPO TOTAL</Text>
-              <Text style={[styles.usageValue, { color: colors.primaryForeground }]}>{hourLabel}</Text>
-            </View>
-            <View style={[styles.circle, { borderColor: 'rgba(255,255,255,0.2)' }]}>
-              <Text style={[styles.circleValue, { color: colors.primaryForeground }]}>{usagePercent}%</Text>
-              <Text style={[styles.circleLabel, { color: 'rgba(255,255,255,0.7)' }]}>limite</Text>
-            </View>
-          </View>
-          <View style={[styles.heroTrack, { backgroundColor: 'rgba(255,255,255,0.15)' }]}>
-            <View style={[styles.heroProgress, { width: `${usagePercent}%`, backgroundColor: colors.accent }]} />
-          </View>
-        </View>
+      {showSteps && (
+        <Card style={{ marginBottom: 20 }}>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Primeiros passos</Text>
+          {steps.map((step) => (
+            <Row key={step.title} icon={step.done ? 'check-circle' : 'circle'} iconColor={step.done ? colors.success : colors.mutedForeground}
+              title={step.title} detail={step.done ? 'Concluído' : step.detail} onPress={step.done ? undefined : step.go} />
+          ))}
+        </Card>
+      )}
 
-        <SectionHeader title="Atenção hoje" action="Ver todos" onPress={() => router.push('/apps')} />
-        <View style={styles.attentionList}>
-          {attentionApps.map((app) => (
-            <Pressable key={app.id} testID={`attention-${app.id}`} onPress={() => router.push({ pathname: '/app/[id]', params: { id: app.id } })} style={({ pressed }) => [styles.attentionItem, { backgroundColor: colors.card, borderColor: colors.border }, pressed && styles.pressed]}>
-              <AppIcon name={app.icon} color={app.iconColor} size={42} />
-              <View style={styles.attentionCopy}>
-                <Text style={[styles.attentionTitle, { color: colors.foreground }]}>{app.name}</Text>
-                <Text style={[styles.attentionSub, { color: colors.mutedForeground }]}>{app.status === 'bloqueado' ? 'Acesso restrito' : `${app.usageToday} min de ${app.dailyLimit} min`}</Text>
-              </View>
-              <StatusPill status={app.status} />
+      {(unhealthy.length > 0 || alerts.length > 0) && (
+        <View style={{ gap: 8, marginBottom: 20 }}>
+          {unhealthy.slice(0, 3).map((d) => (
+            <Pressable key={d.id} onPress={() => router.push({ pathname: '/(app)/device/[id]', params: { id: d.id } })}>
+              <Notice icon="alert-triangle" tone={d.protectionState === 'disabled' ? 'danger' : 'warning'}>
+                {`${d.name} (${data.children.find((c) => c.id === d.childId)?.displayName ?? ''}): `}
+                {!d.online ? 'sem contato há algum tempo' : d.protectionState === 'disabled' ? 'proteção desligada' : `proteção incompleta${d.protectionIssues[0] ? ` — ${d.protectionIssues[0]}` : ''}`}
+              </Notice>
             </Pressable>
           ))}
-          {attentionApps.length === 0 && <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Tudo tranquilo por enquanto.</Text></View>}
+          {alerts.map((e) => (
+            <Notice key={e.id} icon="shield-off" tone="danger">
+              {`${EVENT_LABEL[e.type]} · ${childName(e.deviceId)} (${deviceName(e.deviceId)}) · ${new Date(e.occurredAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`}
+            </Notice>
+          ))}
         </View>
-
-        <SectionHeader title="Rotina atual" action="Ajustar" onPress={() => router.push('/routine')} />
-        {activeRoutine ? (
-          <Pressable testID="sleep-routine" onPress={() => router.push('/routine')} style={({ pressed }) => [styles.routineCard, { backgroundColor: colors.secondary }, pressed && styles.pressed]}>
-            <View style={[styles.routineIcon, { backgroundColor: colors.card }]}>
-              <Feather name={activeRoutine.icon as any || 'moon'} size={20} color={colors.secondaryForeground} />
-            </View>
-            <View style={styles.routineCopy}>
-              <Text style={[styles.routineTitle, { color: colors.secondaryForeground }]}>{activeRoutine.title}</Text>
-              <Text style={[styles.routineSub, { color: colors.secondaryForeground, opacity: 0.8 }]}>{activeRoutine.start} às {activeRoutine.end}</Text>
-            </View>
-            <View style={[styles.activeBadge, { backgroundColor: colors.card }]}>
-              <View style={[styles.activeDot, { backgroundColor: colors.primary }]} />
-              <Text style={[styles.activeText, { color: colors.foreground }]}>Ativa</Text>
-            </View>
-          </Pressable>
-        ) : (
-          <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}><Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Nenhuma pausa programada.</Text></View>
-        )}
-
-        <View style={styles.footerNote}>
-          <Feather name="shield" size={16} color={colors.mutedForeground} />
-          <Text style={[styles.footerText, { color: colors.mutedForeground }]}>Regras digitais claras e transparentes para a família inteira.</Text>
-        </View>
-      </>
       )}
-    </ScrollView>
+
+      {pendingRequests.length > 0 && (
+        <>
+          <SectionTitle>Pedidos de tempo</SectionTitle>
+          <View style={{ gap: 10 }}>
+            {pendingRequests.slice(0, 5).map((req) => (
+              <Card key={req.id}>
+                <Text style={[styles.reqTitle, { color: colors.foreground }]}>{req.childName} pediu +{req.requestedMinutes} min de {req.appName}</Text>
+                {req.message ? <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>“{req.message}”</Text> : null}
+                {canEdit && (
+                  <View style={styles.actions}>
+                    <Button label="Negar" variant="secondary" onPress={() => resolve(req.id, 'denied')} style={{ flex: 1 }} />
+                    <Button label="Liberar hoje" onPress={() => resolve(req.id, 'approved')} style={{ flex: 1 }} testID={`approve-${req.id}`} />
+                  </View>
+                )}
+              </Card>
+            ))}
+          </View>
+        </>
+      )}
+
+      {data.pendingApps.length > 0 && (
+        <>
+          <SectionTitle>Apps novos aguardando você</SectionTitle>
+          <View style={{ gap: 10 }}>
+            {data.pendingApps.slice(0, 5).map((app) => (
+              <Card key={app.id}>
+                <Text style={[styles.reqTitle, { color: colors.foreground }]}>{app.label}</Text>
+                <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>Instalado em {deviceName(app.deviceId)} ({childName(app.deviceId)}) · bloqueado até você decidir</Text>
+                {canEdit && (
+                  <View style={styles.actions}>
+                    <Button label="Manter bloqueado" variant="destructive" onPress={() => decideApp(app.deviceId, app.packageName, 'blocked')} style={{ flex: 1 }} />
+                    <Button label="Aprovar" onPress={() => decideApp(app.deviceId, app.packageName, 'approved')} style={{ flex: 1 }} />
+                  </View>
+                )}
+              </Card>
+            ))}
+          </View>
+        </>
+      )}
+
+      {data.devices.length === 0 ? (
+        <Card style={{ gap: 12, marginTop: 20 }}>
+          <View style={[styles.setupIcon, { backgroundColor: colors.secondary }]}><Feather name="smartphone" size={26} color={colors.secondaryForeground} /></View>
+          <Text style={[styles.setupTitle, { color: colors.foreground }]}>Espaço de {data.childName}</Text>
+          <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>Conecte o aparelho de {data.childName} para acompanhar o uso e aplicar as proteções. Funciona com iPhone e Android, independente do seu celular.</Text>
+          {canEdit && <Button label="Parear aparelho" icon="link" onPress={() => router.push('/(app)/pair-device')} testID="home-pair-device" />}
+        </Card>
+      ) : (
+        <>
+          <View style={[styles.hero, { backgroundColor: colors.primary }]}>
+            <Text style={[styles.heroEyebrow, { color: colors.primaryForeground }]}>HOJE · {data.childName.toUpperCase()}</Text>
+            <View style={styles.heroRow}>
+              <View>
+                <Text style={[styles.heroLabel, { color: colors.primaryForeground }]}>Tempo total</Text>
+                <Text style={[styles.heroValue, { color: colors.primaryForeground }]}>{formatMinutes(totalUsage)}</Text>
+              </View>
+              <View style={[styles.circle, { borderColor: colors.primaryForeground }]}>
+                <Text style={[styles.circleValue, { color: colors.primaryForeground }]}>{usagePercent}%</Text>
+                <Text style={[styles.circleLabel, { color: colors.primaryForeground }]}>do limite</Text>
+              </View>
+            </View>
+            <View style={[styles.heroTrack, { backgroundColor: colors.primaryForeground + '33' }]}>
+              <View style={[styles.heroProgress, { width: `${usagePercent}%`, backgroundColor: colors.accent }]} />
+            </View>
+          </View>
+
+          <SectionTitle action="Ver todos" onAction={() => router.push('/(app)/(tabs)/apps')}>Atenção hoje</SectionTitle>
+          <View style={{ gap: 10 }}>
+            {attentionApps.map((app) => (
+              <Card key={app.id} onPress={() => router.push({ pathname: '/app/[id]', params: { id: app.id } })} style={styles.appRow}>
+                <AppIcon name={app.icon} color={app.iconColor} size={42} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.reqTitle, { color: colors.foreground }]}>{app.name}</Text>
+                  <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>{app.status === 'bloqueado' && !app.extraToday ? 'Acesso bloqueado' : `${app.usageToday} de ${app.effectiveLimit} min`}</Text>
+                </View>
+                <StatusPill status={app.status} />
+              </Card>
+            ))}
+            {attentionApps.length === 0 && <Notice icon="smile" tone="success">Tudo tranquilo por enquanto.</Notice>}
+          </View>
+
+          <SectionTitle action="Ajustar" onAction={() => router.push('/(app)/(tabs)/routine')}>Rotina</SectionTitle>
+          {activeRoutine ? (
+            <Card style={styles.appRow}>
+              <Feather name={(activeRoutine.icon || 'moon') as React.ComponentProps<typeof Feather>['name']} size={22} color={colors.primary} />
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.reqTitle, { color: colors.foreground }]}>{activeRoutine.title}</Text>
+                <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>{activeRoutine.start} às {activeRoutine.end}</Text>
+              </View>
+            </Card>
+          ) : <Notice icon="moon">Nenhuma pausa programada para {data.childName}.</Notice>}
+        </>
+      )}
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: 20 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 },
-  eyebrow: { fontFamily: 'Inter_600SemiBold', fontSize: 13, textTransform: 'capitalize', marginBottom: 4 },
-  greeting: { fontFamily: 'Inter_700Bold', fontSize: 32, letterSpacing: -1.2 },
-  profileButton: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
-  profileLetter: { fontFamily: 'Inter_700Bold', fontSize: 18 },
-  onlineDot: { position: 'absolute', bottom: 0, right: 0, width: 12, height: 12, borderRadius: 12, backgroundColor: '#4ade80', borderWidth: 2 },
-  
-  setupCard: { borderWidth: 1, borderRadius: 24, padding: 24, gap: 16 },
-  setupIconArea: { width: 56, height: 56, borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
-  setupTitle: { fontFamily: 'Inter_700Bold', fontSize: 22, letterSpacing: -0.5 },
-  setupCopy: { fontFamily: 'Inter_400Regular', fontSize: 15, lineHeight: 22 },
-  setupNotice: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 12, borderRadius: 12 },
-  setupNoticeText: { fontFamily: 'Inter_500Medium', fontSize: 13, flex: 1, lineHeight: 18 },
-  setupButton: { minHeight: 56, borderRadius: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, marginTop: 8 },
-  setupButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 16 },
-
-  heroCard: { borderRadius: 28, padding: 24, marginBottom: 32 },
-  heroTop: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'space-between' },
-  heroEyebrow: { fontFamily: 'Inter_700Bold', fontSize: 11, letterSpacing: 1.5, marginBottom: 8 },
-  heroTitle: { fontFamily: 'Inter_700Bold', fontSize: 24, letterSpacing: -0.5, maxWidth: 220 },
-  heroShield: { width: 46, height: 46, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  usageRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', marginTop: 32 },
-  usageLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 11, letterSpacing: 1 },
-  usageValue: { fontFamily: 'Inter_700Bold', fontSize: 40, letterSpacing: -1.5, marginTop: 4 },
-  circle: { width: 68, height: 68, borderRadius: 34, borderWidth: 3, alignItems: 'center', justifyContent: 'center' },
+  cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 16, marginBottom: 4 },
+  reqTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
+  reqMsg: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 19, marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 10, marginTop: 14 },
+  setupIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  setupTitle: { fontFamily: 'Inter_700Bold', fontSize: 20 },
+  hero: { borderRadius: 26, padding: 22, marginTop: 8 },
+  heroEyebrow: { fontFamily: 'Inter_700Bold', fontSize: 11, letterSpacing: 1.4, opacity: 0.8 },
+  heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 20 },
+  heroLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 12, opacity: 0.8 },
+  heroValue: { fontFamily: 'Inter_700Bold', fontSize: 38, letterSpacing: -1.4, marginTop: 4 },
+  circle: { width: 68, height: 68, borderRadius: 34, borderWidth: 3, alignItems: 'center', justifyContent: 'center', opacity: 0.95 },
   circleValue: { fontFamily: 'Inter_700Bold', fontSize: 16 },
-  circleLabel: { fontFamily: 'Inter_500Medium', fontSize: 10, marginTop: 2 },
-  heroTrack: { height: 10, borderRadius: 10, overflow: 'hidden', marginTop: 24 },
+  circleLabel: { fontFamily: 'Inter_500Medium', fontSize: 10, opacity: 0.8 },
+  heroTrack: { height: 10, borderRadius: 10, overflow: 'hidden', marginTop: 20 },
   heroProgress: { height: '100%', borderRadius: 10 },
-  
-  attentionList: { gap: 10, marginBottom: 32 },
-  attentionItem: { borderWidth: 1, borderRadius: 20, padding: 16, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  attentionCopy: { flex: 1 },
-  attentionTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15, marginBottom: 4 },
-  attentionSub: { fontFamily: 'Inter_400Regular', fontSize: 13 },
-  emptyState: { padding: 18, borderRadius: 20, borderWidth: 1, alignItems: 'center' },
-  emptyText: { fontFamily: 'Inter_500Medium', fontSize: 14 },
-
-  routineCard: { borderRadius: 20, padding: 18, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  routineIcon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  routineCopy: { flex: 1 },
-  routineTitle: { fontFamily: 'Inter_700Bold', fontSize: 15, marginBottom: 4 },
-  routineSub: { fontFamily: 'Inter_500Medium', fontSize: 13 },
-  activeBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
-  activeDot: { width: 6, height: 6, borderRadius: 3 },
-  activeText: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
-
-  footerNote: { flexDirection: 'row', alignItems: 'center', gap: 10, marginTop: 32, paddingHorizontal: 4 },
-  footerText: { fontFamily: 'Inter_500Medium', fontSize: 13, flex: 1, lineHeight: 18 },
-  pressed: { opacity: 0.7, transform: [{ scale: 0.98 }] },
+  appRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
 });

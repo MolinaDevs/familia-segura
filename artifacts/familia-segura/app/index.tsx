@@ -41,7 +41,7 @@ export default function Index() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.hero}>
-        <View style={styles.iconContainer}>
+        <View style={[styles.iconContainer, { backgroundColor: colors.secondary }]}>
           <Feather name="shield" size={42} color={colors.primary} />
         </View>
 
@@ -117,7 +117,7 @@ const styles = StyleSheet.create({
   content: { width: '100%', maxWidth: 760, alignSelf: 'center', flexGrow: 1 },
   
   hero: { marginTop: 40, marginBottom: 48, alignItems: 'center' },
-  iconContainer: { width: 88, height: 88, borderRadius: 28, backgroundColor: 'rgba(42, 90, 74, 0.08)', alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
+  iconContainer: { width: 88, height: 88, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
   title: { fontFamily: 'Inter_700Bold', fontSize: 36, lineHeight: 42, letterSpacing: -1.2, marginBottom: 16, textAlign: 'center', maxWidth: 480 },
   subtitle: { fontFamily: 'Inter_500Medium', fontSize: 16, lineHeight: 24, textAlign: 'center', maxWidth: 500 },
   

@@ -65,7 +65,7 @@ export default function PairDeviceScreen() {
 
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Feather name="link" size={32} color="#fff" />
+          <Feather name="link" size={32} color={colors.primaryForeground} />
         </View>
         <Text style={[styles.title, { color: colors.foreground }]}>Vincular Dispositivo</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
@@ -95,7 +95,7 @@ export default function PairDeviceScreen() {
           onPress={handlePair}
           disabled={!ready || loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Vincular</Text>}
+          {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Vincular</Text>}
         </Pressable>
       </View>
     </View>

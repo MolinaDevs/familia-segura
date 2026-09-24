@@ -22,6 +22,7 @@ import "@/lib/apiConfig";
 import "@/services/backgroundSync";
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { reloadAppAsync } from 'expo';
+import { useColors } from '@/hooks/useColors';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -32,6 +33,7 @@ const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const proxyUrl = process.env.EXPO_PUBLIC_CLERK_PROXY_URL || undefined;
 
 function StartupScreen({ missingConfiguration = false }: { missingConfiguration?: boolean }) {
+  const colors = useColors();
   const [isDelayed, setIsDelayed] = useState(false);
 
   useEffect(() => {
@@ -40,12 +42,12 @@ function StartupScreen({ missingConfiguration = false }: { missingConfiguration?
   }, []);
 
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: '#F8F7F3' }}>
-      <ActivityIndicator color="#EF6B5B" />
-      <Text style={{ color: '#17202A', fontWeight: '600', fontSize: 16, textAlign: 'center' }}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background }}>
+      <ActivityIndicator color={colors.primary} />
+      <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: 16, textAlign: 'center' }}>
         {missingConfiguration ? 'Acesso ainda não configurado' : isDelayed ? 'A conexão está demorando mais que o esperado' : 'Preparando o Família Segura...'}
       </Text>
-      <Text style={{ color: '#718078', fontSize: 13, lineHeight: 19, textAlign: 'center', maxWidth: 320 }}>
+      <Text style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 19, textAlign: 'center', maxWidth: 320 }}>
         {missingConfiguration
           ? 'A autenticação precisa ser habilitada neste ambiente antes de continuar.'
           : isDelayed
@@ -58,7 +60,7 @@ function StartupScreen({ missingConfiguration = false }: { missingConfiguration?
           onPress={() => void reloadAppAsync()}
           style={({ pressed }) => ({ paddingHorizontal: 18, paddingVertical: 12, opacity: pressed ? 0.65 : 1 })}
         >
-          <Text style={{ color: '#EF6B5B', fontWeight: '600', fontSize: 14 }}>Tentar novamente</Text>
+          <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14 }}>Tentar novamente</Text>
         </Pressable>
       ) : null}
     </View>

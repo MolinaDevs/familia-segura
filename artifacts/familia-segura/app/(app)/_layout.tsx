@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { setAuthTokenGetter } from '@workspace/api-client-react';
 import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { registerGuardianPush } from '@/services/push';
 
 export default function AppLayout() {
   const { isSignedIn, getToken, isLoaded } = useAuth();
@@ -12,6 +13,11 @@ export default function AppLayout() {
   useEffect(() => {
     setAuthTokenGetter(Platform.OS === 'web' ? null : () => getToken());
   }, [getToken]);
+
+  // Alertas do responsável (pedidos de tempo, apps novos, adulteração). Só pede permissão uma vez.
+  useEffect(() => {
+    if (isSignedIn) void registerGuardianPush();
+  }, [isSignedIn]);
 
   if (!isLoaded) {
     return (
@@ -30,6 +36,12 @@ export default function AppLayout() {
       <Stack.Screen name="app/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />
       <Stack.Screen name="subscription" options={{ headerShown: false, presentation: 'modal' }} />
+      <Stack.Screen name="child-edit" options={{ headerShown: false }} />
+      <Stack.Screen name="pair-device" options={{ headerShown: false }} />
+      <Stack.Screen name="add-app" options={{ headerShown: false }} />
+      <Stack.Screen name="routine-edit" options={{ headerShown: false }} />
+      <Stack.Screen name="members" options={{ headerShown: false }} />
+      <Stack.Screen name="device/[id]" options={{ headerShown: false }} />
     </Stack>
   );
 }

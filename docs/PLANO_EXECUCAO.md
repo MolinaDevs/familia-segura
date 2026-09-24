@@ -62,3 +62,20 @@ Ambiente fora do Expo Go e do Replit; migrations; testes; CI.
 - Liberação temporária (15 min) pelo PIN; seletor de apps do iPhone só pela Área do responsável.
 - `targets/` (cópias geradas pelo plugin a cada prebuild) saiu do git — fim do `Shared.swift` triplicado.
 - CI compila o iOS para simulador (job `ios-native`). **Não verificado localmente** (sem macOS/Xcode).
+
+### Fase 4 ✅ — produto, design e jurídico
+- Navegação: Home · Apps · Rotina · **Relatórios** · **Família**; seletor de criança (até 10) em todas as telas.
+- Telas novas: nova/editar criança (com sugestões por faixa etária — ECA Digital), parear aparelho (instruções
+  iPhone/Android, código com contagem regressiva), adicionar app (catálogo + apps instalados), editor de rotinas,
+  detalhe do aparelho (saúde, bateria, renomear, trocar criança, revogar, apps instalados com aprovar/bloquear),
+  responsáveis (convites e papéis), configurações reais (PIN, instalar/apagar apps, aprovação de apps novos,
+  filtro web, prazo offline, notificações). Onboarding com consentimento LGPD art. 14 e "Tenho um convite".
+- Home com primeiros passos, alertas de proteção/adulteração, pedidos de tempo e apps novos para decidir ali.
+- Gráficos (react-native-svg): uso diário com linha de limite, ranking de apps, mapa de calor dia×hora,
+  comparação entre crianças e aparelhos, cumprimento de combinados, saúde da proteção. Paleta das crianças
+  validada para daltonismo; toque mostra o valor; descrições acessíveis.
+- Modo escuro de verdade (paleta própria) e fim das cores fixas; identidade unificada (verde, sem o coral antigo).
+- Jurídico: política de privacidade reescrita (LGPD/ECA Digital, dados reais, retenção, direitos), página
+  "Para a criança", termos/suporte/exclusão atualizados; retenção automática de 12 meses implementada;
+  rascunho de RIPD em `docs/legal/`. Comercial em `docs/COMERCIAL.md`; textos de loja e Data Safety atualizados.
+- 46 testes de API; bundles Android/iOS gerados. **Telas não verificadas visualmente em aparelho** (exigem Clerk + build nativa).

@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Response } from "express";
 
 const router: IRouter = Router();
-const updatedAt = "21 de setembro de 2026";
+const updatedAt = "24 de setembro de 2026";
 
 type LegalPage = {
   title: string;
@@ -9,35 +9,75 @@ type LegalPage = {
   sections: Array<{ title: string; body: string }>;
 };
 
+// Dados do controlador vêm do ambiente (preencher antes de publicar nas lojas).
+const controller = process.env.LEGAL_CONTROLLER_NAME ?? "[razão social a definir]";
+const controllerId = process.env.LEGAL_CONTROLLER_CNPJ ?? "[CNPJ a definir]";
+const dpoEmail = process.env.LEGAL_DPO_EMAIL ?? "[e-mail do encarregado a definir]";
+
 const pages: Record<string, LegalPage> = {
   privacy: {
     title: "Política de Privacidade",
-    summary: "Como o Família Segura trata dados de responsáveis, crianças e dispositivos.",
+    summary: "Como o Família Segura trata dados de responsáveis, crianças e adolescentes e de seus aparelhos, conforme a LGPD (Lei 13.709/2018) e o ECA Digital (Lei 15.211/2025).",
     sections: [
       {
-        title: "Quem somos e finalidade",
-        body: "O Família Segura ajuda responsáveis a combinar e aplicar limites de uso de aplicativos. Tratamos dados apenas para autenticar a família, vincular dispositivos, mostrar uso permitido pelo sistema, aplicar regras, processar solicitações de tempo e manter a assinatura.",
+        title: "Quem somos",
+        body: `O Família Segura é operado por ${controller} (${controllerId}), controladora dos dados. Encarregado pelo tratamento de dados (DPO): ${dpoEmail}.`,
+      },
+      {
+        title: "Para que serve",
+        body: "O aplicativo permite que responsáveis legais definam limites de tempo, bloqueios, rotinas e permissões de instalação e remoção de aplicativos nos aparelhos de crianças e adolescentes, com transparência para quem é acompanhado. Os dados são tratados somente para essa finalidade.",
       },
       {
         title: "Dados tratados",
-        body: "Podemos tratar nome de exibição do responsável, nome e ano de nascimento da criança, identificadores da família e dos dispositivos, plataforma, estado da proteção, regras, rotinas, totais de tempo dos aplicativos configurados, solicitações de tempo, registros de auditoria e informações de assinatura. Não lemos mensagens, senhas, teclas digitadas, fotos, contatos nem o conteúdo da tela.",
+        body: "Do responsável: nome de exibição, identificador de conta, e-mail (pelo provedor de login), papel na família e tokens de notificação. Da criança ou adolescente: nome ou apelido, ano de nascimento e cor de identificação. Dos aparelhos: plataforma, modelo, versão do sistema, fuso horário, nível de bateria, estado da proteção e credencial própria do aparelho (guardada apenas como hash). De uso: minutos por aplicativo por dia e por hora; no Android, a lista de apps instalados (nome e identificador do pacote) e eventos como instalação, remoção, reinício e tentativas de desligar a proteção. Também: regras, rotinas, pedidos de tempo, liberações e registros de auditoria.",
       },
       {
-        title: "Serviços essenciais",
-        body: "Usamos Clerk para autenticação, RevenueCat e as lojas Apple/Google para compras e assinaturas, e infraestrutura Replit para operar a API e o banco de dados. Cada fornecedor trata apenas os dados necessários à sua função e segue seus próprios termos.",
+        title: "O que não tratamos",
+        body: "Não lemos mensagens, fotos, contatos, histórico de navegação, senhas, o que é digitado nem o conteúdo das telas. Não coletamos localização. No Android, o serviço de acessibilidade identifica somente qual aplicativo está aberto e, nas telas de configurações, apenas se elas se referem ao Família Segura ou a desinstalar e instalar apps, para impedir que a proteção seja desligada. No iPhone, a Apple não informa ao aplicativo quais apps estão instalados; os apps escolhidos ficam somente no aparelho.",
       },
       {
-        title: "Crianças e consentimento",
-        body: "A conta é criada e administrada por um responsável. O aplicativo informa à criança quais regras estão ativas e quais dados de uso são compartilhados. O responsável deve manter o consentimento adequado e usar o serviço de forma proporcional à idade.",
+        title: "Base legal e consentimento (LGPD art. 14)",
+        body: "O tratamento de dados de crianças é feito no seu melhor interesse, com o consentimento específico e em destaque de pelo menos um dos pais ou do responsável legal, dado no cadastro da família. Dados de adolescentes seguem o mesmo cuidado. O consentimento pode ser revogado a qualquer momento, com a exclusão da família.",
       },
       {
-        title: "Retenção, segurança e direitos",
-        body: "Dados da família permanecem enquanto a conta estiver ativa e podem ser removidos pelo responsável no aplicativo. Credenciais de dispositivos são armazenadas de forma protegida e podem ser revogadas. O responsável pode acessar, exportar, corrigir ou excluir os dados da família pelas opções disponíveis no perfil.",
+        title: "Transparência para a criança",
+        body: "O aplicativo instalado no aparelho da criança mostra quais regras e rotinas estão ativas e quais dados são compartilhados com a família, em linguagem simples. Não há monitoramento oculto.",
+      },
+      {
+        title: "Sem publicidade e sem perfilamento",
+        body: "Não exibimos anúncios, não vendemos dados, não criamos perfis comportamentais para fins comerciais e não usamos dados de crianças e adolescentes para publicidade, em linha com o ECA Digital.",
+      },
+      {
+        title: "Com quem compartilhamos",
+        body: "Apenas com operadores necessários ao serviço: provedor de autenticação (Clerk), gestão de assinaturas (RevenueCat, Apple e Google), envio de notificações (Expo) e infraestrutura de hospedagem e banco de dados. Cada um trata só o necessário à sua função. Pode haver transferência internacional para esses prestadores, com as salvaguardas contratuais previstas na LGPD.",
+      },
+      {
+        title: "Retenção",
+        body: "Dados de uso por hora e por dia são mantidos por até 12 meses para os relatórios e depois apagados. Os demais dados permanecem enquanto a família existir. Ao excluir a família, os dados são removidos do serviço, ressalvadas cópias técnicas temporárias de segurança.",
+      },
+      {
+        title: "Segurança",
+        body: "Conexões criptografadas, credenciais de aparelho e códigos de pareamento guardados apenas como hash, PIN do responsável protegido com scrypt, limites de tentativas e registro de auditoria das alterações.",
+      },
+      {
+        title: "Seus direitos",
+        body: `Confirmação e acesso, correção, portabilidade (exportação em Família > Privacidade), anonimização ou eliminação, informação sobre compartilhamentos e revogação do consentimento. Pedidos também podem ser enviados ao encarregado (${dpoEmail}). Você pode reclamar à ANPD.`,
       },
       {
         title: "Alterações",
-        body: "Mudanças relevantes nesta política serão comunicadas no aplicativo e publicadas nesta página com a respectiva data de atualização.",
+        body: "Mudanças relevantes serão avisadas no aplicativo e publicadas nesta página com a data de atualização. Quando a mudança exigir, pediremos novo consentimento.",
       },
+    ],
+  },
+  crianca: {
+    title: "Para você que usa o aparelho",
+    summary: "Explicação simples do que o Família Segura faz no seu celular ou tablet.",
+    sections: [
+      { title: "O que é", body: "É um aplicativo que sua família usa para combinar quanto tempo você fica em cada app e em quais horários o celular descansa, como na hora de dormir e na escola." },
+      { title: "O que sua família vê", body: "Quanto tempo você usou cada aplicativo, quais apps estão instalados (no Android) e se a proteção está ligada. Eles não veem suas mensagens, fotos, conversas nem o que você escreve." },
+      { title: "Você pode pedir mais tempo", body: "No próprio aplicativo existe o botão Pedir mais tempo. Sua família recebe o pedido e responde." },
+      { title: "Ligações de emergência", body: "Telefone e emergência nunca são bloqueados, nem durante as pausas." },
+      { title: "Dúvidas", body: "Converse com sua família sobre as regras. Elas podem mudar conforme você cresce." },
     ],
   },
   terms: {
@@ -61,6 +101,10 @@ const pages: Record<string, LegalPage> = {
         body: "Quando a assinatura termina, o aplicativo retorna ao acesso básico. Regras já salvas não são apagadas automaticamente. Em falhas temporárias de verificação, o acesso Premium confirmado pode permanecer por um período limitado para evitar interrupções indevidas.",
       },
       {
+        title: "Proteção dos aparelhos e PIN",
+        body: "O responsável pode bloquear a instalação e a remoção de aplicativos e impedir que a proteção seja desligada no aparelho da criança; essas ações ficam liberáveis somente com o PIN do responsável. O PIN é pessoal: não o compartilhe com a criança. Telefone e emergência nunca são bloqueados.",
+      },
+      {
         title: "Limitações",
         body: "O Família Segura reduz riscos, mas não garante bloqueio absoluto, segurança física, aprovação pelas lojas ou funcionamento ininterrupto. Atualizações do sistema, permissões revogadas, falta de conexão e restrições do fabricante podem limitar recursos.",
       },
@@ -80,11 +124,11 @@ const pages: Record<string, LegalPage> = {
       },
       {
         title: "Proteção no dispositivo",
-        body: "Confirme no aparelho da criança se as permissões de uso e proteção estão ativas. No Android, revise Acesso ao uso, Serviço de proteção e bateria. No iPhone, revise a autorização de Controle Familiar.",
+        body: "No aparelho da criança, abra Área do responsável (com o PIN) e Configurar a proteção. No Android, revise Acesso ao uso, Serviço de proteção, Proteção contra desinstalação e bateria. No iPhone, revise a autorização do Tempo de Uso e a associação dos apps de cada regra.",
       },
       {
         title: "Conta e dados",
-        body: "Em Perfil, o responsável pode exportar os dados, remover dispositivos e excluir a família. Para recuperar acesso, use o mesmo método de entrada adotado no cadastro.",
+        body: "Em Família, o responsável pode exportar os dados, gerenciar aparelhos e excluir a família. Para recuperar acesso, use o mesmo método de entrada adotado no cadastro. Esqueceu o PIN? Defina um novo em Família > Configurações; ele vale nos aparelhos após a próxima sincronização.",
       },
       {
         title: "Antes de solicitar ajuda",
@@ -98,11 +142,11 @@ const pages: Record<string, LegalPage> = {
     sections: [
       {
         title: "Pelo aplicativo",
-        body: "Entre na conta do responsável, abra Perfil e toque em Excluir Família. Confirme a ação. A família, perfis infantis, dispositivos, regras, rotinas, pedidos, consentimentos e registros associados são removidos do serviço.",
+        body: "Entre na conta do titular, abra Família > Privacidade e toque em Excluir família e dados. Confirme a ação. A família, perfis infantis, dispositivos, regras, rotinas, pedidos, consentimentos e registros associados são removidos do serviço.",
       },
       {
         title: "Assinatura",
-        body: "Excluir a conta não cancela automaticamente uma assinatura da App Store ou Google Play. Cancele a renovação em Configurações > Família Segura Premium > Gerenciar assinatura.",
+        body: "Excluir a conta não cancela automaticamente uma assinatura da App Store ou Google Play. Cancele a renovação na loja (Família > Premium > Gerenciar assinatura). Antes de excluir, desvincule os aparelhos das crianças pela Área do responsável para remover a proteção contra desinstalação.",
       },
       {
         title: "O que pode permanecer",
@@ -140,23 +184,23 @@ function renderPage(page: LegalPage) {
   <title>${escapeHtml(page.title)} | Família Segura</title>
   <meta name="description" content="${escapeHtml(page.summary)}">
   <style>
-    :root{color-scheme:light dark;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f8f7f3;color:#17202a}
+    :root{color-scheme:light dark;font-family:Inter,system-ui,-apple-system,sans-serif;background:#f9f9f7;color:#1f2a37}
     body{margin:0}.shell{max-width:760px;margin:auto;padding:48px 22px 80px}
-    nav{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:44px}a{color:#c94e42;font-weight:650}
+    nav{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:44px}a{color:#2a5a4a;font-weight:650}
     .brand{font-size:14px;letter-spacing:.04em;text-transform:uppercase;color:#667085;margin-bottom:10px}
     h1{font-size:clamp(34px,8vw,54px);line-height:1.02;letter-spacing:-.04em;margin:0 0 18px}
     .lead{font-size:18px;line-height:1.6;color:#52606d;margin-bottom:42px}
     section{padding:24px 0;border-top:1px solid #dfe3df}h2{font-size:20px;margin:0 0 10px}
     p{font-size:15px;line-height:1.75;margin:0;color:#3f4b56}
     footer{margin-top:38px;font-size:13px;color:#667085}
-    @media(prefers-color-scheme:dark){:root{background:#101821;color:#f7f4ed}.lead,p{color:#bcc5ce}section{border-color:#2d3742}a{color:#ff8b7d}}
+    @media(prefers-color-scheme:dark){:root{background:#101821;color:#f7f4ed}.lead,p{color:#bcc5ce}section{border-color:#2d3742}a{color:#8cc7ae}}
   </style>
 </head>
 <body><main class="shell">
   <div class="brand">Família Segura</div>
   <nav>
     <a href="./privacy">Privacidade</a><a href="./terms">Termos</a>
-    <a href="./support">Suporte</a><a href="./delete-account">Exclusão</a>
+    <a href="./support">Suporte</a><a href="./delete-account">Exclusão</a><a href="./crianca">Para a criança</a>
   </nav>
   <h1>${escapeHtml(page.title)}</h1>
   <p class="lead">${escapeHtml(page.summary)}</p>

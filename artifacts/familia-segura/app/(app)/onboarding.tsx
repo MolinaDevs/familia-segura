@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { useRouter } from 'expo-router';
-import { getGetFamilyOverviewQueryKey, useCreateFamily } from '@workspace/api-client-react';
+import { getGetFamilyOverviewQueryKey, useAcceptInvite, useCreateFamily } from '@workspace/api-client-react';
+import { applyAgePreset } from '@/lib/agePresets';
+import { openLegal } from '@/lib/legal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +18,9 @@ export default function Onboarding() {
   const queryClient = useQueryClient();
   
   const createFamily = useCreateFamily();
+  const acceptInvite = useAcceptInvite();
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
   
   const [step, setStep] = useState(1);
   const [familyName, setFamilyName] = useState('');
@@ -41,10 +46,16 @@ export default function Onboarding() {
             guardianName: guardianName,
             childName: childName,
             childBirthYear: new Date().getFullYear() - parseInt(childAge, 10),
-            consentAccepted
+            consentAccepted,
+            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           }
         });
-        queryClient.setQueryData(getGetFamilyOverviewQueryKey(), family);
+        // Sugestão por idade (autonomia progressiva). Falha aqui não impede o cadastro.
+        const child = family.children[0];
+        if (child && child.ageBand !== 'adulto') {
+          await applyAgePreset(child.id, child.ageBand, family.routines).catch(() => 0);
+        }
+        await queryClient.invalidateQueries({ queryKey: getGetFamilyOverviewQueryKey() });
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         router.replace('/(app)');
       } catch (err: unknown) {
@@ -55,6 +66,78 @@ export default function Onboarding() {
       }
     }
   };
+
+  const joinWithInvite = async () => {
+    if (!inviteCode || !guardianName || !consentAccepted) return;
+    setLoading(true);
+    setSubmitError(null);
+    try {
+      const family = await acceptInvite.mutateAsync({ data: { code: inviteCode, displayName: guardianName, consentAccepted } });
+      queryClient.setQueryData(getGetFamilyOverviewQueryKey(), family);
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      router.replace('/(app)');
+    } catch (err: unknown) {
+      const status = (err as { status?: number }).status;
+      setSubmitError(status === 409 ? 'A família já atingiu o limite de responsáveis ou você já participa de outra família.' : 'Convite inválido ou expirado. Peça um novo ao titular da família.');
+      setLoading(false);
+    }
+  };
+
+  if (inviteMode) {
+    return (
+      <KeyboardAwareScrollViewCompat
+        style={[styles.container, { backgroundColor: colors.background }]}
+        contentContainerStyle={{ paddingTop: insets.top + 40, paddingBottom: Math.max(insets.bottom + 20, 40), paddingHorizontal: 24, flexGrow: 1 }}
+        bottomOffset={20}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
+            <Feather name="user-plus" size={32} color={colors.primaryForeground} />
+          </View>
+          <Text style={[styles.title, { color: colors.foreground }]}>Entrar com convite</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Use o código que o titular da família gerou em Família → Responsáveis.</Text>
+        </View>
+        <View style={styles.form}>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.foreground }]}>Código do convite</Text>
+            <TextInput style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground, letterSpacing: 3 }]}
+              value={inviteCode} onChangeText={(t) => setInviteCode(t.toUpperCase())} autoCapitalize="characters" autoCorrect={false}
+              placeholder="ABCDE23456" placeholderTextColor={colors.mutedForeground} testID="onboarding-invite-code" />
+          </View>
+          <View style={styles.inputGroup}>
+            <Text style={[styles.label, { color: colors.foreground }]}>Seu nome</Text>
+            <TextInput style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+              value={guardianName} onChangeText={setGuardianName} placeholder="Seu nome" placeholderTextColor={colors.mutedForeground} />
+          </View>
+          <Pressable onPress={() => setConsentAccepted((a) => !a)} accessibilityRole="checkbox" accessibilityState={{ checked: consentAccepted }}
+            style={[styles.consentRow, { borderColor: consentAccepted ? colors.primary : colors.border, backgroundColor: colors.card }]}>
+            <View style={[styles.checkbox, { borderColor: consentAccepted ? colors.primary : colors.mutedForeground, backgroundColor: consentAccepted ? colors.primary : 'transparent' }]}>
+              {consentAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
+            </View>
+            <Text style={[styles.consentText, { color: colors.foreground }]}>
+              Declaro ser responsável pelas crianças desta família e li a Política de Privacidade.
+            </Text>
+          </Pressable>
+          {submitError && (
+            <View style={[styles.errorContainer, { backgroundColor: colors.dangerSoft, borderColor: colors.destructive }]}>
+              <Feather name="alert-circle" size={16} color={colors.destructive} />
+              <Text style={[styles.errorText, { color: colors.destructive }]}>{submitError}</Text>
+            </View>
+          )}
+        </View>
+        <View style={styles.footer}>
+          <Pressable onPress={() => { setInviteMode(false); setSubmitError(null); }} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
+            <Text style={[styles.backButtonText, { color: colors.mutedForeground }]}>Voltar</Text>
+          </Pressable>
+          <Pressable testID="onboarding-join" onPress={joinWithInvite} disabled={!inviteCode || !guardianName || !consentAccepted || loading}
+            style={({ pressed }) => [styles.button, { backgroundColor: colors.primary, flex: 1 }, pressed && styles.pressed, (!inviteCode || !guardianName || !consentAccepted || loading) && { opacity: 0.5 }]}>
+            {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Entrar na família</Text>}
+          </Pressable>
+        </View>
+      </KeyboardAwareScrollViewCompat>
+    );
+  }
 
   return (
     <KeyboardAwareScrollViewCompat 
@@ -100,6 +183,10 @@ export default function Onboarding() {
                 testID="onboarding-guardian-name"
               />
             </View>
+            <Pressable onPress={() => setInviteMode(true)} style={({ pressed }) => [styles.inviteLink, pressed && styles.pressed]} testID="onboarding-have-invite">
+              <Feather name="user-plus" size={16} color={colors.primary} />
+              <Text style={[styles.inviteText, { color: colors.primary }]}>Tenho um convite de outro responsável</Text>
+            </Pressable>
           </>
         ) : (
           <>
@@ -137,14 +224,17 @@ export default function Onboarding() {
                 {consentAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
               </View>
               <Text style={[styles.consentText, { color: colors.foreground }]}>
-                Concordo com a coleta de dados necessária para gerenciar limites, pausas, tempo de uso e permissões de apps. Posso exportar ou apagar os dados quando quiser.
+                Declaro ser pai, mãe ou responsável legal por esta criança e autorizo, em nome dela, o tratamento dos dados necessários ao controle parental (tempo de uso por app, apps instalados, estado da proteção dos aparelhos), conforme o art. 14 da LGPD e a Política de Privacidade. Posso exportar ou apagar tudo quando quiser.
               </Text>
+            </Pressable>
+            <Pressable onPress={() => void openLegal('privacy')} hitSlop={8}>
+              <Text style={[styles.inviteText, { color: colors.primary }]}>Ler a Política de Privacidade</Text>
             </Pressable>
           </>
         )}
 
         {submitError && (
-          <View style={[styles.errorContainer, { backgroundColor: `${colors.destructive}15`, borderColor: colors.destructive }]}>
+          <View style={[styles.errorContainer, { backgroundColor: colors.dangerSoft, borderColor: colors.destructive }]}>
             <Feather name="alert-circle" size={16} color={colors.destructive} />
             <Text style={[styles.errorText, { color: colors.destructive }]}>{submitError}</Text>
           </View>
@@ -203,4 +293,6 @@ const styles = StyleSheet.create({
   backButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 16 },
   
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+  inviteLink: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
+  inviteText: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
 });

@@ -29,9 +29,13 @@ function NativeTabLayout() {
         <NativeTabs.Trigger.Icon sf={{ default: 'moon', selected: 'moon.fill' }} />
         <NativeTabs.Trigger.Label>Rotina</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="reports">
+        <NativeTabs.Trigger.Icon sf={{ default: 'chart.bar', selected: 'chart.bar.fill' }} />
+        <NativeTabs.Trigger.Label>Relatórios</NativeTabs.Trigger.Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
-        <NativeTabs.Trigger.Icon sf={{ default: 'person', selected: 'person.fill' }} />
-        <NativeTabs.Trigger.Label>Perfil</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={{ default: 'person.2', selected: 'person.2.fill' }} />
+        <NativeTabs.Trigger.Label>Família</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -89,7 +93,8 @@ function ClassicTabLayout() {
       />
       <Tabs.Screen name="apps" options={{ title: 'Apps', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="square.grid.2x2" tintColor={color} size={23} /> : <Feather name="grid" size={21} color={color} /> }} />
       <Tabs.Screen name="routine" options={{ title: 'Rotina', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="moon" tintColor={color} size={23} /> : <Feather name="moon" size={21} color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="person" tintColor={color} size={23} /> : <Feather name="user" size={21} color={color} /> }} />
+      <Tabs.Screen name="reports" options={{ title: 'Relatórios', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="chart.bar" tintColor={color} size={23} /> : <Feather name="bar-chart-2" size={21} color={color} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Família', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="person.2" tintColor={color} size={23} /> : <Feather name="users" size={21} color={color} /> }} />
     </Tabs>
   );
 }
