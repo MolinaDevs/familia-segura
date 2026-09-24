@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import {
   useMutation,
@@ -21,30 +21,59 @@ import type {
 
 import type {
   AppRule,
+  AppRuleInput,
   AppRuleUpdate,
   AuditEvent,
   BadRequestResponse,
+  CatalogApp,
   ChildInput,
   ChildOverview,
   ChildProfile,
+  ChildUpdate,
+  ConflictResponse,
+  Device,
+  DeviceApp,
+  DeviceAppUpdate,
+  DeviceEventsInput,
   DevicePairInput,
   DevicePairResult,
   DeviceProtectionInput,
+  DeviceUpdate,
   DeviceUsageInput,
   FamilyExport,
   FamilyInput,
+  FamilyMember,
   FamilyOverview,
+  FamilySettings,
+  FamilySettingsUpdate,
   ForbiddenResponse,
+  GetUsageReportParams,
+  GuardianPinInput,
   HealthStatus,
+  InstalledAppsInput,
+  InstalledAppsResult,
+  Invite,
+  InviteAcceptInput,
+  InviteInput,
+  MemberUpdate,
   NotFoundResponse,
   PairingCode,
   PairingCodeInput,
+  PaymentRequiredResponse,
+  PinVerifyInput,
+  PinVerifyResult,
+  PushTokenInput,
   Routine,
+  RoutineInput,
   RoutineUpdate,
+  TimeGrant,
+  TimeGrantInput,
   TimeRequest,
   TimeRequestInput,
   TimeRequestResolution,
-  UnauthorizedResponse
+  TooManyRequestsResponse,
+  UnauthorizedResponse,
+  UsageReport
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -145,6 +174,77 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
 
 
 
+export const getListCatalogAppsUrl = () => {
+
+
+
+
+  return `/api/catalog/apps`
+}
+
+export const listCatalogApps = async ( options?: Parameters<typeof customFetch>[1]): Promise<CatalogApp[]> => {
+
+  return customFetch<CatalogApp[]>(getListCatalogAppsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListCatalogAppsQueryKey = () => {
+    return [
+    `/api/catalog/apps`
+    ] as const;
+    }
+
+
+export const getListCatalogAppsQueryOptions = <TData = Awaited<ReturnType<typeof listCatalogApps>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCatalogApps>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListCatalogAppsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listCatalogApps>>> = ({ signal }) => listCatalogApps({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listCatalogApps>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListCatalogAppsQueryResult = NonNullable<Awaited<ReturnType<typeof listCatalogApps>>>
+export type ListCatalogAppsQueryError = ErrorType<UnauthorizedResponse>
+
+
+
+export function useListCatalogApps<TData = Awaited<ReturnType<typeof listCatalogApps>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listCatalogApps>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListCatalogAppsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetFamilyOverviewUrl = () => {
 
 
@@ -175,7 +275,7 @@ export const getGetFamilyOverviewQueryKey = () => {
     }
 
 
-export const getGetFamilyOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getFamilyOverview>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetFamilyOverviewQueryOptions = <TData = Awaited<ReturnType<typeof getFamilyOverview>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -194,11 +294,11 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetFamilyOverviewQueryResult = NonNullable<Awaited<ReturnType<typeof getFamilyOverview>>>
-export type GetFamilyOverviewQueryError = ErrorType<UnauthorizedResponse>
+export type GetFamilyOverviewQueryError = ErrorType<UnauthorizedResponse | NotFoundResponse>
 
 
 
-export function useGetFamilyOverview<TData = Awaited<ReturnType<typeof getFamilyOverview>>, TError = ErrorType<UnauthorizedResponse>>(
+export function useGetFamilyOverview<TData = Awaited<ReturnType<typeof getFamilyOverview>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
   options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFamilyOverview>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -255,7 +355,7 @@ return customFetch<FamilyOverview>(getCreateFamilyUrl(),
 
 export const getCreateFamilyMutationKey = () => ['createFamily'] as const;
 
-export const getCreateFamilyMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+export const getCreateFamilyMutationOptions = <TError = ErrorType<UnauthorizedResponse | ConflictResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFamily>>, TError,CreateFamilyMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createFamily>>, TError,CreateFamilyMutationVariables, TContext> => {
 
@@ -284,10 +384,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateFamilyMutationResult = NonNullable<Awaited<ReturnType<typeof createFamily>>>
     export type CreateFamilyMutationBody = BodyType<FamilyInput>
-    export type CreateFamilyMutationError = ErrorType<UnauthorizedResponse>
+    export type CreateFamilyMutationError = ErrorType<UnauthorizedResponse | ConflictResponse>
     export type CreateFamilyMutationVariables = {data: BodyType<FamilyInput>}
 
-    export const useCreateFamily = <TError = ErrorType<UnauthorizedResponse>,
+    export const useCreateFamily = <TError = ErrorType<UnauthorizedResponse | ConflictResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createFamily>>, TError,CreateFamilyMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createFamily>>,
@@ -366,6 +466,170 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getDeleteFamilyMutationOptions(options));
     }
 
+export const getUpdateFamilySettingsUrl = () => {
+
+
+
+
+  return `/api/family/settings`
+}
+
+export const updateFamilySettings = async (familySettingsUpdate: FamilySettingsUpdate, options?: Parameters<typeof customFetch>[1]): Promise<FamilySettings> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FamilySettings>(getUpdateFamilySettingsUrl(),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(familySettingsUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateFamilySettingsMutationKey = () => ['updateFamilySettings'] as const;
+
+export const getUpdateFamilySettingsMutationOptions = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFamilySettings>>, TError,UpdateFamilySettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateFamilySettings>>, TError,UpdateFamilySettingsMutationVariables, TContext> => {
+
+const mutationKey = getUpdateFamilySettingsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateFamilySettings>>, UpdateFamilySettingsMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  updateFamilySettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateFamilySettingsMutationResult = NonNullable<Awaited<ReturnType<typeof updateFamilySettings>>>
+    export type UpdateFamilySettingsMutationBody = BodyType<FamilySettingsUpdate>
+    export type UpdateFamilySettingsMutationError = ErrorType<UnauthorizedResponse | ForbiddenResponse>
+    export type UpdateFamilySettingsMutationVariables = {data: BodyType<FamilySettingsUpdate>}
+
+    export const useUpdateFamilySettings = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateFamilySettings>>, TError,UpdateFamilySettingsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateFamilySettings>>,
+        TError,
+        UpdateFamilySettingsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateFamilySettingsMutationOptions(options));
+    }
+
+export const getSetGuardianPinUrl = () => {
+
+
+
+
+  return `/api/family/guardian-pin`
+}
+
+export const setGuardianPin = async (guardianPinInput: GuardianPinInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getSetGuardianPinUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(guardianPinInput)
+  }
+);}
+
+
+
+
+
+export const getSetGuardianPinMutationKey = () => ['setGuardianPin'] as const;
+
+export const getSetGuardianPinMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGuardianPin>>, TError,SetGuardianPinMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof setGuardianPin>>, TError,SetGuardianPinMutationVariables, TContext> => {
+
+const mutationKey = getSetGuardianPinMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof setGuardianPin>>, SetGuardianPinMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  setGuardianPin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SetGuardianPinMutationResult = NonNullable<Awaited<ReturnType<typeof setGuardianPin>>>
+    export type SetGuardianPinMutationBody = BodyType<GuardianPinInput>
+    export type SetGuardianPinMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>
+    export type SetGuardianPinMutationVariables = {data: BodyType<GuardianPinInput>}
+
+    export const useSetGuardianPin = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ForbiddenResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof setGuardianPin>>, TError,SetGuardianPinMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof setGuardianPin>>,
+        TError,
+        SetGuardianPinMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSetGuardianPinMutationOptions(options));
+    }
+
 export const getCreateChildUrl = () => {
 
 
@@ -405,7 +669,7 @@ return customFetch<ChildProfile>(getCreateChildUrl(),
 
 export const getCreateChildMutationKey = () => ['createChild'] as const;
 
-export const getCreateChildMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+export const getCreateChildMutationOptions = <TError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ForbiddenResponse | ConflictResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChild>>, TError,CreateChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createChild>>, TError,CreateChildMutationVariables, TContext> => {
 
@@ -434,10 +698,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreateChildMutationResult = NonNullable<Awaited<ReturnType<typeof createChild>>>
     export type CreateChildMutationBody = BodyType<ChildInput>
-    export type CreateChildMutationError = ErrorType<UnauthorizedResponse>
+    export type CreateChildMutationError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ForbiddenResponse | ConflictResponse>
     export type CreateChildMutationVariables = {data: BodyType<ChildInput>}
 
-    export const useCreateChild = <TError = ErrorType<UnauthorizedResponse>,
+    export const useCreateChild = <TError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ForbiddenResponse | ConflictResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createChild>>, TError,CreateChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createChild>>,
@@ -446,6 +710,476 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateChildMutationOptions(options));
+    }
+
+export const getUpdateChildUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}`
+}
+
+export const updateChild = async (childId: string,
+    childUpdate: ChildUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ChildProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChildProfile>(getUpdateChildUrl(childId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(childUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateChildMutationKey = () => ['updateChild'] as const;
+
+export const getUpdateChildMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChild>>, TError,UpdateChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateChild>>, TError,UpdateChildMutationVariables, TContext> => {
+
+const mutationKey = getUpdateChildMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateChild>>, UpdateChildMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  updateChild(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateChildMutationResult = NonNullable<Awaited<ReturnType<typeof updateChild>>>
+    export type UpdateChildMutationBody = BodyType<ChildUpdate>
+    export type UpdateChildMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type UpdateChildMutationVariables = {childId: string;data: BodyType<ChildUpdate>}
+
+    export const useUpdateChild = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateChild>>, TError,UpdateChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateChild>>,
+        TError,
+        UpdateChildMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateChildMutationOptions(options));
+    }
+
+export const getArchiveChildUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}`
+}
+
+export const archiveChild = async (childId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getArchiveChildUrl(childId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getArchiveChildMutationKey = () => ['archiveChild'] as const;
+
+export const getArchiveChildMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveChild>>, TError,ArchiveChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof archiveChild>>, TError,ArchiveChildMutationVariables, TContext> => {
+
+const mutationKey = getArchiveChildMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof archiveChild>>, ArchiveChildMutationVariables> = (props) => {
+          const {childId} = props ?? {};
+
+          return  archiveChild(childId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ArchiveChildMutationResult = NonNullable<Awaited<ReturnType<typeof archiveChild>>>
+
+    export type ArchiveChildMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type ArchiveChildMutationVariables = {childId: string}
+
+    export const useArchiveChild = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof archiveChild>>, TError,ArchiveChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof archiveChild>>,
+        TError,
+        ArchiveChildMutationVariables,
+        TContext
+      > => {
+      return useMutation(getArchiveChildMutationOptions(options));
+    }
+
+export const getCreateAppRuleUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}/apps`
+}
+
+export const createAppRule = async (childId: string,
+    appRuleInput: AppRuleInput, options?: Parameters<typeof customFetch>[1]): Promise<AppRule> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AppRule>(getCreateAppRuleUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(appRuleInput)
+  }
+);}
+
+
+
+
+
+export const getCreateAppRuleMutationKey = () => ['createAppRule'] as const;
+
+export const getCreateAppRuleMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse | ConflictResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAppRule>>, TError,CreateAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createAppRule>>, TError,CreateAppRuleMutationVariables, TContext> => {
+
+const mutationKey = getCreateAppRuleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createAppRule>>, CreateAppRuleMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  createAppRule(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateAppRuleMutationResult = NonNullable<Awaited<ReturnType<typeof createAppRule>>>
+    export type CreateAppRuleMutationBody = BodyType<AppRuleInput>
+    export type CreateAppRuleMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse | ConflictResponse>
+    export type CreateAppRuleMutationVariables = {childId: string;data: BodyType<AppRuleInput>}
+
+    export const useCreateAppRule = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse | ConflictResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createAppRule>>, TError,CreateAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createAppRule>>,
+        TError,
+        CreateAppRuleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateAppRuleMutationOptions(options));
+    }
+
+export const getDeleteAppRuleUrl = (childId: string,
+    appId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}/apps/${appId}`
+}
+
+export const deleteAppRule = async (childId: string,
+    appId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteAppRuleUrl(childId,appId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteAppRuleMutationKey = () => ['deleteAppRule'] as const;
+
+export const getDeleteAppRuleMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAppRule>>, TError,DeleteAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteAppRule>>, TError,DeleteAppRuleMutationVariables, TContext> => {
+
+const mutationKey = getDeleteAppRuleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteAppRule>>, DeleteAppRuleMutationVariables> = (props) => {
+          const {childId,appId} = props ?? {};
+
+          return  deleteAppRule(childId,appId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteAppRuleMutationResult = NonNullable<Awaited<ReturnType<typeof deleteAppRule>>>
+
+    export type DeleteAppRuleMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type DeleteAppRuleMutationVariables = {childId: string;appId: string}
+
+    export const useDeleteAppRule = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteAppRule>>, TError,DeleteAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteAppRule>>,
+        TError,
+        DeleteAppRuleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteAppRuleMutationOptions(options));
+    }
+
+export const getCreateRoutineUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}/routines`
+}
+
+export const createRoutine = async (childId: string,
+    routineInput: RoutineInput, options?: Parameters<typeof customFetch>[1]): Promise<Routine> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Routine>(getCreateRoutineUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(routineInput)
+  }
+);}
+
+
+
+
+
+export const getCreateRoutineMutationKey = () => ['createRoutine'] as const;
+
+export const getCreateRoutineMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoutine>>, TError,CreateRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createRoutine>>, TError,CreateRoutineMutationVariables, TContext> => {
+
+const mutationKey = getCreateRoutineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createRoutine>>, CreateRoutineMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  createRoutine(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateRoutineMutationResult = NonNullable<Awaited<ReturnType<typeof createRoutine>>>
+    export type CreateRoutineMutationBody = BodyType<RoutineInput>
+    export type CreateRoutineMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type CreateRoutineMutationVariables = {childId: string;data: BodyType<RoutineInput>}
+
+    export const useCreateRoutine = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createRoutine>>, TError,CreateRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createRoutine>>,
+        TError,
+        CreateRoutineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateRoutineMutationOptions(options));
+    }
+
+export const getCreateTimeGrantUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}/grants`
+}
+
+export const createTimeGrant = async (childId: string,
+    timeGrantInput: TimeGrantInput, options?: Parameters<typeof customFetch>[1]): Promise<TimeGrant> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TimeGrant>(getCreateTimeGrantUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(timeGrantInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTimeGrantMutationKey = () => ['createTimeGrant'] as const;
+
+export const getCreateTimeGrantMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeGrant>>, TError,CreateTimeGrantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTimeGrant>>, TError,CreateTimeGrantMutationVariables, TContext> => {
+
+const mutationKey = getCreateTimeGrantMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTimeGrant>>, CreateTimeGrantMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  createTimeGrant(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTimeGrantMutationResult = NonNullable<Awaited<ReturnType<typeof createTimeGrant>>>
+    export type CreateTimeGrantMutationBody = BodyType<TimeGrantInput>
+    export type CreateTimeGrantMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type CreateTimeGrantMutationVariables = {childId: string;data: BodyType<TimeGrantInput>}
+
+    export const useCreateTimeGrant = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeGrant>>, TError,CreateTimeGrantMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTimeGrant>>,
+        TError,
+        CreateTimeGrantMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTimeGrantMutationOptions(options));
     }
 
 export const getCreatePairingCodeUrl = () => {
@@ -487,7 +1221,7 @@ return customFetch<PairingCode>(getCreatePairingCodeUrl(),
 
 export const getCreatePairingCodeMutationKey = () => ['createPairingCode'] as const;
 
-export const getCreatePairingCodeMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+export const getCreatePairingCodeMutationOptions = <TError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ConflictResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPairingCode>>, TError,CreatePairingCodeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof createPairingCode>>, TError,CreatePairingCodeMutationVariables, TContext> => {
 
@@ -516,10 +1250,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type CreatePairingCodeMutationResult = NonNullable<Awaited<ReturnType<typeof createPairingCode>>>
     export type CreatePairingCodeMutationBody = BodyType<PairingCodeInput>
-    export type CreatePairingCodeMutationError = ErrorType<UnauthorizedResponse>
+    export type CreatePairingCodeMutationError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ConflictResponse>
     export type CreatePairingCodeMutationVariables = {data: BodyType<PairingCodeInput>}
 
-    export const useCreatePairingCode = <TError = ErrorType<UnauthorizedResponse>,
+    export const useCreatePairingCode = <TError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ConflictResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPairingCode>>, TError,CreatePairingCodeMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof createPairingCode>>,
@@ -569,7 +1303,7 @@ return customFetch<DevicePairResult>(getPairDeviceUrl(),
 
 export const getPairDeviceMutationKey = () => ['pairDevice'] as const;
 
-export const getPairDeviceMutationOptions = <TError = ErrorType<BadRequestResponse>,
+export const getPairDeviceMutationOptions = <TError = ErrorType<BadRequestResponse | ConflictResponse | TooManyRequestsResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pairDevice>>, TError,PairDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
 ): UseMutationOptions<Awaited<ReturnType<typeof pairDevice>>, TError,PairDeviceMutationVariables, TContext> => {
 
@@ -598,10 +1332,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PairDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof pairDevice>>>
     export type PairDeviceMutationBody = BodyType<DevicePairInput>
-    export type PairDeviceMutationError = ErrorType<BadRequestResponse>
+    export type PairDeviceMutationError = ErrorType<BadRequestResponse | ConflictResponse | TooManyRequestsResponse>
     export type PairDeviceMutationVariables = {data: BodyType<DevicePairInput>}
 
-    export const usePairDevice = <TError = ErrorType<BadRequestResponse>,
+    export const usePairDevice = <TError = ErrorType<BadRequestResponse | ConflictResponse | TooManyRequestsResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pairDevice>>, TError,PairDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
         Awaited<ReturnType<typeof pairDevice>>,
@@ -611,6 +1345,1329 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getPairDeviceMutationOptions(options));
     }
+
+export const getUpdateDeviceUrl = (deviceId: string,) => {
+
+
+
+
+  return `/api/family/devices/${deviceId}`
+}
+
+export const updateDevice = async (deviceId: string,
+    deviceUpdate: DeviceUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Device> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Device>(getUpdateDeviceUrl(deviceId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deviceUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateDeviceMutationKey = () => ['updateDevice'] as const;
+
+export const getUpdateDeviceMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDevice>>, TError,UpdateDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDevice>>, TError,UpdateDeviceMutationVariables, TContext> => {
+
+const mutationKey = getUpdateDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDevice>>, UpdateDeviceMutationVariables> = (props) => {
+          const {deviceId,data} = props ?? {};
+
+          return  updateDevice(deviceId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof updateDevice>>>
+    export type UpdateDeviceMutationBody = BodyType<DeviceUpdate>
+    export type UpdateDeviceMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type UpdateDeviceMutationVariables = {deviceId: string;data: BodyType<DeviceUpdate>}
+
+    export const useUpdateDevice = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDevice>>, TError,UpdateDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDevice>>,
+        TError,
+        UpdateDeviceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateDeviceMutationOptions(options));
+    }
+
+export const getRevokeDeviceUrl = (deviceId: string,) => {
+
+
+
+
+  return `/api/family/devices/${deviceId}`
+}
+
+export const revokeDevice = async (deviceId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRevokeDeviceUrl(deviceId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRevokeDeviceMutationKey = () => ['revokeDevice'] as const;
+
+export const getRevokeDeviceMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeDevice>>, TError,RevokeDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof revokeDevice>>, TError,RevokeDeviceMutationVariables, TContext> => {
+
+const mutationKey = getRevokeDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeDevice>>, RevokeDeviceMutationVariables> = (props) => {
+          const {deviceId} = props ?? {};
+
+          return  revokeDevice(deviceId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RevokeDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof revokeDevice>>>
+
+    export type RevokeDeviceMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type RevokeDeviceMutationVariables = {deviceId: string}
+
+    export const useRevokeDevice = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeDevice>>, TError,RevokeDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof revokeDevice>>,
+        TError,
+        RevokeDeviceMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRevokeDeviceMutationOptions(options));
+    }
+
+export const getListDeviceAppsUrl = (deviceId: string,) => {
+
+
+
+
+  return `/api/family/devices/${deviceId}/apps`
+}
+
+export const listDeviceApps = async (deviceId: string, options?: Parameters<typeof customFetch>[1]): Promise<DeviceApp[]> => {
+
+  return customFetch<DeviceApp[]>(getListDeviceAppsUrl(deviceId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListDeviceAppsQueryKey = (deviceId: string,) => {
+    return [
+    `/api/family/devices/${deviceId}/apps`
+    ] as const;
+    }
+
+
+export const getListDeviceAppsQueryOptions = <TData = Awaited<ReturnType<typeof listDeviceApps>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(deviceId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeviceApps>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListDeviceAppsQueryKey(deviceId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listDeviceApps>>> = ({ signal }) => listDeviceApps(deviceId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: deviceId !== null && deviceId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listDeviceApps>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListDeviceAppsQueryResult = NonNullable<Awaited<ReturnType<typeof listDeviceApps>>>
+export type ListDeviceAppsQueryError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+
+
+
+export function useListDeviceApps<TData = Awaited<ReturnType<typeof listDeviceApps>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
+ deviceId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listDeviceApps>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListDeviceAppsQueryOptions(deviceId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateDeviceAppUrl = (deviceId: string,
+    packageName: string,) => {
+
+
+
+
+  return `/api/family/devices/${deviceId}/apps/${packageName}`
+}
+
+export const updateDeviceApp = async (deviceId: string,
+    packageName: string,
+    deviceAppUpdate: DeviceAppUpdate, options?: Parameters<typeof customFetch>[1]): Promise<DeviceApp> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<DeviceApp>(getUpdateDeviceAppUrl(deviceId,packageName),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(deviceAppUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateDeviceAppMutationKey = () => ['updateDeviceApp'] as const;
+
+export const getUpdateDeviceAppMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDeviceApp>>, TError,UpdateDeviceAppMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateDeviceApp>>, TError,UpdateDeviceAppMutationVariables, TContext> => {
+
+const mutationKey = getUpdateDeviceAppMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateDeviceApp>>, UpdateDeviceAppMutationVariables> = (props) => {
+          const {deviceId,packageName,data} = props ?? {};
+
+          return  updateDeviceApp(deviceId,packageName,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateDeviceAppMutationResult = NonNullable<Awaited<ReturnType<typeof updateDeviceApp>>>
+    export type UpdateDeviceAppMutationBody = BodyType<DeviceAppUpdate>
+    export type UpdateDeviceAppMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type UpdateDeviceAppMutationVariables = {deviceId: string;packageName: string;data: BodyType<DeviceAppUpdate>}
+
+    export const useUpdateDeviceApp = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateDeviceApp>>, TError,UpdateDeviceAppMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateDeviceApp>>,
+        TError,
+        UpdateDeviceAppMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateDeviceAppMutationOptions(options));
+    }
+
+export const getUpdateAppRuleUrl = (appId: string,) => {
+
+
+
+
+  return `/api/family/apps/${appId}/rules`
+}
+
+export const updateAppRule = async (appId: string,
+    appRuleUpdate: AppRuleUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AppRule> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<AppRule>(getUpdateAppRuleUrl(appId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(appRuleUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAppRuleMutationKey = () => ['updateAppRule'] as const;
+
+export const getUpdateAppRuleMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAppRule>>, TError,UpdateAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAppRule>>, TError,UpdateAppRuleMutationVariables, TContext> => {
+
+const mutationKey = getUpdateAppRuleMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAppRule>>, UpdateAppRuleMutationVariables> = (props) => {
+          const {appId,data} = props ?? {};
+
+          return  updateAppRule(appId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAppRuleMutationResult = NonNullable<Awaited<ReturnType<typeof updateAppRule>>>
+    export type UpdateAppRuleMutationBody = BodyType<AppRuleUpdate>
+    export type UpdateAppRuleMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type UpdateAppRuleMutationVariables = {appId: string;data: BodyType<AppRuleUpdate>}
+
+    export const useUpdateAppRule = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAppRule>>, TError,UpdateAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAppRule>>,
+        TError,
+        UpdateAppRuleMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateAppRuleMutationOptions(options));
+    }
+
+export const getUpdateRoutineUrl = (routineId: string,) => {
+
+
+
+
+  return `/api/family/routines/${routineId}`
+}
+
+export const updateRoutine = async (routineId: string,
+    routineUpdate: RoutineUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Routine> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Routine>(getUpdateRoutineUrl(routineId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(routineUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateRoutineMutationKey = () => ['updateRoutine'] as const;
+
+export const getUpdateRoutineMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRoutine>>, TError,UpdateRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateRoutine>>, TError,UpdateRoutineMutationVariables, TContext> => {
+
+const mutationKey = getUpdateRoutineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRoutine>>, UpdateRoutineMutationVariables> = (props) => {
+          const {routineId,data} = props ?? {};
+
+          return  updateRoutine(routineId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateRoutineMutationResult = NonNullable<Awaited<ReturnType<typeof updateRoutine>>>
+    export type UpdateRoutineMutationBody = BodyType<RoutineUpdate>
+    export type UpdateRoutineMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type UpdateRoutineMutationVariables = {routineId: string;data: BodyType<RoutineUpdate>}
+
+    export const useUpdateRoutine = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRoutine>>, TError,UpdateRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateRoutine>>,
+        TError,
+        UpdateRoutineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateRoutineMutationOptions(options));
+    }
+
+export const getDeleteRoutineUrl = (routineId: string,) => {
+
+
+
+
+  return `/api/family/routines/${routineId}`
+}
+
+export const deleteRoutine = async (routineId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getDeleteRoutineUrl(routineId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteRoutineMutationKey = () => ['deleteRoutine'] as const;
+
+export const getDeleteRoutineMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRoutine>>, TError,DeleteRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteRoutine>>, TError,DeleteRoutineMutationVariables, TContext> => {
+
+const mutationKey = getDeleteRoutineMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteRoutine>>, DeleteRoutineMutationVariables> = (props) => {
+          const {routineId} = props ?? {};
+
+          return  deleteRoutine(routineId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteRoutineMutationResult = NonNullable<Awaited<ReturnType<typeof deleteRoutine>>>
+
+    export type DeleteRoutineMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type DeleteRoutineMutationVariables = {routineId: string}
+
+    export const useDeleteRoutine = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteRoutine>>, TError,DeleteRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteRoutine>>,
+        TError,
+        DeleteRoutineMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDeleteRoutineMutationOptions(options));
+    }
+
+export const getCreateTimeRequestUrl = () => {
+
+
+
+
+  return `/api/family/time-requests`
+}
+
+export const createTimeRequest = async (timeRequestInput: TimeRequestInput, options?: Parameters<typeof customFetch>[1]): Promise<TimeRequest> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TimeRequest>(getCreateTimeRequestUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(timeRequestInput)
+  }
+);}
+
+
+
+
+
+export const getCreateTimeRequestMutationKey = () => ['createTimeRequest'] as const;
+
+export const getCreateTimeRequestMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeRequest>>, TError,CreateTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createTimeRequest>>, TError,CreateTimeRequestMutationVariables, TContext> => {
+
+const mutationKey = getCreateTimeRequestMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTimeRequest>>, CreateTimeRequestMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createTimeRequest(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateTimeRequestMutationResult = NonNullable<Awaited<ReturnType<typeof createTimeRequest>>>
+    export type CreateTimeRequestMutationBody = BodyType<TimeRequestInput>
+    export type CreateTimeRequestMutationError = ErrorType<UnauthorizedResponse>
+    export type CreateTimeRequestMutationVariables = {data: BodyType<TimeRequestInput>}
+
+    export const useCreateTimeRequest = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeRequest>>, TError,CreateTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createTimeRequest>>,
+        TError,
+        CreateTimeRequestMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateTimeRequestMutationOptions(options));
+    }
+
+export const getResolveTimeRequestUrl = (requestId: string,) => {
+
+
+
+
+  return `/api/family/time-requests/${requestId}`
+}
+
+export const resolveTimeRequest = async (requestId: string,
+    timeRequestResolution: TimeRequestResolution, options?: Parameters<typeof customFetch>[1]): Promise<TimeRequest> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<TimeRequest>(getResolveTimeRequestUrl(requestId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(timeRequestResolution)
+  }
+);}
+
+
+
+
+
+export const getResolveTimeRequestMutationKey = () => ['resolveTimeRequest'] as const;
+
+export const getResolveTimeRequestMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveTimeRequest>>, TError,ResolveTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resolveTimeRequest>>, TError,ResolveTimeRequestMutationVariables, TContext> => {
+
+const mutationKey = getResolveTimeRequestMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveTimeRequest>>, ResolveTimeRequestMutationVariables> = (props) => {
+          const {requestId,data} = props ?? {};
+
+          return  resolveTimeRequest(requestId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResolveTimeRequestMutationResult = NonNullable<Awaited<ReturnType<typeof resolveTimeRequest>>>
+    export type ResolveTimeRequestMutationBody = BodyType<TimeRequestResolution>
+    export type ResolveTimeRequestMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type ResolveTimeRequestMutationVariables = {requestId: string;data: BodyType<TimeRequestResolution>}
+
+    export const useResolveTimeRequest = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveTimeRequest>>, TError,ResolveTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resolveTimeRequest>>,
+        TError,
+        ResolveTimeRequestMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResolveTimeRequestMutationOptions(options));
+    }
+
+export const getCreateInviteUrl = () => {
+
+
+
+
+  return `/api/family/invites`
+}
+
+export const createInvite = async (inviteInput: InviteInput, options?: Parameters<typeof customFetch>[1]): Promise<Invite> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Invite>(getCreateInviteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(inviteInput)
+  }
+);}
+
+
+
+
+
+export const getCreateInviteMutationKey = () => ['createInvite'] as const;
+
+export const getCreateInviteMutationOptions = <TError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ForbiddenResponse | ConflictResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,CreateInviteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,CreateInviteMutationVariables, TContext> => {
+
+const mutationKey = getCreateInviteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createInvite>>, CreateInviteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  createInvite(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateInviteMutationResult = NonNullable<Awaited<ReturnType<typeof createInvite>>>
+    export type CreateInviteMutationBody = BodyType<InviteInput>
+    export type CreateInviteMutationError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ForbiddenResponse | ConflictResponse>
+    export type CreateInviteMutationVariables = {data: BodyType<InviteInput>}
+
+    export const useCreateInvite = <TError = ErrorType<UnauthorizedResponse | PaymentRequiredResponse | ForbiddenResponse | ConflictResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createInvite>>, TError,CreateInviteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createInvite>>,
+        TError,
+        CreateInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCreateInviteMutationOptions(options));
+    }
+
+export const getAcceptInviteUrl = () => {
+
+
+
+
+  return `/api/family/invites/accept`
+}
+
+export const acceptInvite = async (inviteAcceptInput: InviteAcceptInput, options?: Parameters<typeof customFetch>[1]): Promise<FamilyOverview> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FamilyOverview>(getAcceptInviteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(inviteAcceptInput)
+  }
+);}
+
+
+
+
+
+export const getAcceptInviteMutationKey = () => ['acceptInvite'] as const;
+
+export const getAcceptInviteMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ConflictResponse | TooManyRequestsResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,AcceptInviteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,AcceptInviteMutationVariables, TContext> => {
+
+const mutationKey = getAcceptInviteMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof acceptInvite>>, AcceptInviteMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  acceptInvite(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AcceptInviteMutationResult = NonNullable<Awaited<ReturnType<typeof acceptInvite>>>
+    export type AcceptInviteMutationBody = BodyType<InviteAcceptInput>
+    export type AcceptInviteMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse | ConflictResponse | TooManyRequestsResponse>
+    export type AcceptInviteMutationVariables = {data: BodyType<InviteAcceptInput>}
+
+    export const useAcceptInvite = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | ConflictResponse | TooManyRequestsResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof acceptInvite>>, TError,AcceptInviteMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof acceptInvite>>,
+        TError,
+        AcceptInviteMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAcceptInviteMutationOptions(options));
+    }
+
+export const getUpdateMemberUrl = (memberId: string,) => {
+
+
+
+
+  return `/api/family/members/${memberId}`
+}
+
+export const updateMember = async (memberId: string,
+    memberUpdate: MemberUpdate, options?: Parameters<typeof customFetch>[1]): Promise<FamilyMember> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<FamilyMember>(getUpdateMemberUrl(memberId),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(memberUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateMemberMutationKey = () => ['updateMember'] as const;
+
+export const getUpdateMemberMutationOptions = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMember>>, TError,UpdateMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateMember>>, TError,UpdateMemberMutationVariables, TContext> => {
+
+const mutationKey = getUpdateMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateMember>>, UpdateMemberMutationVariables> = (props) => {
+          const {memberId,data} = props ?? {};
+
+          return  updateMember(memberId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateMemberMutationResult = NonNullable<Awaited<ReturnType<typeof updateMember>>>
+    export type UpdateMemberMutationBody = BodyType<MemberUpdate>
+    export type UpdateMemberMutationError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+    export type UpdateMemberMutationVariables = {memberId: string;data: BodyType<MemberUpdate>}
+
+    export const useUpdateMember = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateMember>>, TError,UpdateMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateMember>>,
+        TError,
+        UpdateMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUpdateMemberMutationOptions(options));
+    }
+
+export const getRemoveMemberUrl = (memberId: string,) => {
+
+
+
+
+  return `/api/family/members/${memberId}`
+}
+
+export const removeMember = async (memberId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getRemoveMemberUrl(memberId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getRemoveMemberMutationKey = () => ['removeMember'] as const;
+
+export const getRemoveMemberMutationOptions = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMember>>, TError,RemoveMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof removeMember>>, TError,RemoveMemberMutationVariables, TContext> => {
+
+const mutationKey = getRemoveMemberMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof removeMember>>, RemoveMemberMutationVariables> = (props) => {
+          const {memberId} = props ?? {};
+
+          return  removeMember(memberId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RemoveMemberMutationResult = NonNullable<Awaited<ReturnType<typeof removeMember>>>
+
+    export type RemoveMemberMutationError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>
+    export type RemoveMemberMutationVariables = {memberId: string}
+
+    export const useRemoveMember = <TError = ErrorType<UnauthorizedResponse | ForbiddenResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof removeMember>>, TError,RemoveMemberMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof removeMember>>,
+        TError,
+        RemoveMemberMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRemoveMemberMutationOptions(options));
+    }
+
+export const getRegisterGuardianPushTokenUrl = () => {
+
+
+
+
+  return `/api/family/push-tokens`
+}
+
+export const registerGuardianPushToken = async (pushTokenInput: PushTokenInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getRegisterGuardianPushTokenUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushTokenInput)
+  }
+);}
+
+
+
+
+
+export const getRegisterGuardianPushTokenMutationKey = () => ['registerGuardianPushToken'] as const;
+
+export const getRegisterGuardianPushTokenMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerGuardianPushToken>>, TError,RegisterGuardianPushTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerGuardianPushToken>>, TError,RegisterGuardianPushTokenMutationVariables, TContext> => {
+
+const mutationKey = getRegisterGuardianPushTokenMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerGuardianPushToken>>, RegisterGuardianPushTokenMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerGuardianPushToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterGuardianPushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof registerGuardianPushToken>>>
+    export type RegisterGuardianPushTokenMutationBody = BodyType<PushTokenInput>
+    export type RegisterGuardianPushTokenMutationError = ErrorType<UnauthorizedResponse>
+    export type RegisterGuardianPushTokenMutationVariables = {data: BodyType<PushTokenInput>}
+
+    export const useRegisterGuardianPushToken = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerGuardianPushToken>>, TError,RegisterGuardianPushTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerGuardianPushToken>>,
+        TError,
+        RegisterGuardianPushTokenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegisterGuardianPushTokenMutationOptions(options));
+    }
+
+export const getGetUsageReportUrl = (params?: GetUsageReportParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/family/reports/usage?${stringifiedParams}` : `/api/family/reports/usage`
+}
+
+export const getUsageReport = async (params?: GetUsageReportParams, options?: Parameters<typeof customFetch>[1]): Promise<UsageReport> => {
+
+  return customFetch<UsageReport>(getGetUsageReportUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetUsageReportQueryKey = (params?: GetUsageReportParams,) => {
+    return [
+    `/api/family/reports/usage`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetUsageReportQueryOptions = <TData = Awaited<ReturnType<typeof getUsageReport>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(params?: GetUsageReportParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsageReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetUsageReportQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getUsageReport>>> = ({ signal }) => getUsageReport(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getUsageReport>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetUsageReportQueryResult = NonNullable<Awaited<ReturnType<typeof getUsageReport>>>
+export type GetUsageReportQueryError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+
+
+
+export function useGetUsageReport<TData = Awaited<ReturnType<typeof getUsageReport>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
+ params?: GetUsageReportParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getUsageReport>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetUsageReportQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getListAuditEventsUrl = () => {
+
+
+
+
+  return `/api/family/audit`
+}
+
+export const listAuditEvents = async ( options?: Parameters<typeof customFetch>[1]): Promise<AuditEvent[]> => {
+
+  return customFetch<AuditEvent[]>(getListAuditEventsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAuditEventsQueryKey = () => {
+    return [
+    `/api/family/audit`
+    ] as const;
+    }
+
+
+export const getListAuditEventsQueryOptions = <TData = Awaited<ReturnType<typeof listAuditEvents>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAuditEventsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditEvents>>> = ({ signal }) => listAuditEvents({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAuditEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditEvents>>>
+export type ListAuditEventsQueryError = ErrorType<UnauthorizedResponse>
+
+
+
+export function useListAuditEvents<TData = Awaited<ReturnType<typeof listAuditEvents>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAuditEventsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getExportFamilyDataUrl = () => {
+
+
+
+
+  return `/api/family/export`
+}
+
+export const exportFamilyData = async ( options?: Parameters<typeof customFetch>[1]): Promise<FamilyExport> => {
+
+  return customFetch<FamilyExport>(getExportFamilyDataUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getExportFamilyDataQueryKey = () => {
+    return [
+    `/api/family/export`
+    ] as const;
+    }
+
+
+export const getExportFamilyDataQueryOptions = <TData = Awaited<ReturnType<typeof exportFamilyData>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportFamilyData>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getExportFamilyDataQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportFamilyData>>> = ({ signal }) => exportFamilyData({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportFamilyData>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ExportFamilyDataQueryResult = NonNullable<Awaited<ReturnType<typeof exportFamilyData>>>
+export type ExportFamilyDataQueryError = ErrorType<UnauthorizedResponse>
+
+
+
+export function useExportFamilyData<TData = Awaited<ReturnType<typeof exportFamilyData>>, TError = ErrorType<UnauthorizedResponse>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportFamilyData>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getExportFamilyDataQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetChildOverviewUrl = () => {
 
@@ -847,84 +2904,15 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getSyncChildProtectionMutationOptions(options));
     }
 
-export const getRevokeDeviceUrl = (deviceId: string,) => {
+export const getSyncInstalledAppsUrl = () => {
 
 
 
 
-  return `/api/family/devices/${deviceId}`
+  return `/api/child/installed-apps`
 }
 
-export const revokeDevice = async (deviceId: string, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
-
-  return customFetch<void>(getRevokeDeviceUrl(deviceId),
-  {
-    ...options,
-    method: 'DELETE'
-
-
-  }
-);}
-
-
-
-
-
-export const getRevokeDeviceMutationKey = () => ['revokeDevice'] as const;
-
-export const getRevokeDeviceMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeDevice>>, TError,RevokeDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof revokeDevice>>, TError,RevokeDeviceMutationVariables, TContext> => {
-
-const mutationKey = getRevokeDeviceMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof revokeDevice>>, RevokeDeviceMutationVariables> = (props) => {
-          const {deviceId} = props ?? {};
-
-          return  revokeDevice(deviceId,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type RevokeDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof revokeDevice>>>
-
-    export type RevokeDeviceMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
-    export type RevokeDeviceMutationVariables = {deviceId: string}
-
-    export const useRevokeDevice = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof revokeDevice>>, TError,RevokeDeviceMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof revokeDevice>>,
-        TError,
-        RevokeDeviceMutationVariables,
-        TContext
-      > => {
-      return useMutation(getRevokeDeviceMutationOptions(options));
-    }
-
-export const getUpdateAppRuleUrl = (appId: string,) => {
-
-
-
-
-  return `/api/family/apps/${appId}/rules`
-}
-
-export const updateAppRule = async (appId: string,
-    appRuleUpdate: AppRuleUpdate, options?: Parameters<typeof customFetch>[1]): Promise<AppRule> => {
+export const syncInstalledApps = async (installedAppsInput: InstalledAppsInput, options?: Parameters<typeof customFetch>[1]): Promise<InstalledAppsResult> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -940,177 +2928,12 @@ export const updateAppRule = async (appId: string,
     }
     return headers;
   };
-return customFetch<AppRule>(getUpdateAppRuleUrl(appId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(appRuleUpdate)
-  }
-);}
-
-
-
-
-
-export const getUpdateAppRuleMutationKey = () => ['updateAppRule'] as const;
-
-export const getUpdateAppRuleMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAppRule>>, TError,UpdateAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateAppRule>>, TError,UpdateAppRuleMutationVariables, TContext> => {
-
-const mutationKey = getUpdateAppRuleMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAppRule>>, UpdateAppRuleMutationVariables> = (props) => {
-          const {appId,data} = props ?? {};
-
-          return  updateAppRule(appId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateAppRuleMutationResult = NonNullable<Awaited<ReturnType<typeof updateAppRule>>>
-    export type UpdateAppRuleMutationBody = BodyType<AppRuleUpdate>
-    export type UpdateAppRuleMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
-    export type UpdateAppRuleMutationVariables = {appId: string;data: BodyType<AppRuleUpdate>}
-
-    export const useUpdateAppRule = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAppRule>>, TError,UpdateAppRuleMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateAppRule>>,
-        TError,
-        UpdateAppRuleMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateAppRuleMutationOptions(options));
-    }
-
-export const getUpdateRoutineUrl = (routineId: string,) => {
-
-
-
-
-  return `/api/family/routines/${routineId}`
-}
-
-export const updateRoutine = async (routineId: string,
-    routineUpdate: RoutineUpdate, options?: Parameters<typeof customFetch>[1]): Promise<Routine> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<Routine>(getUpdateRoutineUrl(routineId),
-  {
-    ...options,
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(routineUpdate)
-  }
-);}
-
-
-
-
-
-export const getUpdateRoutineMutationKey = () => ['updateRoutine'] as const;
-
-export const getUpdateRoutineMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRoutine>>, TError,UpdateRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof updateRoutine>>, TError,UpdateRoutineMutationVariables, TContext> => {
-
-const mutationKey = getUpdateRoutineMutationKey();
-const {mutation: mutationOptions, request: requestOptions} = options ?
-      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
-      options
-      : {...options, mutation: {...options.mutation, mutationKey}}
-      : {mutation: { mutationKey, }, request: undefined};
-
-
-
-
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateRoutine>>, UpdateRoutineMutationVariables> = (props) => {
-          const {routineId,data} = props ?? {};
-
-          return  updateRoutine(routineId,data,requestOptions)
-        }
-
-
-
-
-
-
-  return  { mutationFn, ...mutationOptions }}
-
-    export type UpdateRoutineMutationResult = NonNullable<Awaited<ReturnType<typeof updateRoutine>>>
-    export type UpdateRoutineMutationBody = BodyType<RoutineUpdate>
-    export type UpdateRoutineMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
-    export type UpdateRoutineMutationVariables = {routineId: string;data: BodyType<RoutineUpdate>}
-
-    export const useUpdateRoutine = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateRoutine>>, TError,UpdateRoutineMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
- ): UseMutationResult<
-        Awaited<ReturnType<typeof updateRoutine>>,
-        TError,
-        UpdateRoutineMutationVariables,
-        TContext
-      > => {
-      return useMutation(getUpdateRoutineMutationOptions(options));
-    }
-
-export const getCreateTimeRequestUrl = () => {
-
-
-
-
-  return `/api/family/time-requests`
-}
-
-export const createTimeRequest = async (timeRequestInput: TimeRequestInput, options?: Parameters<typeof customFetch>[1]): Promise<TimeRequest> => {
-
-    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
-    if (!h) return {};
-    if (h instanceof Headers) return Object.fromEntries(h.entries());
-    if (Symbol.iterator in h) {
-      return Object.fromEntries(
-        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
-      );
-    }
-    const headers: Record<string, string | readonly string[]> = {};
-    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
-      if (value !== undefined) headers[name] = value;
-    }
-    return headers;
-  };
-return customFetch<TimeRequest>(getCreateTimeRequestUrl(),
+return customFetch<InstalledAppsResult>(getSyncInstalledAppsUrl(),
   {
     ...options,
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(timeRequestInput)
+    body: JSON.stringify(installedAppsInput)
   }
 );}
 
@@ -1118,13 +2941,13 @@ return customFetch<TimeRequest>(getCreateTimeRequestUrl(),
 
 
 
-export const getCreateTimeRequestMutationKey = () => ['createTimeRequest'] as const;
+export const getSyncInstalledAppsMutationKey = () => ['syncInstalledApps'] as const;
 
-export const getCreateTimeRequestMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeRequest>>, TError,CreateTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof createTimeRequest>>, TError,CreateTimeRequestMutationVariables, TContext> => {
+export const getSyncInstalledAppsMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncInstalledApps>>, TError,SyncInstalledAppsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof syncInstalledApps>>, TError,SyncInstalledAppsMutationVariables, TContext> => {
 
-const mutationKey = getCreateTimeRequestMutationKey();
+const mutationKey = getSyncInstalledAppsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1134,10 +2957,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createTimeRequest>>, CreateTimeRequestMutationVariables> = (props) => {
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof syncInstalledApps>>, SyncInstalledAppsMutationVariables> = (props) => {
           const {data} = props ?? {};
 
-          return  createTimeRequest(data,requestOptions)
+          return  syncInstalledApps(data,requestOptions)
         }
 
 
@@ -1147,32 +2970,31 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type CreateTimeRequestMutationResult = NonNullable<Awaited<ReturnType<typeof createTimeRequest>>>
-    export type CreateTimeRequestMutationBody = BodyType<TimeRequestInput>
-    export type CreateTimeRequestMutationError = ErrorType<UnauthorizedResponse>
-    export type CreateTimeRequestMutationVariables = {data: BodyType<TimeRequestInput>}
+    export type SyncInstalledAppsMutationResult = NonNullable<Awaited<ReturnType<typeof syncInstalledApps>>>
+    export type SyncInstalledAppsMutationBody = BodyType<InstalledAppsInput>
+    export type SyncInstalledAppsMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse>
+    export type SyncInstalledAppsMutationVariables = {data: BodyType<InstalledAppsInput>}
 
-    export const useCreateTimeRequest = <TError = ErrorType<UnauthorizedResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createTimeRequest>>, TError,CreateTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useSyncInstalledApps = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof syncInstalledApps>>, TError,SyncInstalledAppsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof createTimeRequest>>,
+        Awaited<ReturnType<typeof syncInstalledApps>>,
         TError,
-        CreateTimeRequestMutationVariables,
+        SyncInstalledAppsMutationVariables,
         TContext
       > => {
-      return useMutation(getCreateTimeRequestMutationOptions(options));
+      return useMutation(getSyncInstalledAppsMutationOptions(options));
     }
 
-export const getResolveTimeRequestUrl = (requestId: string,) => {
+export const getReportDeviceEventsUrl = () => {
 
 
 
 
-  return `/api/family/time-requests/${requestId}`
+  return `/api/child/events`
 }
 
-export const resolveTimeRequest = async (requestId: string,
-    timeRequestResolution: TimeRequestResolution, options?: Parameters<typeof customFetch>[1]): Promise<TimeRequest> => {
+export const reportDeviceEvents = async (deviceEventsInput: DeviceEventsInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
     const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
     if (!h) return {};
@@ -1188,12 +3010,12 @@ export const resolveTimeRequest = async (requestId: string,
     }
     return headers;
   };
-return customFetch<TimeRequest>(getResolveTimeRequestUrl(requestId),
+return customFetch<void>(getReportDeviceEventsUrl(),
   {
     ...options,
-    method: 'PATCH',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
-    body: JSON.stringify(timeRequestResolution)
+    body: JSON.stringify(deviceEventsInput)
   }
 );}
 
@@ -1201,13 +3023,13 @@ return customFetch<TimeRequest>(getResolveTimeRequestUrl(requestId),
 
 
 
-export const getResolveTimeRequestMutationKey = () => ['resolveTimeRequest'] as const;
+export const getReportDeviceEventsMutationKey = () => ['reportDeviceEvents'] as const;
 
-export const getResolveTimeRequestMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveTimeRequest>>, TError,ResolveTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
-): UseMutationOptions<Awaited<ReturnType<typeof resolveTimeRequest>>, TError,ResolveTimeRequestMutationVariables, TContext> => {
+export const getReportDeviceEventsMutationOptions = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportDeviceEvents>>, TError,ReportDeviceEventsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof reportDeviceEvents>>, TError,ReportDeviceEventsMutationVariables, TContext> => {
 
-const mutationKey = getResolveTimeRequestMutationKey();
+const mutationKey = getReportDeviceEventsMutationKey();
 const {mutation: mutationOptions, request: requestOptions} = options ?
       options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
       options
@@ -1217,10 +3039,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
 
 
-      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolveTimeRequest>>, ResolveTimeRequestMutationVariables> = (props) => {
-          const {requestId,data} = props ?? {};
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof reportDeviceEvents>>, ReportDeviceEventsMutationVariables> = (props) => {
+          const {data} = props ?? {};
 
-          return  resolveTimeRequest(requestId,data,requestOptions)
+          return  reportDeviceEvents(data,requestOptions)
         }
 
 
@@ -1230,38 +3052,52 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
   return  { mutationFn, ...mutationOptions }}
 
-    export type ResolveTimeRequestMutationResult = NonNullable<Awaited<ReturnType<typeof resolveTimeRequest>>>
-    export type ResolveTimeRequestMutationBody = BodyType<TimeRequestResolution>
-    export type ResolveTimeRequestMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
-    export type ResolveTimeRequestMutationVariables = {requestId: string;data: BodyType<TimeRequestResolution>}
+    export type ReportDeviceEventsMutationResult = NonNullable<Awaited<ReturnType<typeof reportDeviceEvents>>>
+    export type ReportDeviceEventsMutationBody = BodyType<DeviceEventsInput>
+    export type ReportDeviceEventsMutationError = ErrorType<BadRequestResponse | UnauthorizedResponse>
+    export type ReportDeviceEventsMutationVariables = {data: BodyType<DeviceEventsInput>}
 
-    export const useResolveTimeRequest = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
-    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolveTimeRequest>>, TError,ResolveTimeRequestMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+    export const useReportDeviceEvents = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof reportDeviceEvents>>, TError,ReportDeviceEventsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
  ): UseMutationResult<
-        Awaited<ReturnType<typeof resolveTimeRequest>>,
+        Awaited<ReturnType<typeof reportDeviceEvents>>,
         TError,
-        ResolveTimeRequestMutationVariables,
+        ReportDeviceEventsMutationVariables,
         TContext
       > => {
-      return useMutation(getResolveTimeRequestMutationOptions(options));
+      return useMutation(getReportDeviceEventsMutationOptions(options));
     }
 
-export const getListAuditEventsUrl = () => {
+export const getVerifyGuardianPinUrl = () => {
 
 
 
 
-  return `/api/family/audit`
+  return `/api/child/verify-pin`
 }
 
-export const listAuditEvents = async ( options?: Parameters<typeof customFetch>[1]): Promise<AuditEvent[]> => {
+export const verifyGuardianPin = async (pinVerifyInput: PinVerifyInput, options?: Parameters<typeof customFetch>[1]): Promise<PinVerifyResult> => {
 
-  return customFetch<AuditEvent[]>(getListAuditEventsUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<PinVerifyResult>(getVerifyGuardianPinUrl(),
   {
     ...options,
-    method: 'GET'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pinVerifyInput)
   }
 );}
 
@@ -1269,70 +3105,81 @@ export const listAuditEvents = async ( options?: Parameters<typeof customFetch>[
 
 
 
-export const getListAuditEventsQueryKey = () => {
-    return [
-    `/api/family/audit`
-    ] as const;
+export const getVerifyGuardianPinMutationKey = () => ['verifyGuardianPin'] as const;
+
+export const getVerifyGuardianPinMutationOptions = <TError = ErrorType<UnauthorizedResponse | TooManyRequestsResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyGuardianPin>>, TError,VerifyGuardianPinMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof verifyGuardianPin>>, TError,VerifyGuardianPinMutationVariables, TContext> => {
+
+const mutationKey = getVerifyGuardianPinMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof verifyGuardianPin>>, VerifyGuardianPinMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  verifyGuardianPin(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VerifyGuardianPinMutationResult = NonNullable<Awaited<ReturnType<typeof verifyGuardianPin>>>
+    export type VerifyGuardianPinMutationBody = BodyType<PinVerifyInput>
+    export type VerifyGuardianPinMutationError = ErrorType<UnauthorizedResponse | TooManyRequestsResponse>
+    export type VerifyGuardianPinMutationVariables = {data: BodyType<PinVerifyInput>}
+
+    export const useVerifyGuardianPin = <TError = ErrorType<UnauthorizedResponse | TooManyRequestsResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof verifyGuardianPin>>, TError,VerifyGuardianPinMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof verifyGuardianPin>>,
+        TError,
+        VerifyGuardianPinMutationVariables,
+        TContext
+      > => {
+      return useMutation(getVerifyGuardianPinMutationOptions(options));
     }
 
-
-export const getListAuditEventsQueryOptions = <TData = Awaited<ReturnType<typeof listAuditEvents>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getListAuditEventsQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAuditEvents>>> = ({ signal }) => listAuditEvents({ signal, ...requestOptions });
+export const getRegisterDevicePushTokenUrl = () => {
 
 
 
 
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData> & { queryKey: QueryKey }
+  return `/api/child/push-token`
 }
 
-export type ListAuditEventsQueryResult = NonNullable<Awaited<ReturnType<typeof listAuditEvents>>>
-export type ListAuditEventsQueryError = ErrorType<UnauthorizedResponse>
+export const registerDevicePushToken = async (pushTokenInput: PushTokenInput, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
 
-
-
-export function useListAuditEvents<TData = Awaited<ReturnType<typeof listAuditEvents>>, TError = ErrorType<UnauthorizedResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAuditEvents>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getListAuditEventsQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
-
-export const getExportFamilyDataUrl = () => {
-
-
-
-
-  return `/api/family/export`
-}
-
-export const exportFamilyData = async ( options?: Parameters<typeof customFetch>[1]): Promise<FamilyExport> => {
-
-  return customFetch<FamilyExport>(getExportFamilyDataUrl(),
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getRegisterDevicePushTokenUrl(),
   {
     ...options,
-    method: 'GET'
-
-
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushTokenInput)
   }
 );}
 
@@ -1340,51 +3187,48 @@ export const exportFamilyData = async ( options?: Parameters<typeof customFetch>
 
 
 
-export const getExportFamilyDataQueryKey = () => {
-    return [
-    `/api/family/export`
-    ] as const;
+export const getRegisterDevicePushTokenMutationKey = () => ['registerDevicePushToken'] as const;
+
+export const getRegisterDevicePushTokenMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerDevicePushToken>>, TError,RegisterDevicePushTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof registerDevicePushToken>>, TError,RegisterDevicePushTokenMutationVariables, TContext> => {
+
+const mutationKey = getRegisterDevicePushTokenMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof registerDevicePushToken>>, RegisterDevicePushTokenMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  registerDevicePushToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RegisterDevicePushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof registerDevicePushToken>>>
+    export type RegisterDevicePushTokenMutationBody = BodyType<PushTokenInput>
+    export type RegisterDevicePushTokenMutationError = ErrorType<UnauthorizedResponse>
+    export type RegisterDevicePushTokenMutationVariables = {data: BodyType<PushTokenInput>}
+
+    export const useRegisterDevicePushToken = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof registerDevicePushToken>>, TError,RegisterDevicePushTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof registerDevicePushToken>>,
+        TError,
+        RegisterDevicePushTokenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getRegisterDevicePushTokenMutationOptions(options));
     }
-
-
-export const getExportFamilyDataQueryOptions = <TData = Awaited<ReturnType<typeof exportFamilyData>>, TError = ErrorType<UnauthorizedResponse>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportFamilyData>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-) => {
-
-const {query: queryOptions, request: requestOptions} = options ?? {};
-
-  const queryKey =  queryOptions?.queryKey ?? getExportFamilyDataQueryKey();
-
-
-
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof exportFamilyData>>> = ({ signal }) => exportFamilyData({ signal, ...requestOptions });
-
-
-
-
-
-   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof exportFamilyData>>, TError, TData> & { queryKey: QueryKey }
-}
-
-export type ExportFamilyDataQueryResult = NonNullable<Awaited<ReturnType<typeof exportFamilyData>>>
-export type ExportFamilyDataQueryError = ErrorType<UnauthorizedResponse>
-
-
-
-export function useExportFamilyData<TData = Awaited<ReturnType<typeof exportFamilyData>>, TError = ErrorType<UnauthorizedResponse>>(
-  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof exportFamilyData>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
-
- ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
-
-  const queryOptions = getExportFamilyDataQueryOptions(options)
-
-  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
-
-  return withQueryKey(query, queryOptions.queryKey);
-}
-
-
-
-
-
-
 

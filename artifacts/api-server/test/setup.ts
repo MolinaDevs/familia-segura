@@ -13,6 +13,7 @@ vi.mock("@clerk/express", () => ({
 const { db, pool } = await import("@workspace/db");
 
 beforeEach(async () => {
+  process.env.PREMIUM_BYPASS = "true";
   const { rows } = await pool.query<{ tablename: string }>(
     "select tablename from pg_tables where schemaname = 'public' and tablename <> '__drizzle_migrations'",
   );

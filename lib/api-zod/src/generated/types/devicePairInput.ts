@@ -3,12 +3,12 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { DevicePairInputPlatform } from './devicePairInputPlatform';
 
 export interface DevicePairInput {
-  /** @pattern ^[0-9]{6}$ */
+  /** @pattern ^[A-Za-z0-9-]{6,12}$ */
   code: string;
   /**
      * @minLength 1
@@ -16,4 +16,12 @@ export interface DevicePairInput {
      */
   name: string;
   platform: DevicePairInputPlatform;
+  /** @maxLength 40 */
+  osVersion?: string;
+  /** @maxLength 80 */
+  model?: string;
+  /** @maxLength 40 */
+  appVersion?: string;
+  /** @maxLength 64 */
+  timezone?: string;
 }

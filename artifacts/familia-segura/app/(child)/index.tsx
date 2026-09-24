@@ -104,7 +104,9 @@ export default function ChildDashboard() {
         : Platform.OS === 'android'
           ? getAndroidUsageSamples(visibleData.apps)
           : [];
-      if (samples.length > 0 && !cancelled) syncUsage.mutate({ data: { samples } });
+      const now = new Date();
+      const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      if (samples.length > 0 && !cancelled) syncUsage.mutate({ data: { samples, localDate, localHour: now.getHours() } });
     };
     void sync();
     const subscription = AppState.addEventListener('change', (state) => {
@@ -123,14 +125,11 @@ export default function ChildDashboard() {
     if (!appId || !minutes || isOffline) return;
     setLoading(true);
     try {
-      const childId = await SecureStore.getItemAsync('childId') || 'unknown';
-      const requestedApp = visibleData?.apps.find((app) =>
-        app.appId.toLocaleLowerCase('pt-BR') === appId.trim().toLocaleLowerCase('pt-BR')
-        || app.appName.toLocaleLowerCase('pt-BR') === appId.trim().toLocaleLowerCase('pt-BR'));
+      const childId = visibleData?.child.id ?? (await SecureStore.getItemAsync('childId')) ?? '';
       await createRequest.mutateAsync({
         data: {
           childId,
-          appId: requestedApp?.appId ?? appId.trim(),
+          appId,
           requestedMinutes: parseInt(minutes, 10),
           message
         }
@@ -140,9 +139,10 @@ export default function ChildDashboard() {
       setAppId('');
       setMinutes('');
       setMessage('');
+      void refetch();
     } catch (err) {
-      console.error(err);
-      Alert.alert("Erro", "Não foi possível enviar o pedido.");
+      const status = (err as { status?: number }).status;
+      Alert.alert("Erro", status === 409 ? "Aguarde a resposta dos pedidos anteriores." : "Não foi possível enviar o pedido.");
     } finally {
       setLoading(false);
     }
@@ -219,7 +219,8 @@ export default function ChildDashboard() {
               <View key={app.id} style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{app.appName}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
-                  Status: {app.status} {app.dailyLimitMinutes ? `(${app.dailyLimitMinutes} min/dia)` : ''}
+                  {app.status === 'blocked' ? 'Bloqueado pela família' : `${app.usageTodayMinutes} de ${app.dailyLimitMinutes} min hoje`}
+                  {app.extraTodayMinutes > 0 && app.status !== 'blocked' ? ` · +${app.extraTodayMinutes} min liberados hoje` : ''}
                 </Text>
               </View>
             ))}
@@ -235,7 +236,7 @@ export default function ChildDashboard() {
               <View key={routine.id} style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, opacity: routine.enabled ? 1 : 0.5 }}>
                 <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{routine.title}</Text>
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
-                  {routine.startTime} - {routine.endTime} ({routine.days})
+                  {routine.startTime} às {routine.endTime} · {formatDays(routine.days)}
                 </Text>
               </View>
             ))}
@@ -243,29 +244,49 @@ export default function ChildDashboard() {
         </>
       )}
 
+      {visibleData.pendingRequests.length > 0 && (
+        <View style={{ gap: 8, marginBottom: 24 }}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Aguardando resposta</Text>
+          {visibleData.pendingRequests.map((request) => (
+            <View key={request.id} style={{ padding: 12, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card }}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>+{request.requestedMinutes} min de {request.appName}</Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pedir mais tempo</Text>
       <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.foreground }]}>Para qual aplicativo?</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            value={appId}
-            onChangeText={setAppId}
-            placeholder="Ex: YouTube, TikTok"
-            placeholderTextColor={colors.mutedForeground}
-          />
+          <View style={styles.chips}>
+            {visibleData.apps.map((app) => (
+              <Pressable
+                key={app.id}
+                testID={`request-app-${app.appId}`}
+                onPress={() => setAppId(app.appId)}
+                style={[styles.chip, { borderColor: appId === app.appId ? colors.primary : colors.border, backgroundColor: appId === app.appId ? colors.secondary : colors.background }]}
+              >
+                <Text style={[styles.chipText, { color: appId === app.appId ? colors.primary : colors.foreground }]}>{app.appName}</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={styles.inputGroup}>
           <Text style={[styles.label, { color: colors.foreground }]}>Quantos minutos?</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
-            value={minutes}
-            onChangeText={setMinutes}
-            placeholder="Ex: 15"
-            keyboardType="numeric"
-            placeholderTextColor={colors.mutedForeground}
-          />
+          <View style={styles.chips}>
+            {['10', '15', '30', '45', '60'].map((value) => (
+              <Pressable
+                key={value}
+                testID={`request-minutes-${value}`}
+                onPress={() => setMinutes(value)}
+                style={[styles.chip, { borderColor: minutes === value ? colors.primary : colors.border, backgroundColor: minutes === value ? colors.secondary : colors.background }]}
+              >
+                <Text style={[styles.chipText, { color: minutes === value ? colors.primary : colors.foreground }]}>{value} min</Text>
+              </Pressable>
+            ))}
+          </View>
         </View>
 
         <View style={styles.inputGroup}>
@@ -318,4 +339,14 @@ const styles = StyleSheet.create({
   button: { height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   buttonText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 16 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
+  chipText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
 });
+
+const DAY_LABELS: Record<string, string> = { dom: 'dom', seg: 'seg', ter: 'ter', qua: 'qua', qui: 'qui', sex: 'sex', sab: 'sáb' };
+function formatDays(days: string) {
+  const list = days.split(',').map((d) => d.trim()).filter(Boolean);
+  if (list.length === 7) return 'todos os dias';
+  return list.map((d) => DAY_LABELS[d] ?? d).join(', ');
+}

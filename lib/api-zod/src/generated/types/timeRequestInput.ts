@@ -3,11 +3,15 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface TimeRequestInput {
   childId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
   appId: string;
   /**
      * @minimum 5

@@ -9,6 +9,7 @@ export default defineConfig({
     env: {
       NODE_ENV: "test",
       PREMIUM_BYPASS: "true",
+      RATE_LIMIT_PAIR: "1000",
       DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgres://familia:familia@localhost:55432/familia_segura",
     },
   },

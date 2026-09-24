@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { TimeRequestStatus } from './timeRequestStatus';
 
@@ -17,4 +17,6 @@ export interface TimeRequest {
   message: string;
   status: TimeRequestStatus;
   createdAt: Date;
+  /** @nullable */
+  resolvedAt?: Date | null;
 }

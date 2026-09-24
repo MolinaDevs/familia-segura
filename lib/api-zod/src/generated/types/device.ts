@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { DevicePlatform } from './devicePlatform';
 import type { DeviceProtectionState } from './deviceProtectionState';
@@ -20,4 +20,13 @@ export interface Device {
   /** @nullable */
   protectionUpdatedAt?: Date | null;
   lastSeenAt: Date;
+  online: boolean;
+  /** @nullable */
+  osVersion?: string | null;
+  /** @nullable */
+  model?: string | null;
+  /** @nullable */
+  appVersion?: string | null;
+  /** @nullable */
+  batteryLevel?: number | null;
 }

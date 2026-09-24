@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface FamilyInput {
@@ -23,9 +23,14 @@ export interface FamilyInput {
      */
   childName: string;
   /**
-     * @minimum 2008
-     * @maximum 2026
+     * @minimum 2006
+     * @maximum 2030
      */
   childBirthYear: number;
   consentAccepted: boolean;
+  /**
+     * @minLength 3
+     * @maxLength 64
+     */
+  timezone?: string;
 }

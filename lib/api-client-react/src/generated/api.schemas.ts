@@ -3,10 +3,11 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 export interface ErrorResponse {
   error: string;
+  code?: string;
 }
 
 export interface HealthStatus {
@@ -30,11 +31,65 @@ export interface FamilyInput {
      */
   childName: string;
   /**
-     * @minimum 2008
-     * @maximum 2026
+     * @minimum 2006
+     * @maximum 2030
      */
   childBirthYear: number;
   consentAccepted: boolean;
+  /**
+     * @minLength 3
+     * @maxLength 64
+     */
+  timezone?: string;
+}
+
+export interface FamilySettings {
+  timezone: string;
+  offlineLeaseHours: number;
+  quarantineNewApps: boolean;
+  hasGuardianPin: boolean;
+}
+
+export interface FamilySettingsUpdate {
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  name?: string;
+  /**
+     * @minLength 3
+     * @maxLength 64
+     */
+  timezone?: string;
+  /**
+     * @minimum 12
+     * @maximum 720
+     */
+  offlineLeaseHours?: number;
+  quarantineNewApps?: boolean;
+}
+
+export type FamilyLimitsPlan = typeof FamilyLimitsPlan[keyof typeof FamilyLimitsPlan];
+
+
+export const FamilyLimitsPlan = {
+  free: 'free',
+  premium: 'premium',
+} as const;
+
+export interface FamilyLimits {
+  plan: FamilyLimitsPlan;
+  maxChildren: number;
+  maxDevices: number;
+  maxGuardians: number;
+  children: number;
+  devices: number;
+  guardians: number;
+}
+
+export interface GuardianPinInput {
+  /** @pattern ^[0-9]{4,8}$ */
+  pin: string;
 }
 
 export interface ChildInput {
@@ -44,10 +99,27 @@ export interface ChildInput {
      */
   displayName: string;
   /**
-     * @minimum 2008
-     * @maximum 2026
+     * @minimum 2006
+     * @maximum 2030
      */
   birthYear: number;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  color?: string;
+}
+
+export interface ChildUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 50
+     */
+  displayName?: string;
+  /**
+     * @minimum 2006
+     * @maximum 2030
+     */
+  birthYear?: number;
+  /** @pattern ^#[0-9A-Fa-f]{6}$ */
+  color?: string;
 }
 
 export interface PairingCodeInput {
@@ -63,7 +135,7 @@ export const DevicePairInputPlatform = {
 } as const;
 
 export interface DevicePairInput {
-  /** @pattern ^[0-9]{6}$ */
+  /** @pattern ^[A-Za-z0-9-]{6,12}$ */
   code: string;
   /**
      * @minLength 1
@@ -71,12 +143,37 @@ export interface DevicePairInput {
      */
   name: string;
   platform: DevicePairInputPlatform;
+  /** @maxLength 40 */
+  osVersion?: string;
+  /** @maxLength 80 */
+  model?: string;
+  /** @maxLength 40 */
+  appVersion?: string;
+  /** @maxLength 64 */
+  timezone?: string;
 }
+
+export interface DeviceUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name?: string;
+  childId?: string;
+}
+
+export type DeviceUsageInputPrecision = typeof DeviceUsageInputPrecision[keyof typeof DeviceUsageInputPrecision];
+
+
+export const DeviceUsageInputPrecision = {
+  exact: 'exact',
+  estimated: 'estimated',
+} as const;
 
 export type DeviceUsageInputSamplesItem = {
   /**
      * @minLength 1
-     * @maxLength 100
+     * @maxLength 200
      */
   appId: string;
   /**
@@ -87,7 +184,15 @@ export type DeviceUsageInputSamplesItem = {
 };
 
 export interface DeviceUsageInput {
-  /** @maxItems 50 */
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  localDate?: string;
+  /**
+     * @minimum 0
+     * @maximum 23
+     */
+  localHour?: number;
+  precision?: DeviceUsageInputPrecision;
+  /** @maxItems 200 */
   samples: DeviceUsageInputSamplesItem[];
 }
 
@@ -109,6 +214,143 @@ export interface DeviceProtectionInput {
      * @items.maxLength 80
      */
   issues: string[];
+  /** @maxLength 40 */
+  osVersion?: string;
+  /** @maxLength 80 */
+  model?: string;
+  /** @maxLength 40 */
+  appVersion?: string;
+  /** @maxLength 64 */
+  timezone?: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  batteryLevel?: number;
+  /** @maxItems 200 */
+  boundRuleIds?: string[];
+}
+
+export type InstalledAppsInputAppsItem = {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  packageName: string;
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  label: string;
+  installedAt?: string;
+};
+
+export interface InstalledAppsInput {
+  /** true quando a lista é o inventário completo (apps ausentes são marcados como removidos) */
+  snapshot: boolean;
+  /** @maxItems 600 */
+  apps: InstalledAppsInputAppsItem[];
+}
+
+export interface InstalledAppsResult {
+  blockedPackages: string[];
+  pendingPackages: string[];
+}
+
+export type DeviceEventsInputEventsItemType = typeof DeviceEventsInputEventsItemType[keyof typeof DeviceEventsInputEventsItemType];
+
+
+export const DeviceEventsInputEventsItemType = {
+  protection_disabled: 'protection_disabled',
+  protection_enabled: 'protection_enabled',
+  tamper_attempt: 'tamper_attempt',
+  uninstall_attempt: 'uninstall_attempt',
+  app_installed: 'app_installed',
+  app_removed: 'app_removed',
+  limit_reached: 'limit_reached',
+  routine_block: 'routine_block',
+  device_reboot: 'device_reboot',
+  pin_failed: 'pin_failed',
+} as const;
+
+export type DeviceEventsInputEventsItem = {
+  type: DeviceEventsInputEventsItemType;
+  /** @maxLength 240 */
+  detail?: string;
+  occurredAt?: string;
+};
+
+export interface DeviceEventsInput {
+  /**
+     * @minItems 1
+     * @maxItems 50
+     */
+  events: DeviceEventsInputEventsItem[];
+}
+
+export interface PinVerifyInput {
+  /** @pattern ^[0-9]{4,8}$ */
+  pin: string;
+}
+
+export interface PinVerifyResult {
+  valid: boolean;
+}
+
+export type PushTokenInputPlatform = typeof PushTokenInputPlatform[keyof typeof PushTokenInputPlatform];
+
+
+export const PushTokenInputPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export interface PushTokenInput {
+  /**
+     * @minLength 10
+     * @maxLength 300
+     */
+  token: string;
+  platform: PushTokenInputPlatform;
+}
+
+export type AppRuleInputStatus = typeof AppRuleInputStatus[keyof typeof AppRuleInputStatus];
+
+
+export const AppRuleInputStatus = {
+  allowed: 'allowed',
+  attention: 'attention',
+  blocked: 'blocked',
+} as const;
+
+export interface AppRuleInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  catalogAppId?: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name?: string;
+  /**
+     * @minLength 1
+     * @maxLength 40
+     */
+  category?: string;
+  /**
+     * @maxItems 10
+     * @items.minLength 3
+     * @items.maxLength 200
+     */
+  androidPackages?: string[];
+  /**
+     * @minimum 0
+     * @maximum 1440
+     */
+  dailyLimitMinutes?: number;
+  status?: AppRuleInputStatus;
 }
 
 export type AppRuleUpdateStatus = typeof AppRuleUpdateStatus[keyof typeof AppRuleUpdateStatus];
@@ -130,21 +372,81 @@ export interface AppRuleUpdate {
   dailyLimitMinutes?: number;
 }
 
+export interface RoutineInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  title: string;
+  /** @maxLength 160 */
+  description?: string;
+  /** @pattern ^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$ */
+  days: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  startTime: string;
+  /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
+  endTime: string;
+  /** @maxLength 40 */
+  icon?: string;
+  enabled?: boolean;
+}
+
 export interface RoutineUpdate {
   /**
      * @minLength 1
      * @maxLength 80
      */
   title?: string;
+  /** @maxLength 160 */
+  description?: string;
+  /** @pattern ^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$ */
+  days?: string;
   /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
   startTime?: string;
   /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
   endTime?: string;
+  /** @maxLength 40 */
+  icon?: string;
   enabled?: boolean;
+}
+
+export interface TimeGrantInput {
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  appId: string;
+  /**
+     * @minimum 5
+     * @maximum 240
+     */
+  minutes: number;
+}
+
+export type TimeGrantSource = typeof TimeGrantSource[keyof typeof TimeGrantSource];
+
+
+export const TimeGrantSource = {
+  manual: 'manual',
+  request: 'request',
+} as const;
+
+export interface TimeGrant {
+  id: string;
+  childId: string;
+  appId: string;
+  minutes: number;
+  validOn: string;
+  source: TimeGrantSource;
+  createdAt: string;
 }
 
 export interface TimeRequestInput {
   childId: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
   appId: string;
   /**
      * @minimum 5
@@ -165,6 +467,72 @@ export const TimeRequestResolutionStatus = {
 
 export interface TimeRequestResolution {
   status: TimeRequestResolutionStatus;
+  /**
+     * @minimum 5
+     * @maximum 240
+     */
+  grantedMinutes?: number;
+}
+
+export type InviteInputRole = typeof InviteInputRole[keyof typeof InviteInputRole];
+
+
+export const InviteInputRole = {
+  guardian: 'guardian',
+  viewer: 'viewer',
+} as const;
+
+export interface InviteInput {
+  role: InviteInputRole;
+}
+
+export type InviteRole = typeof InviteRole[keyof typeof InviteRole];
+
+
+export const InviteRole = {
+  guardian: 'guardian',
+  viewer: 'viewer',
+} as const;
+
+export interface Invite {
+  code: string;
+  role: InviteRole;
+  expiresAt: string;
+}
+
+export interface InviteAcceptInput {
+  /**
+     * @minLength 6
+     * @maxLength 20
+     */
+  code: string;
+  /**
+     * @minLength 2
+     * @maxLength 80
+     */
+  displayName: string;
+  consentAccepted: boolean;
+}
+
+export type MemberUpdateRole = typeof MemberUpdateRole[keyof typeof MemberUpdateRole];
+
+
+export const MemberUpdateRole = {
+  guardian: 'guardian',
+  viewer: 'viewer',
+} as const;
+
+export interface MemberUpdate {
+  role: MemberUpdateRole;
+}
+
+export interface CatalogApp {
+  id: string;
+  name: string;
+  category: string;
+  icon: string;
+  iconColor: string;
+  androidPackages: string[];
 }
 
 export interface Family {
@@ -179,18 +547,33 @@ export type FamilyMemberRole = typeof FamilyMemberRole[keyof typeof FamilyMember
 export const FamilyMemberRole = {
   owner: 'owner',
   guardian: 'guardian',
+  viewer: 'viewer',
 } as const;
 
 export interface FamilyMember {
   id: string;
   displayName: string;
   role: FamilyMemberRole;
+  isCurrentUser: boolean;
 }
+
+export type ChildProfileAgeBand = typeof ChildProfileAgeBand[keyof typeof ChildProfileAgeBand];
+
+
+export const ChildProfileAgeBand = {
+  ate9: 'ate9',
+  de10a12: 'de10a12',
+  de13a15: 'de13a15',
+  de16a17: 'de16a17',
+  adulto: 'adulto',
+} as const;
 
 export interface ChildProfile {
   id: string;
   displayName: string;
   birthYear: number;
+  color: string;
+  ageBand: ChildProfileAgeBand;
 }
 
 export type DevicePlatform = typeof DevicePlatform[keyof typeof DevicePlatform];
@@ -232,6 +615,15 @@ export interface Device {
   /** @nullable */
   protectionUpdatedAt?: string | null;
   lastSeenAt: string;
+  online: boolean;
+  /** @nullable */
+  osVersion?: string | null;
+  /** @nullable */
+  model?: string | null;
+  /** @nullable */
+  appVersion?: string | null;
+  /** @nullable */
+  batteryLevel?: number | null;
 }
 
 export interface DevicePairResult {
@@ -242,6 +634,51 @@ export interface DevicePairResult {
 export interface PairingCode {
   code: string;
   expiresAt: string;
+}
+
+export type DeviceAppStatus = typeof DeviceAppStatus[keyof typeof DeviceAppStatus];
+
+
+export const DeviceAppStatus = {
+  approved: 'approved',
+  blocked: 'blocked',
+  pending: 'pending',
+} as const;
+
+export interface DeviceApp {
+  id: string;
+  deviceId: string;
+  packageName: string;
+  label: string;
+  status: DeviceAppStatus;
+  /** @nullable */
+  installedAt?: string | null;
+  /** @nullable */
+  removedAt?: string | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+}
+
+export type DeviceAppUpdateStatus = typeof DeviceAppUpdateStatus[keyof typeof DeviceAppUpdateStatus];
+
+
+export const DeviceAppUpdateStatus = {
+  approved: 'approved',
+  blocked: 'blocked',
+} as const;
+
+export interface DeviceAppUpdate {
+  status: DeviceAppUpdateStatus;
+}
+
+export interface DeviceEvent {
+  id: string;
+  deviceId: string;
+  childId: string;
+  type: string;
+  /** @nullable */
+  detail?: string | null;
+  occurredAt: string;
 }
 
 export type AppRuleStatus = typeof AppRuleStatus[keyof typeof AppRuleStatus];
@@ -261,8 +698,12 @@ export interface AppRule {
   category: string;
   icon: string;
   iconColor: string;
+  androidPackages: string[];
   usageTodayMinutes: number;
+  /** No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje. */
   dailyLimitMinutes: number;
+  extraTodayMinutes: number;
+  effectiveLimitMinutes: number;
   status: AppRuleStatus;
 }
 
@@ -297,12 +738,16 @@ export interface TimeRequest {
   message: string;
   status: TimeRequestStatus;
   createdAt: string;
+  /** @nullable */
+  resolvedAt?: string | null;
 }
 
 export interface AuditEvent {
   id: string;
   action: string;
   summary: string;
+  /** @nullable */
+  actorName?: string | null;
   createdAt: string;
 }
 
@@ -314,20 +759,161 @@ export interface PrivacySummary {
 
 export interface FamilyOverview {
   family: Family;
+  /** Data de hoje no fuso da família (YYYY-MM-DD) */
+  today: string;
   members: FamilyMember[];
   children: ChildProfile[];
   devices: Device[];
   apps: AppRule[];
   routines: Routine[];
   timeRequests: TimeRequest[];
+  pendingApps: DeviceApp[];
+  recentEvents: DeviceEvent[];
+  limits: FamilyLimits;
+  settings: FamilySettings;
   privacy: PrivacySummary;
+}
+
+/**
+ * Verificador para checagem offline do PIN no aparelho (scrypt N=16384, r=8, p=1, 32 bytes)
+ */
+export interface PinVerifier {
+  algorithm: string;
+  salt: string;
+  hash: string;
+}
+
+export interface ChildPolicy {
+  leaseHours: number;
+  quarantineNewApps: boolean;
+  timezone: string;
+  serverTime: string;
+  blockedPackages: string[];
+  pendingPackages: string[];
+  pinVerifier?: PinVerifier | null;
 }
 
 export interface ChildOverview {
   child: ChildProfile;
+  deviceId: string;
   apps: AppRule[];
   routines: Routine[];
   collectedData: string[];
+  policy: ChildPolicy;
+  pendingRequests: TimeRequest[];
+}
+
+export type UsageReportPrecision = typeof UsageReportPrecision[keyof typeof UsageReportPrecision];
+
+
+export const UsageReportPrecision = {
+  exact: 'exact',
+  estimated: 'estimated',
+  mixed: 'mixed',
+  none: 'none',
+} as const;
+
+export type UsageReportTotals = {
+  minutes: number;
+  dailyAverage: number;
+  previousPeriodMinutes: number;
+};
+
+export type UsageReportDailyItem = {
+  date: string;
+  minutes: number;
+  limitMinutes: number;
+};
+
+export type UsageReportAppsItemPrecision = typeof UsageReportAppsItemPrecision[keyof typeof UsageReportAppsItemPrecision];
+
+
+export const UsageReportAppsItemPrecision = {
+  exact: 'exact',
+  estimated: 'estimated',
+} as const;
+
+export type UsageReportAppsItem = {
+  appId: string;
+  appName: string;
+  iconColor: string;
+  minutes: number;
+  precision: UsageReportAppsItemPrecision;
+};
+
+export type UsageReportHeatmapItem = {
+  /**
+     * @minimum 0
+     * @maximum 6
+     */
+  weekday: number;
+  /**
+     * @minimum 0
+     * @maximum 23
+     */
+  hour: number;
+  minutes: number;
+};
+
+export type UsageReportDevicesItemPlatform = typeof UsageReportDevicesItemPlatform[keyof typeof UsageReportDevicesItemPlatform];
+
+
+export const UsageReportDevicesItemPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export type UsageReportDevicesItem = {
+  deviceId: string;
+  name: string;
+  platform: UsageReportDevicesItemPlatform;
+  minutes: number;
+};
+
+export type UsageReportChildrenItem = {
+  childId: string;
+  name: string;
+  color: string;
+  minutes: number;
+};
+
+export type UsageReportCompliance = {
+  limitsReached: number;
+  requestsCreated: number;
+  requestsApproved: number;
+  requestsDenied: number;
+  extraMinutesGranted: number;
+};
+
+export type UsageReportProtectionItemPlatform = typeof UsageReportProtectionItemPlatform[keyof typeof UsageReportProtectionItemPlatform];
+
+
+export const UsageReportProtectionItemPlatform = {
+  ios: 'ios',
+  android: 'android',
+} as const;
+
+export type UsageReportProtectionItem = {
+  deviceId: string;
+  name: string;
+  platform: UsageReportProtectionItemPlatform;
+  state: string;
+  lastSeenAt: string;
+  tamperEvents: number;
+};
+
+export interface UsageReport {
+  from: string;
+  to: string;
+  precision: UsageReportPrecision;
+  totals: UsageReportTotals;
+  daily: UsageReportDailyItem[];
+  apps: UsageReportAppsItem[];
+  heatmap: UsageReportHeatmapItem[];
+  devices: UsageReportDevicesItem[];
+  children: UsageReportChildrenItem[];
+  compliance: UsageReportCompliance;
+  protection: UsageReportProtectionItem[];
 }
 
 export interface FamilyExport {
@@ -347,7 +933,12 @@ export type UnauthorizedResponse = ErrorResponse;
 export type BadRequestResponse = ErrorResponse;
 
 /**
- * Owner access required
+ * Recurso ou limite exclusivo do Premium
+ */
+export type PaymentRequiredResponse = ErrorResponse;
+
+/**
+ * Papel sem permissão para a ação
  */
 export type ForbiddenResponse = ErrorResponse;
 
@@ -355,4 +946,23 @@ export type ForbiddenResponse = ErrorResponse;
  * Not found
  */
 export type NotFoundResponse = ErrorResponse;
+
+/**
+ * Conflito (limite atingido ou registro duplicado)
+ */
+export type ConflictResponse = ErrorResponse;
+
+/**
+ * Muitas tentativas
+ */
+export type TooManyRequestsResponse = ErrorResponse;
+
+export type GetUsageReportParams = {
+childId?: string;
+/**
+ * @minimum 1
+ * @maximum 365
+ */
+days?: number;
+};
 

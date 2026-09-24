@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export type FamilyMemberRole = typeof FamilyMemberRole[keyof typeof FamilyMemberRole];
@@ -12,4 +12,5 @@ export type FamilyMemberRole = typeof FamilyMemberRole[keyof typeof FamilyMember
 export const FamilyMemberRole = {
   owner: 'owner',
   guardian: 'guardian',
+  viewer: 'viewer',
 } as const;

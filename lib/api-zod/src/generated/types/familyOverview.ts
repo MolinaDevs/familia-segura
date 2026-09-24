@@ -3,24 +3,34 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { AppRule } from './appRule';
 import type { ChildProfile } from './childProfile';
 import type { Device } from './device';
+import type { DeviceApp } from './deviceApp';
+import type { DeviceEvent } from './deviceEvent';
 import type { Family } from './family';
+import type { FamilyLimits } from './familyLimits';
 import type { FamilyMember } from './familyMember';
+import type { FamilySettings } from './familySettings';
 import type { PrivacySummary } from './privacySummary';
 import type { Routine } from './routine';
 import type { TimeRequest } from './timeRequest';
 
 export interface FamilyOverview {
   family: Family;
+  /** Data de hoje no fuso da família (YYYY-MM-DD) */
+  today: string;
   members: FamilyMember[];
   children: ChildProfile[];
   devices: Device[];
   apps: AppRule[];
   routines: Routine[];
   timeRequests: TimeRequest[];
+  pendingApps: DeviceApp[];
+  recentEvents: DeviceEvent[];
+  limits: FamilyLimits;
+  settings: FamilySettings;
   privacy: PrivacySummary;
 }

@@ -8,6 +8,13 @@
       "when": 1790256041807,
       "tag": "0000_right_lord_hawal",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790256516292,
+      "tag": "0001_fase1_familia_multicrianca",
+      "breakpoints": true
     }
   ]
 }

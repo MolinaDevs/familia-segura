@@ -3,11 +3,20 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
+import type { DeviceUsageInputPrecision } from './deviceUsageInputPrecision';
 import type { DeviceUsageInputSamplesItem } from './deviceUsageInputSamplesItem';
 
 export interface DeviceUsageInput {
-  /** @maxItems 50 */
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  localDate?: string;
+  /**
+     * @minimum 0
+     * @maximum 23
+     */
+  localHour?: number;
+  precision?: DeviceUsageInputPrecision;
+  /** @maxItems 200 */
   samples: DeviceUsageInputSamplesItem[];
 }

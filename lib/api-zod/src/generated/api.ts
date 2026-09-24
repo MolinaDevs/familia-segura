@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import * as zod from 'zod';
 
@@ -13,21 +13,36 @@ export const HealthCheckResponse = zod.object({
 })
 
 
+export const ListCatalogAppsResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string())
+})
+export const ListCatalogAppsResponse = zod.array(ListCatalogAppsResponseItem)
+
+
 export const GetFamilyOverviewResponse = zod.object({
   "family": zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "createdAt": zod.coerce.date()
 }),
+  "today": zod.string().describe('Data de hoje no fuso da família (YYYY-MM-DD)'),
   "members": zod.array(zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "role": zod.enum(['owner', 'guardian'])
+  "role": zod.enum(['owner', 'guardian', 'viewer']),
+  "isCurrentUser": zod.boolean()
 })),
   "children": zod.array(zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "birthYear": zod.number().int()
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -38,7 +53,12 @@ export const GetFamilyOverviewResponse = zod.object({
   "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
   "protectionIssues": zod.array(zod.string()),
   "protectionUpdatedAt": zod.coerce.date().nullish(),
-  "lastSeenAt": zod.coerce.date()
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -48,8 +68,11 @@ export const GetFamilyOverviewResponse = zod.object({
   "category": zod.string(),
   "icon": zod.string(),
   "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
-  "dailyLimitMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
   "status": zod.enum(['allowed', 'attention', 'blocked'])
 })),
   "routines": zod.array(zod.object({
@@ -72,8 +95,43 @@ export const GetFamilyOverviewResponse = zod.object({
   "requestedMinutes": zod.number().int(),
   "message": zod.string(),
   "status": zod.enum(['pending', 'approved', 'denied']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
 })),
+  "pendingApps": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "packageName": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['approved', 'blocked', 'pending']),
+  "installedAt": zod.coerce.date().nullish(),
+  "removedAt": zod.coerce.date().nullish(),
+  "firstSeenAt": zod.coerce.date(),
+  "lastSeenAt": zod.coerce.date()
+})),
+  "recentEvents": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "type": zod.string(),
+  "detail": zod.string().nullish(),
+  "occurredAt": zod.coerce.date()
+})),
+  "limits": zod.object({
+  "plan": zod.enum(['free', 'premium']),
+  "maxChildren": zod.number().int(),
+  "maxDevices": zod.number().int(),
+  "maxGuardians": zod.number().int(),
+  "children": zod.number().int(),
+  "devices": zod.number().int(),
+  "guardians": zod.number().int()
+}),
+  "settings": zod.object({
+  "timezone": zod.string(),
+  "offlineLeaseHours": zod.number().int(),
+  "quarantineNewApps": zod.boolean(),
+  "hasGuardianPin": zod.boolean()
+}),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
   "retentionDays": zod.number().int(),
@@ -90,8 +148,11 @@ export const createFamilyBodyGuardianNameMax = 80;
 
 export const createFamilyBodyChildNameMax = 50;
 
-export const createFamilyBodyChildBirthYearMin = 2008;
-export const createFamilyBodyChildBirthYearMax = 2026;
+export const createFamilyBodyChildBirthYearMin = 2006;
+export const createFamilyBodyChildBirthYearMax = 2030;
+
+export const createFamilyBodyTimezoneMin = 3;
+export const createFamilyBodyTimezoneMax = 64;
 
 
 
@@ -100,7 +161,8 @@ export const CreateFamilyBody = zod.object({
   "guardianName": zod.string().min(createFamilyBodyGuardianNameMin).max(createFamilyBodyGuardianNameMax),
   "childName": zod.string().min(1).max(createFamilyBodyChildNameMax),
   "childBirthYear": zod.number().int().min(createFamilyBodyChildBirthYearMin).max(createFamilyBodyChildBirthYearMax),
-  "consentAccepted": zod.boolean()
+  "consentAccepted": zod.boolean(),
+  "timezone": zod.string().min(createFamilyBodyTimezoneMin).max(createFamilyBodyTimezoneMax).optional()
 })
 
 export const CreateFamilyResponse = zod.object({
@@ -109,15 +171,19 @@ export const CreateFamilyResponse = zod.object({
   "name": zod.string(),
   "createdAt": zod.coerce.date()
 }),
+  "today": zod.string().describe('Data de hoje no fuso da família (YYYY-MM-DD)'),
   "members": zod.array(zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "role": zod.enum(['owner', 'guardian'])
+  "role": zod.enum(['owner', 'guardian', 'viewer']),
+  "isCurrentUser": zod.boolean()
 })),
   "children": zod.array(zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "birthYear": zod.number().int()
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -128,7 +194,12 @@ export const CreateFamilyResponse = zod.object({
   "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
   "protectionIssues": zod.array(zod.string()),
   "protectionUpdatedAt": zod.coerce.date().nullish(),
-  "lastSeenAt": zod.coerce.date()
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -138,8 +209,11 @@ export const CreateFamilyResponse = zod.object({
   "category": zod.string(),
   "icon": zod.string(),
   "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
-  "dailyLimitMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
   "status": zod.enum(['allowed', 'attention', 'blocked'])
 })),
   "routines": zod.array(zod.object({
@@ -162,8 +236,43 @@ export const CreateFamilyResponse = zod.object({
   "requestedMinutes": zod.number().int(),
   "message": zod.string(),
   "status": zod.enum(['pending', 'approved', 'denied']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
 })),
+  "pendingApps": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "packageName": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['approved', 'blocked', 'pending']),
+  "installedAt": zod.coerce.date().nullish(),
+  "removedAt": zod.coerce.date().nullish(),
+  "firstSeenAt": zod.coerce.date(),
+  "lastSeenAt": zod.coerce.date()
+})),
+  "recentEvents": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "type": zod.string(),
+  "detail": zod.string().nullish(),
+  "occurredAt": zod.coerce.date()
+})),
+  "limits": zod.object({
+  "plan": zod.enum(['free', 'premium']),
+  "maxChildren": zod.number().int(),
+  "maxDevices": zod.number().int(),
+  "maxGuardians": zod.number().int(),
+  "children": zod.number().int(),
+  "devices": zod.number().int(),
+  "guardians": zod.number().int()
+}),
+  "settings": zod.object({
+  "timezone": zod.string(),
+  "offlineLeaseHours": zod.number().int(),
+  "quarantineNewApps": zod.boolean(),
+  "hasGuardianPin": zod.boolean()
+}),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
   "retentionDays": zod.number().int(),
@@ -175,22 +284,219 @@ export const CreateFamilyResponse = zod.object({
 export const DeleteFamilyResponse = zod.void()
 
 
+export const updateFamilySettingsBodyNameMin = 2;
+export const updateFamilySettingsBodyNameMax = 80;
+
+export const updateFamilySettingsBodyTimezoneMin = 3;
+export const updateFamilySettingsBodyTimezoneMax = 64;
+
+export const updateFamilySettingsBodyOfflineLeaseHoursMin = 12;
+export const updateFamilySettingsBodyOfflineLeaseHoursMax = 720;
+
+
+
+export const UpdateFamilySettingsBody = zod.object({
+  "name": zod.string().min(updateFamilySettingsBodyNameMin).max(updateFamilySettingsBodyNameMax).optional(),
+  "timezone": zod.string().min(updateFamilySettingsBodyTimezoneMin).max(updateFamilySettingsBodyTimezoneMax).optional(),
+  "offlineLeaseHours": zod.number().int().min(updateFamilySettingsBodyOfflineLeaseHoursMin).max(updateFamilySettingsBodyOfflineLeaseHoursMax).optional(),
+  "quarantineNewApps": zod.boolean().optional()
+})
+
+export const UpdateFamilySettingsResponse = zod.object({
+  "timezone": zod.string(),
+  "offlineLeaseHours": zod.number().int(),
+  "quarantineNewApps": zod.boolean(),
+  "hasGuardianPin": zod.boolean()
+})
+
+
+export const setGuardianPinBodyPinRegExp = new RegExp('^[0-9]{4,8}$');
+
+
+export const SetGuardianPinBody = zod.object({
+  "pin": zod.string().regex(setGuardianPinBodyPinRegExp)
+})
+
+export const SetGuardianPinResponse = zod.void()
+
+
 export const createChildBodyDisplayNameMax = 50;
 
-export const createChildBodyBirthYearMin = 2008;
-export const createChildBodyBirthYearMax = 2026;
+export const createChildBodyBirthYearMin = 2006;
+export const createChildBodyBirthYearMax = 2030;
 
+export const createChildBodyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
 
 
 export const CreateChildBody = zod.object({
   "displayName": zod.string().min(1).max(createChildBodyDisplayNameMax),
-  "birthYear": zod.number().int().min(createChildBodyBirthYearMin).max(createChildBodyBirthYearMax)
+  "birthYear": zod.number().int().min(createChildBodyBirthYearMin).max(createChildBodyBirthYearMax),
+  "color": zod.string().regex(createChildBodyColorRegExp).optional()
 })
 
 export const CreateChildResponse = zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "birthYear": zod.number().int()
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+})
+
+
+export const UpdateChildParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const updateChildBodyDisplayNameMax = 50;
+
+export const updateChildBodyBirthYearMin = 2006;
+export const updateChildBodyBirthYearMax = 2030;
+
+export const updateChildBodyColorRegExp = new RegExp('^#[0-9A-Fa-f]{6}$');
+
+
+export const UpdateChildBody = zod.object({
+  "displayName": zod.string().min(1).max(updateChildBodyDisplayNameMax).optional(),
+  "birthYear": zod.number().int().min(updateChildBodyBirthYearMin).max(updateChildBodyBirthYearMax).optional(),
+  "color": zod.string().regex(updateChildBodyColorRegExp).optional()
+})
+
+export const UpdateChildResponse = zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+})
+
+
+export const ArchiveChildParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const ArchiveChildResponse = zod.void()
+
+
+export const CreateAppRuleParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const createAppRuleBodyCatalogAppIdMax = 200;
+
+export const createAppRuleBodyNameMax = 80;
+
+export const createAppRuleBodyCategoryMax = 40;
+
+export const createAppRuleBodyAndroidPackagesItemMin = 3;
+export const createAppRuleBodyAndroidPackagesItemMax = 200;
+
+export const createAppRuleBodyAndroidPackagesMax = 10;
+
+export const createAppRuleBodyDailyLimitMinutesMin = 0;
+export const createAppRuleBodyDailyLimitMinutesMax = 1440;
+
+
+
+export const CreateAppRuleBody = zod.object({
+  "catalogAppId": zod.string().min(1).max(createAppRuleBodyCatalogAppIdMax).optional(),
+  "name": zod.string().min(1).max(createAppRuleBodyNameMax).optional(),
+  "category": zod.string().min(1).max(createAppRuleBodyCategoryMax).optional(),
+  "androidPackages": zod.array(zod.string().min(createAppRuleBodyAndroidPackagesItemMin).max(createAppRuleBodyAndroidPackagesItemMax)).max(createAppRuleBodyAndroidPackagesMax).optional(),
+  "dailyLimitMinutes": zod.number().int().min(createAppRuleBodyDailyLimitMinutesMin).max(createAppRuleBodyDailyLimitMinutesMax).optional(),
+  "status": zod.enum(['allowed', 'attention', 'blocked']).optional()
+})
+
+export const CreateAppRuleResponse = zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "appId": zod.string(),
+  "appName": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
+  "usageTodayMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
+  "status": zod.enum(['allowed', 'attention', 'blocked'])
+})
+
+
+export const deleteAppRulePathAppIdMax = 200;
+
+
+
+export const DeleteAppRuleParams = zod.object({
+  "childId": zod.coerce.string().uuid(),
+  "appId": zod.coerce.string().min(1).max(deleteAppRulePathAppIdMax)
+})
+
+export const DeleteAppRuleResponse = zod.void()
+
+
+export const CreateRoutineParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const createRoutineBodyTitleMax = 80;
+
+export const createRoutineBodyDescriptionMax = 160;
+
+export const createRoutineBodyDaysRegExp = new RegExp('^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$');
+export const createRoutineBodyStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const createRoutineBodyEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const createRoutineBodyIconMax = 40;
+
+
+
+export const CreateRoutineBody = zod.object({
+  "title": zod.string().min(1).max(createRoutineBodyTitleMax),
+  "description": zod.string().max(createRoutineBodyDescriptionMax).optional(),
+  "days": zod.string().regex(createRoutineBodyDaysRegExp),
+  "startTime": zod.string().regex(createRoutineBodyStartTimeRegExp),
+  "endTime": zod.string().regex(createRoutineBodyEndTimeRegExp),
+  "icon": zod.string().max(createRoutineBodyIconMax).optional(),
+  "enabled": zod.boolean().optional()
+})
+
+export const CreateRoutineResponse = zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "days": zod.string(),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "enabled": zod.boolean(),
+  "icon": zod.string()
+})
+
+
+export const CreateTimeGrantParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const createTimeGrantBodyAppIdMax = 200;
+
+export const createTimeGrantBodyMinutesMin = 5;
+export const createTimeGrantBodyMinutesMax = 240;
+
+
+
+export const CreateTimeGrantBody = zod.object({
+  "appId": zod.string().min(1).max(createTimeGrantBodyAppIdMax),
+  "minutes": zod.number().int().min(createTimeGrantBodyMinutesMin).max(createTimeGrantBodyMinutesMax)
+})
+
+export const CreateTimeGrantResponse = zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "appId": zod.string(),
+  "minutes": zod.number().int(),
+  "validOn": zod.string(),
+  "source": zod.enum(['manual', 'request']),
+  "createdAt": zod.coerce.date()
 })
 
 
@@ -204,15 +510,27 @@ export const CreatePairingCodeResponse = zod.object({
 })
 
 
-export const pairDeviceBodyCodeRegExp = new RegExp('^[0-9]{6}$');
+export const pairDeviceBodyCodeRegExp = new RegExp('^[A-Za-z0-9-]{6,12}$');
 export const pairDeviceBodyNameMax = 80;
+
+export const pairDeviceBodyOsVersionMax = 40;
+
+export const pairDeviceBodyModelMax = 80;
+
+export const pairDeviceBodyAppVersionMax = 40;
+
+export const pairDeviceBodyTimezoneMax = 64;
 
 
 
 export const PairDeviceBody = zod.object({
   "code": zod.string().regex(pairDeviceBodyCodeRegExp),
   "name": zod.string().min(1).max(pairDeviceBodyNameMax),
-  "platform": zod.enum(['ios', 'android'])
+  "platform": zod.enum(['ios', 'android']),
+  "osVersion": zod.string().max(pairDeviceBodyOsVersionMax).optional(),
+  "model": zod.string().max(pairDeviceBodyModelMax).optional(),
+  "appVersion": zod.string().max(pairDeviceBodyAppVersionMax).optional(),
+  "timezone": zod.string().max(pairDeviceBodyTimezoneMax).optional()
 })
 
 export const PairDeviceResponse = zod.object({
@@ -225,76 +543,46 @@ export const PairDeviceResponse = zod.object({
   "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
   "protectionIssues": zod.array(zod.string()),
   "protectionUpdatedAt": zod.coerce.date().nullish(),
-  "lastSeenAt": zod.coerce.date()
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish()
 }),
   "deviceToken": zod.string()
 })
 
 
-export const GetChildOverviewResponse = zod.object({
-  "child": zod.object({
-  "id": zod.string().uuid(),
-  "displayName": zod.string(),
-  "birthYear": zod.number().int()
-}),
-  "apps": zod.array(zod.object({
-  "id": zod.string().uuid(),
-  "childId": zod.string().uuid(),
-  "appId": zod.string(),
-  "appName": zod.string(),
-  "category": zod.string(),
-  "icon": zod.string(),
-  "iconColor": zod.string(),
-  "usageTodayMinutes": zod.number().int(),
-  "dailyLimitMinutes": zod.number().int(),
-  "status": zod.enum(['allowed', 'attention', 'blocked'])
-})),
-  "routines": zod.array(zod.object({
+export const UpdateDeviceParams = zod.object({
+  "deviceId": zod.coerce.string().uuid()
+})
+
+export const updateDeviceBodyNameMax = 80;
+
+
+
+export const UpdateDeviceBody = zod.object({
+  "name": zod.string().min(1).max(updateDeviceBodyNameMax).optional(),
+  "childId": zod.string().uuid().optional()
+})
+
+export const UpdateDeviceResponse = zod.object({
   "id": zod.string().uuid(),
   "childId": zod.string().uuid(),
-  "title": zod.string(),
-  "description": zod.string(),
-  "days": zod.string(),
-  "startTime": zod.string(),
-  "endTime": zod.string(),
-  "enabled": zod.boolean(),
-  "icon": zod.string()
-})),
-  "collectedData": zod.array(zod.string())
+  "name": zod.string(),
+  "platform": zod.enum(['ios', 'android']),
+  "status": zod.enum(['active', 'offline', 'revoked']),
+  "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
+  "protectionIssues": zod.array(zod.string()),
+  "protectionUpdatedAt": zod.coerce.date().nullish(),
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish()
 })
-
-
-export const syncChildUsageBodySamplesItemAppIdMax = 100;
-
-export const syncChildUsageBodySamplesItemUsageTodayMinutesMin = 0;
-export const syncChildUsageBodySamplesItemUsageTodayMinutesMax = 1440;
-
-export const syncChildUsageBodySamplesMax = 50;
-
-
-
-export const SyncChildUsageBody = zod.object({
-  "samples": zod.array(zod.object({
-  "appId": zod.string().min(1).max(syncChildUsageBodySamplesItemAppIdMax),
-  "usageTodayMinutes": zod.number().int().min(syncChildUsageBodySamplesItemUsageTodayMinutesMin).max(syncChildUsageBodySamplesItemUsageTodayMinutesMax)
-})).max(syncChildUsageBodySamplesMax)
-})
-
-export const SyncChildUsageResponse = zod.void()
-
-
-export const syncChildProtectionBodyIssuesItemMax = 80;
-
-export const syncChildProtectionBodyIssuesMax = 10;
-
-
-
-export const SyncChildProtectionBody = zod.object({
-  "state": zod.enum(['active', 'partial', 'disabled', 'unavailable']),
-  "issues": zod.array(zod.string().min(1).max(syncChildProtectionBodyIssuesItemMax)).max(syncChildProtectionBodyIssuesMax)
-})
-
-export const SyncChildProtectionResponse = zod.void()
 
 
 export const RevokeDeviceParams = zod.object({
@@ -304,8 +592,56 @@ export const RevokeDeviceParams = zod.object({
 export const RevokeDeviceResponse = zod.void()
 
 
+export const ListDeviceAppsParams = zod.object({
+  "deviceId": zod.coerce.string().uuid()
+})
+
+export const ListDeviceAppsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "packageName": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['approved', 'blocked', 'pending']),
+  "installedAt": zod.coerce.date().nullish(),
+  "removedAt": zod.coerce.date().nullish(),
+  "firstSeenAt": zod.coerce.date(),
+  "lastSeenAt": zod.coerce.date()
+})
+export const ListDeviceAppsResponse = zod.array(ListDeviceAppsResponseItem)
+
+
+export const updateDeviceAppPathPackageNameMax = 200;
+
+
+
+export const UpdateDeviceAppParams = zod.object({
+  "deviceId": zod.coerce.string().uuid(),
+  "packageName": zod.coerce.string().min(1).max(updateDeviceAppPathPackageNameMax)
+})
+
+export const UpdateDeviceAppBody = zod.object({
+  "status": zod.enum(['approved', 'blocked'])
+})
+
+export const UpdateDeviceAppResponse = zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "packageName": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['approved', 'blocked', 'pending']),
+  "installedAt": zod.coerce.date().nullish(),
+  "removedAt": zod.coerce.date().nullish(),
+  "firstSeenAt": zod.coerce.date(),
+  "lastSeenAt": zod.coerce.date()
+})
+
+
+export const updateAppRulePathAppIdMax = 200;
+
+
+
 export const UpdateAppRuleParams = zod.object({
-  "appId": zod.coerce.string()
+  "appId": zod.coerce.string().min(1).max(updateAppRulePathAppIdMax)
 })
 
 export const updateAppRuleBodyDailyLimitMinutesMin = 0;
@@ -327,8 +663,11 @@ export const UpdateAppRuleResponse = zod.object({
   "category": zod.string(),
   "icon": zod.string(),
   "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
-  "dailyLimitMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
   "status": zod.enum(['allowed', 'attention', 'blocked'])
 })
 
@@ -339,14 +678,22 @@ export const UpdateRoutineParams = zod.object({
 
 export const updateRoutineBodyTitleMax = 80;
 
+export const updateRoutineBodyDescriptionMax = 160;
+
+export const updateRoutineBodyDaysRegExp = new RegExp('^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$');
 export const updateRoutineBodyStartTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
 export const updateRoutineBodyEndTimeRegExp = new RegExp('^([01][0-9]|2[0-3]):[0-5][0-9]$');
+export const updateRoutineBodyIconMax = 40;
+
 
 
 export const UpdateRoutineBody = zod.object({
   "title": zod.string().min(1).max(updateRoutineBodyTitleMax).optional(),
+  "description": zod.string().max(updateRoutineBodyDescriptionMax).optional(),
+  "days": zod.string().regex(updateRoutineBodyDaysRegExp).optional(),
   "startTime": zod.string().regex(updateRoutineBodyStartTimeRegExp).optional(),
   "endTime": zod.string().regex(updateRoutineBodyEndTimeRegExp).optional(),
+  "icon": zod.string().max(updateRoutineBodyIconMax).optional(),
   "enabled": zod.boolean().optional()
 })
 
@@ -363,6 +710,15 @@ export const UpdateRoutineResponse = zod.object({
 })
 
 
+export const DeleteRoutineParams = zod.object({
+  "routineId": zod.coerce.string().uuid()
+})
+
+export const DeleteRoutineResponse = zod.void()
+
+
+export const createTimeRequestBodyAppIdMax = 200;
+
 export const createTimeRequestBodyRequestedMinutesMin = 5;
 export const createTimeRequestBodyRequestedMinutesMax = 120;
 
@@ -372,7 +728,7 @@ export const createTimeRequestBodyMessageMax = 240;
 
 export const CreateTimeRequestBody = zod.object({
   "childId": zod.string().uuid(),
-  "appId": zod.string(),
+  "appId": zod.string().min(1).max(createTimeRequestBodyAppIdMax),
   "requestedMinutes": zod.number().int().min(createTimeRequestBodyRequestedMinutesMin).max(createTimeRequestBodyRequestedMinutesMax),
   "message": zod.string().max(createTimeRequestBodyMessageMax)
 })
@@ -386,7 +742,8 @@ export const CreateTimeRequestResponse = zod.object({
   "requestedMinutes": zod.number().int(),
   "message": zod.string(),
   "status": zod.enum(['pending', 'approved', 'denied']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
 })
 
 
@@ -394,8 +751,14 @@ export const ResolveTimeRequestParams = zod.object({
   "requestId": zod.coerce.string().uuid()
 })
 
+export const resolveTimeRequestBodyGrantedMinutesMin = 5;
+export const resolveTimeRequestBodyGrantedMinutesMax = 240;
+
+
+
 export const ResolveTimeRequestBody = zod.object({
-  "status": zod.enum(['approved', 'denied'])
+  "status": zod.enum(['approved', 'denied']),
+  "grantedMinutes": zod.number().int().min(resolveTimeRequestBodyGrantedMinutesMin).max(resolveTimeRequestBodyGrantedMinutesMax).optional()
 })
 
 export const ResolveTimeRequestResponse = zod.object({
@@ -407,36 +770,55 @@ export const ResolveTimeRequestResponse = zod.object({
   "requestedMinutes": zod.number().int(),
   "message": zod.string(),
   "status": zod.enum(['pending', 'approved', 'denied']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
 })
 
 
-export const ListAuditEventsResponseItem = zod.object({
-  "id": zod.string().uuid(),
-  "action": zod.string(),
-  "summary": zod.string(),
-  "createdAt": zod.coerce.date()
+export const CreateInviteBody = zod.object({
+  "role": zod.enum(['guardian', 'viewer'])
 })
-export const ListAuditEventsResponse = zod.array(ListAuditEventsResponseItem)
+
+export const CreateInviteResponse = zod.object({
+  "code": zod.string(),
+  "role": zod.enum(['guardian', 'viewer']),
+  "expiresAt": zod.coerce.date()
+})
 
 
-export const ExportFamilyDataResponse = zod.object({
-  "exportedAt": zod.coerce.date(),
-  "data": zod.object({
+export const acceptInviteBodyCodeMin = 6;
+export const acceptInviteBodyCodeMax = 20;
+
+export const acceptInviteBodyDisplayNameMin = 2;
+export const acceptInviteBodyDisplayNameMax = 80;
+
+
+
+export const AcceptInviteBody = zod.object({
+  "code": zod.string().min(acceptInviteBodyCodeMin).max(acceptInviteBodyCodeMax),
+  "displayName": zod.string().min(acceptInviteBodyDisplayNameMin).max(acceptInviteBodyDisplayNameMax),
+  "consentAccepted": zod.boolean()
+})
+
+export const AcceptInviteResponse = zod.object({
   "family": zod.object({
   "id": zod.string().uuid(),
   "name": zod.string(),
   "createdAt": zod.coerce.date()
 }),
+  "today": zod.string().describe('Data de hoje no fuso da família (YYYY-MM-DD)'),
   "members": zod.array(zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "role": zod.enum(['owner', 'guardian'])
+  "role": zod.enum(['owner', 'guardian', 'viewer']),
+  "isCurrentUser": zod.boolean()
 })),
   "children": zod.array(zod.object({
   "id": zod.string().uuid(),
   "displayName": zod.string(),
-  "birthYear": zod.number().int()
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -447,7 +829,12 @@ export const ExportFamilyDataResponse = zod.object({
   "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
   "protectionIssues": zod.array(zod.string()),
   "protectionUpdatedAt": zod.coerce.date().nullish(),
-  "lastSeenAt": zod.coerce.date()
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -457,8 +844,11 @@ export const ExportFamilyDataResponse = zod.object({
   "category": zod.string(),
   "icon": zod.string(),
   "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
-  "dailyLimitMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
   "status": zod.enum(['allowed', 'attention', 'blocked'])
 })),
   "routines": zod.array(zod.object({
@@ -481,8 +871,281 @@ export const ExportFamilyDataResponse = zod.object({
   "requestedMinutes": zod.number().int(),
   "message": zod.string(),
   "status": zod.enum(['pending', 'approved', 'denied']),
-  "createdAt": zod.coerce.date()
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
 })),
+  "pendingApps": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "packageName": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['approved', 'blocked', 'pending']),
+  "installedAt": zod.coerce.date().nullish(),
+  "removedAt": zod.coerce.date().nullish(),
+  "firstSeenAt": zod.coerce.date(),
+  "lastSeenAt": zod.coerce.date()
+})),
+  "recentEvents": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "type": zod.string(),
+  "detail": zod.string().nullish(),
+  "occurredAt": zod.coerce.date()
+})),
+  "limits": zod.object({
+  "plan": zod.enum(['free', 'premium']),
+  "maxChildren": zod.number().int(),
+  "maxDevices": zod.number().int(),
+  "maxGuardians": zod.number().int(),
+  "children": zod.number().int(),
+  "devices": zod.number().int(),
+  "guardians": zod.number().int()
+}),
+  "settings": zod.object({
+  "timezone": zod.string(),
+  "offlineLeaseHours": zod.number().int(),
+  "quarantineNewApps": zod.boolean(),
+  "hasGuardianPin": zod.boolean()
+}),
+  "privacy": zod.object({
+  "consentAcceptedAt": zod.coerce.date(),
+  "retentionDays": zod.number().int(),
+  "collectedData": zod.array(zod.string())
+})
+})
+
+
+export const UpdateMemberParams = zod.object({
+  "memberId": zod.coerce.string().uuid()
+})
+
+export const UpdateMemberBody = zod.object({
+  "role": zod.enum(['guardian', 'viewer'])
+})
+
+export const UpdateMemberResponse = zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "role": zod.enum(['owner', 'guardian', 'viewer']),
+  "isCurrentUser": zod.boolean()
+})
+
+
+export const RemoveMemberParams = zod.object({
+  "memberId": zod.coerce.string().uuid()
+})
+
+export const RemoveMemberResponse = zod.void()
+
+
+export const registerGuardianPushTokenBodyTokenMin = 10;
+export const registerGuardianPushTokenBodyTokenMax = 300;
+
+
+
+export const RegisterGuardianPushTokenBody = zod.object({
+  "token": zod.string().min(registerGuardianPushTokenBodyTokenMin).max(registerGuardianPushTokenBodyTokenMax),
+  "platform": zod.enum(['ios', 'android'])
+})
+
+export const RegisterGuardianPushTokenResponse = zod.void()
+
+
+export const getUsageReportQueryDaysDefault = 7;
+export const getUsageReportQueryDaysMax = 365;
+
+
+
+export const GetUsageReportQueryParams = zod.object({
+  "childId": zod.coerce.string().uuid().optional(),
+  "days": zod.coerce.number().int().min(1).max(getUsageReportQueryDaysMax).default(getUsageReportQueryDaysDefault)
+})
+
+export const getUsageReportResponseHeatmapItemWeekdayMin = 0;
+export const getUsageReportResponseHeatmapItemWeekdayMax = 6;
+
+export const getUsageReportResponseHeatmapItemHourMin = 0;
+export const getUsageReportResponseHeatmapItemHourMax = 23;
+
+
+
+export const GetUsageReportResponse = zod.object({
+  "from": zod.string(),
+  "to": zod.string(),
+  "precision": zod.enum(['exact', 'estimated', 'mixed', 'none']),
+  "totals": zod.object({
+  "minutes": zod.number().int(),
+  "dailyAverage": zod.number().int(),
+  "previousPeriodMinutes": zod.number().int()
+}),
+  "daily": zod.array(zod.object({
+  "date": zod.string(),
+  "minutes": zod.number().int(),
+  "limitMinutes": zod.number().int()
+})),
+  "apps": zod.array(zod.object({
+  "appId": zod.string(),
+  "appName": zod.string(),
+  "iconColor": zod.string(),
+  "minutes": zod.number().int(),
+  "precision": zod.enum(['exact', 'estimated'])
+})),
+  "heatmap": zod.array(zod.object({
+  "weekday": zod.number().int().min(getUsageReportResponseHeatmapItemWeekdayMin).max(getUsageReportResponseHeatmapItemWeekdayMax),
+  "hour": zod.number().int().min(getUsageReportResponseHeatmapItemHourMin).max(getUsageReportResponseHeatmapItemHourMax),
+  "minutes": zod.number().int()
+})),
+  "devices": zod.array(zod.object({
+  "deviceId": zod.string().uuid(),
+  "name": zod.string(),
+  "platform": zod.enum(['ios', 'android']),
+  "minutes": zod.number().int()
+})),
+  "children": zod.array(zod.object({
+  "childId": zod.string().uuid(),
+  "name": zod.string(),
+  "color": zod.string(),
+  "minutes": zod.number().int()
+})),
+  "compliance": zod.object({
+  "limitsReached": zod.number().int(),
+  "requestsCreated": zod.number().int(),
+  "requestsApproved": zod.number().int(),
+  "requestsDenied": zod.number().int(),
+  "extraMinutesGranted": zod.number().int()
+}),
+  "protection": zod.array(zod.object({
+  "deviceId": zod.string().uuid(),
+  "name": zod.string(),
+  "platform": zod.enum(['ios', 'android']),
+  "state": zod.string(),
+  "lastSeenAt": zod.coerce.date(),
+  "tamperEvents": zod.number().int()
+}))
+})
+
+
+export const ListAuditEventsResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "action": zod.string(),
+  "summary": zod.string(),
+  "actorName": zod.string().nullish(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAuditEventsResponse = zod.array(ListAuditEventsResponseItem)
+
+
+export const ExportFamilyDataResponse = zod.object({
+  "exportedAt": zod.coerce.date(),
+  "data": zod.object({
+  "family": zod.object({
+  "id": zod.string().uuid(),
+  "name": zod.string(),
+  "createdAt": zod.coerce.date()
+}),
+  "today": zod.string().describe('Data de hoje no fuso da família (YYYY-MM-DD)'),
+  "members": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "role": zod.enum(['owner', 'guardian', 'viewer']),
+  "isCurrentUser": zod.boolean()
+})),
+  "children": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+})),
+  "devices": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "name": zod.string(),
+  "platform": zod.enum(['ios', 'android']),
+  "status": zod.enum(['active', 'offline', 'revoked']),
+  "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
+  "protectionIssues": zod.array(zod.string()),
+  "protectionUpdatedAt": zod.coerce.date().nullish(),
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish()
+})),
+  "apps": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "appId": zod.string(),
+  "appName": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
+  "usageTodayMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
+  "status": zod.enum(['allowed', 'attention', 'blocked'])
+})),
+  "routines": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "days": zod.string(),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "enabled": zod.boolean(),
+  "icon": zod.string()
+})),
+  "timeRequests": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "childName": zod.string(),
+  "appId": zod.string(),
+  "appName": zod.string(),
+  "requestedMinutes": zod.number().int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'denied']),
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
+})),
+  "pendingApps": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "packageName": zod.string(),
+  "label": zod.string(),
+  "status": zod.enum(['approved', 'blocked', 'pending']),
+  "installedAt": zod.coerce.date().nullish(),
+  "removedAt": zod.coerce.date().nullish(),
+  "firstSeenAt": zod.coerce.date(),
+  "lastSeenAt": zod.coerce.date()
+})),
+  "recentEvents": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "deviceId": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "type": zod.string(),
+  "detail": zod.string().nullish(),
+  "occurredAt": zod.coerce.date()
+})),
+  "limits": zod.object({
+  "plan": zod.enum(['free', 'premium']),
+  "maxChildren": zod.number().int(),
+  "maxDevices": zod.number().int(),
+  "maxGuardians": zod.number().int(),
+  "children": zod.number().int(),
+  "devices": zod.number().int(),
+  "guardians": zod.number().int()
+}),
+  "settings": zod.object({
+  "timezone": zod.string(),
+  "offlineLeaseHours": zod.number().int(),
+  "quarantineNewApps": zod.boolean(),
+  "hasGuardianPin": zod.boolean()
+}),
   "privacy": zod.object({
   "consentAcceptedAt": zod.coerce.date(),
   "retentionDays": zod.number().int(),
@@ -493,8 +1156,197 @@ export const ExportFamilyDataResponse = zod.object({
   "id": zod.string().uuid(),
   "action": zod.string(),
   "summary": zod.string(),
+  "actorName": zod.string().nullish(),
   "createdAt": zod.coerce.date()
 }))
 })
+
+
+export const GetChildOverviewResponse = zod.object({
+  "child": zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+}),
+  "deviceId": zod.string().uuid(),
+  "apps": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "appId": zod.string(),
+  "appName": zod.string(),
+  "category": zod.string(),
+  "icon": zod.string(),
+  "iconColor": zod.string(),
+  "androidPackages": zod.array(zod.string()),
+  "usageTodayMinutes": zod.number().int(),
+  "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
+  "extraTodayMinutes": zod.number().int(),
+  "effectiveLimitMinutes": zod.number().int(),
+  "status": zod.enum(['allowed', 'attention', 'blocked'])
+})),
+  "routines": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "days": zod.string(),
+  "startTime": zod.string(),
+  "endTime": zod.string(),
+  "enabled": zod.boolean(),
+  "icon": zod.string()
+})),
+  "collectedData": zod.array(zod.string()),
+  "policy": zod.object({
+  "leaseHours": zod.number().int(),
+  "quarantineNewApps": zod.boolean(),
+  "timezone": zod.string(),
+  "serverTime": zod.coerce.date(),
+  "blockedPackages": zod.array(zod.string()),
+  "pendingPackages": zod.array(zod.string()),
+  "pinVerifier": zod.union([zod.object({
+  "algorithm": zod.string(),
+  "salt": zod.string(),
+  "hash": zod.string()
+}).describe('Verificador para checagem offline do PIN no aparelho (scrypt N=16384, r=8, p=1, 32 bytes)'),zod.null()]).optional()
+}),
+  "pendingRequests": zod.array(zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "childName": zod.string(),
+  "appId": zod.string(),
+  "appName": zod.string(),
+  "requestedMinutes": zod.number().int(),
+  "message": zod.string(),
+  "status": zod.enum(['pending', 'approved', 'denied']),
+  "createdAt": zod.coerce.date(),
+  "resolvedAt": zod.coerce.date().nullish()
+}))
+})
+
+
+export const syncChildUsageBodyLocalDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+export const syncChildUsageBodyLocalHourMin = 0;
+export const syncChildUsageBodyLocalHourMax = 23;
+
+export const syncChildUsageBodySamplesItemAppIdMax = 200;
+
+export const syncChildUsageBodySamplesItemUsageTodayMinutesMin = 0;
+export const syncChildUsageBodySamplesItemUsageTodayMinutesMax = 1440;
+
+export const syncChildUsageBodySamplesMax = 200;
+
+
+
+export const SyncChildUsageBody = zod.object({
+  "localDate": zod.string().regex(syncChildUsageBodyLocalDateRegExp).optional(),
+  "localHour": zod.number().int().min(syncChildUsageBodyLocalHourMin).max(syncChildUsageBodyLocalHourMax).optional(),
+  "precision": zod.enum(['exact', 'estimated']).optional(),
+  "samples": zod.array(zod.object({
+  "appId": zod.string().min(1).max(syncChildUsageBodySamplesItemAppIdMax),
+  "usageTodayMinutes": zod.number().int().min(syncChildUsageBodySamplesItemUsageTodayMinutesMin).max(syncChildUsageBodySamplesItemUsageTodayMinutesMax)
+})).max(syncChildUsageBodySamplesMax)
+})
+
+export const SyncChildUsageResponse = zod.void()
+
+
+export const syncChildProtectionBodyIssuesItemMax = 80;
+
+export const syncChildProtectionBodyIssuesMax = 10;
+
+export const syncChildProtectionBodyOsVersionMax = 40;
+
+export const syncChildProtectionBodyModelMax = 80;
+
+export const syncChildProtectionBodyAppVersionMax = 40;
+
+export const syncChildProtectionBodyTimezoneMax = 64;
+
+export const syncChildProtectionBodyBatteryLevelMin = 0;
+export const syncChildProtectionBodyBatteryLevelMax = 100;
+
+export const syncChildProtectionBodyBoundRuleIdsMax = 200;
+
+
+
+export const SyncChildProtectionBody = zod.object({
+  "state": zod.enum(['active', 'partial', 'disabled', 'unavailable']),
+  "issues": zod.array(zod.string().min(1).max(syncChildProtectionBodyIssuesItemMax)).max(syncChildProtectionBodyIssuesMax),
+  "osVersion": zod.string().max(syncChildProtectionBodyOsVersionMax).optional(),
+  "model": zod.string().max(syncChildProtectionBodyModelMax).optional(),
+  "appVersion": zod.string().max(syncChildProtectionBodyAppVersionMax).optional(),
+  "timezone": zod.string().max(syncChildProtectionBodyTimezoneMax).optional(),
+  "batteryLevel": zod.number().int().min(syncChildProtectionBodyBatteryLevelMin).max(syncChildProtectionBodyBatteryLevelMax).optional(),
+  "boundRuleIds": zod.array(zod.string().uuid()).max(syncChildProtectionBodyBoundRuleIdsMax).optional()
+})
+
+export const SyncChildProtectionResponse = zod.void()
+
+
+export const syncInstalledAppsBodyAppsItemPackageNameMax = 200;
+
+export const syncInstalledAppsBodyAppsItemLabelMax = 120;
+
+export const syncInstalledAppsBodyAppsMax = 600;
+
+
+
+export const SyncInstalledAppsBody = zod.object({
+  "snapshot": zod.boolean().describe('true quando a lista é o inventário completo (apps ausentes são marcados como removidos)'),
+  "apps": zod.array(zod.object({
+  "packageName": zod.string().min(1).max(syncInstalledAppsBodyAppsItemPackageNameMax),
+  "label": zod.string().min(1).max(syncInstalledAppsBodyAppsItemLabelMax),
+  "installedAt": zod.coerce.date().optional()
+})).max(syncInstalledAppsBodyAppsMax)
+})
+
+export const SyncInstalledAppsResponse = zod.object({
+  "blockedPackages": zod.array(zod.string()),
+  "pendingPackages": zod.array(zod.string())
+})
+
+
+export const reportDeviceEventsBodyEventsItemDetailMax = 240;
+
+export const reportDeviceEventsBodyEventsMax = 50;
+
+
+
+export const ReportDeviceEventsBody = zod.object({
+  "events": zod.array(zod.object({
+  "type": zod.enum(['protection_disabled', 'protection_enabled', 'tamper_attempt', 'uninstall_attempt', 'app_installed', 'app_removed', 'limit_reached', 'routine_block', 'device_reboot', 'pin_failed']),
+  "detail": zod.string().max(reportDeviceEventsBodyEventsItemDetailMax).optional(),
+  "occurredAt": zod.coerce.date().optional()
+})).min(1).max(reportDeviceEventsBodyEventsMax)
+})
+
+export const ReportDeviceEventsResponse = zod.void()
+
+
+export const verifyGuardianPinBodyPinRegExp = new RegExp('^[0-9]{4,8}$');
+
+
+export const VerifyGuardianPinBody = zod.object({
+  "pin": zod.string().regex(verifyGuardianPinBodyPinRegExp)
+})
+
+export const VerifyGuardianPinResponse = zod.object({
+  "valid": zod.boolean()
+})
+
+
+export const registerDevicePushTokenBodyTokenMin = 10;
+export const registerDevicePushTokenBodyTokenMax = 300;
+
+
+
+export const RegisterDevicePushTokenBody = zod.object({
+  "token": zod.string().min(registerDevicePushTokenBodyTokenMin).max(registerDevicePushTokenBodyTokenMax),
+  "platform": zod.enum(['ios', 'android'])
+})
+
+export const RegisterDevicePushTokenResponse = zod.void()
 
 

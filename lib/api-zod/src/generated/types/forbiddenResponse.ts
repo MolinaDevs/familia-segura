@@ -3,11 +3,11 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { ErrorResponse } from './errorResponse';
 
 /**
- * Owner access required
+ * Papel sem permissão para a ação
  */
 export type ForbiddenResponse = ErrorResponse;

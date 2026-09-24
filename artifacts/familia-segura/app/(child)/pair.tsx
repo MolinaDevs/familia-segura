@@ -8,6 +8,7 @@ import { Feather } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
+import Constants from 'expo-constants';
 
 export default function PairDeviceScreen() {
   const colors = useColors();
@@ -18,15 +19,21 @@ export default function PairDeviceScreen() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const normalized = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const ready = normalized.length === 8;
+
   const handlePair = async () => {
-    if (code.length !== 6) return;
+    if (!ready) return;
     setLoading(true);
     try {
       const result = await pairDevice.mutateAsync({
         data: {
-          code,
-          name: `${Platform.OS} Device`,
-          platform: Platform.OS === 'ios' ? 'ios' : 'android'
+          code: normalized,
+          name: Platform.OS === 'ios' ? 'iPhone' : 'Android',
+          platform: Platform.OS === 'ios' ? 'ios' : 'android',
+          osVersion: String(Platform.Version),
+          appVersion: Constants.expoConfig?.version,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }
       });
       await AsyncStorage.setItem('childMode', 'true');
@@ -39,8 +46,13 @@ export default function PairDeviceScreen() {
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(child)');
     } catch (err) {
-      console.error(err);
-      Alert.alert("Erro", "Código inválido ou expirado.");
+      const status = (err as { status?: number }).status;
+      Alert.alert(
+        'Não foi possível vincular',
+        status === 409 ? 'A família atingiu o limite de aparelhos. Peça ao responsável para remover um aparelho antigo.'
+          : status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.'
+          : 'Código inválido ou expirado. Peça um novo código ao responsável.',
+      );
       setLoading(false);
     }
   };
@@ -65,11 +77,12 @@ export default function PairDeviceScreen() {
         <TextInput
           style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
           value={code}
-          onChangeText={setCode}
-          placeholder="000000"
+          onChangeText={(value) => setCode(value.toUpperCase())}
+          placeholder="ABCD-2345"
           placeholderTextColor={colors.mutedForeground}
-          keyboardType="numeric"
-          maxLength={6}
+          autoCapitalize="characters"
+          autoCorrect={false}
+          maxLength={9}
         />
         
         <Pressable
@@ -77,10 +90,10 @@ export default function PairDeviceScreen() {
             styles.button,
             { backgroundColor: colors.primary },
             pressed && styles.pressed,
-            (code.length !== 6 || loading) && { opacity: 0.5 }
+            (!ready || loading) && { opacity: 0.5 }
           ]}
           onPress={handlePair}
-          disabled={code.length !== 6 || loading}
+          disabled={!ready || loading}
         >
           {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Vincular</Text>}
         </Pressable>
@@ -97,7 +110,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: 'Inter_700Bold', fontSize: 26, marginBottom: 8, textAlign: 'center' },
   subtitle: { fontFamily: 'Inter_400Regular', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 280 },
   form: { flex: 1, gap: 16, alignItems: 'center' },
-  input: { height: 72, width: '100%', borderWidth: 2, borderRadius: 20, textAlign: 'center', fontFamily: 'Inter_700Bold', fontSize: 32, letterSpacing: 8 },
+  input: { height: 72, width: '100%', borderWidth: 2, borderRadius: 20, textAlign: 'center', fontFamily: 'Inter_700Bold', fontSize: 28, letterSpacing: 4 },
   button: { height: 56, width: '100%', borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
   buttonText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 17 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },

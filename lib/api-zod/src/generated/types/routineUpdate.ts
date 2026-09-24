@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface RoutineUpdate {
@@ -12,9 +12,15 @@ export interface RoutineUpdate {
      * @maxLength 80
      */
   title?: string;
+  /** @maxLength 160 */
+  description?: string;
+  /** @pattern ^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$ */
+  days?: string;
   /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
   startTime?: string;
   /** @pattern ^([01][0-9]|2[0-3]):[0-5][0-9]$ */
   endTime?: string;
+  /** @maxLength 40 */
+  icon?: string;
   enabled?: boolean;
 }

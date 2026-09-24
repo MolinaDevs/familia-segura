@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { AppRuleStatus } from './appRuleStatus';
 
@@ -15,7 +15,11 @@ export interface AppRule {
   category: string;
   icon: string;
   iconColor: string;
+  androidPackages: string[];
   usageTodayMinutes: number;
+  /** No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje. */
   dailyLimitMinutes: number;
+  extraTodayMinutes: number;
+  effectiveLimitMinutes: number;
   status: AppRuleStatus;
 }

@@ -3,12 +3,14 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 
 export interface AuditEvent {
   id: string;
   action: string;
   summary: string;
+  /** @nullable */
+  actorName?: string | null;
   createdAt: Date;
 }

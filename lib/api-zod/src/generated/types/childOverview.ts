@@ -3,15 +3,20 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { AppRule } from './appRule';
+import type { ChildPolicy } from './childPolicy';
 import type { ChildProfile } from './childProfile';
 import type { Routine } from './routine';
+import type { TimeRequest } from './timeRequest';
 
 export interface ChildOverview {
   child: ChildProfile;
+  deviceId: string;
   apps: AppRule[];
   routines: Routine[];
   collectedData: string[];
+  policy: ChildPolicy;
+  pendingRequests: TimeRequest[];
 }

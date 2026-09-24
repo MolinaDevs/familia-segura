@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Api
-  version: 0.2.0
+  version: 0.3.0
   description: API segura do Família Segura
 servers:
   - url: /api
@@ -9,9 +9,12 @@ servers:
 tags:
   - name: health
   - name: family
+  - name: members
   - name: devices
   - name: rules
   - name: requests
+  - name: reports
+  - name: child
   - name: privacy
 paths:
   /healthz:
@@ -25,6 +28,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /catalog/apps:
+    get:
+      operationId: listCatalogApps
+      tags: [rules]
+      responses:
+        "200":
+          description: Catálogo de apps conhecidos (globais + descobertos pela família)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/CatalogApp" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /family:
     get:
       operationId: getFamilyOverview
@@ -37,6 +53,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/FamilyOverview"
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
     post:
       operationId: createFamily
       tags: [family]
@@ -54,12 +71,45 @@ paths:
               schema:
                 $ref: "#/components/schemas/FamilyOverview"
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/Conflict" }
     delete:
       operationId: deleteFamily
       tags: [privacy]
       responses:
         "204":
           description: Family deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /family/settings:
+    patch:
+      operationId: updateFamilySettings
+      tags: [family]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FamilySettingsUpdate" }
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FamilySettings" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+  /family/guardian-pin:
+    put:
+      operationId: setGuardianPin
+      tags: [family]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/GuardianPinInput" }
+      responses:
+        "204":
+          description: PIN atualizado
+        "400": { $ref: "#/components/responses/BadRequest" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
   /family/children:
@@ -80,6 +130,109 @@ paths:
               schema:
                 $ref: "#/components/schemas/ChildProfile"
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "402": { $ref: "#/components/responses/PaymentRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /family/children/{childId}:
+    patch:
+      operationId: updateChild
+      tags: [family]
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChildUpdate" }
+      responses:
+        "200":
+          description: Child updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChildProfile" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: archiveChild
+      tags: [family]
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      responses:
+        "204":
+          description: Perfil arquivado e aparelhos revogados
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /family/children/{childId}/apps:
+    post:
+      operationId: createAppRule
+      tags: [rules]
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/AppRuleInput" }
+      responses:
+        "201":
+          description: Regra criada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AppRule" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /family/children/{childId}/apps/{appId}:
+    delete:
+      operationId: deleteAppRule
+      tags: [rules]
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+        - $ref: "#/components/parameters/AppId"
+      responses:
+        "204":
+          description: Regra removida
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /family/children/{childId}/routines:
+    post:
+      operationId: createRoutine
+      tags: [rules]
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RoutineInput" }
+      responses:
+        "201":
+          description: Rotina criada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Routine" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /family/children/{childId}/grants:
+    post:
+      operationId: createTimeGrant
+      tags: [rules]
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/TimeGrantInput" }
+      responses:
+        "201":
+          description: Tempo extra liberado somente para hoje
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TimeGrant" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /family/pairing-codes:
     post:
       operationId: createPairingCode
@@ -98,6 +251,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/PairingCode"
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "402": { $ref: "#/components/responses/PaymentRequired" }
+        "409": { $ref: "#/components/responses/Conflict" }
   /family/devices/pair:
     post:
       operationId: pairDevice
@@ -116,49 +271,27 @@ paths:
               schema:
                 $ref: "#/components/schemas/DevicePairResult"
         "400": { $ref: "#/components/responses/BadRequest" }
-  /child/overview:
-    get:
-      operationId: getChildOverview
-      tags: [family]
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /family/devices/{deviceId}:
+    patch:
+      operationId: updateDevice
+      tags: [devices]
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeviceUpdate" }
       responses:
         "200":
-          description: Child-facing rules and transparency summary
+          description: Device updated
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/ChildOverview"
+              schema: { $ref: "#/components/schemas/Device" }
         "401": { $ref: "#/components/responses/Unauthorized" }
-  /child/usage:
-    post:
-      operationId: syncChildUsage
-      tags: [devices]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DeviceUsageInput"
-      responses:
-        "204":
-          description: Allowed usage metrics synchronized
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-  /child/protection:
-    post:
-      operationId: syncChildProtection
-      tags: [devices]
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DeviceProtectionInput"
-      responses:
-        "204":
-          description: Device protection state synchronized
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-  /family/devices/{deviceId}:
+        "404": { $ref: "#/components/responses/NotFound" }
     delete:
       operationId: revokeDevice
       tags: [devices]
@@ -167,6 +300,42 @@ paths:
       responses:
         "204":
           description: Device revoked
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /family/devices/{deviceId}/apps:
+    get:
+      operationId: listDeviceApps
+      tags: [devices]
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      responses:
+        "200":
+          description: Apps instalados no aparelho (Android)
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/DeviceApp" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /family/devices/{deviceId}/apps/{packageName}:
+    patch:
+      operationId: updateDeviceApp
+      tags: [devices]
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+        - $ref: "#/components/parameters/PackageName"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeviceAppUpdate" }
+      responses:
+        "200":
+          description: Decisão registrada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/DeviceApp" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
   /family/apps/{appId}/rules:
@@ -211,6 +380,16 @@ paths:
                 $ref: "#/components/schemas/Routine"
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: deleteRoutine
+      tags: [rules]
+      parameters:
+        - $ref: "#/components/parameters/RoutineId"
+      responses:
+        "204":
+          description: Rotina removida
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /family/time-requests:
     post:
       operationId: createTimeRequest
@@ -250,6 +429,109 @@ paths:
                 $ref: "#/components/schemas/TimeRequest"
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /family/invites:
+    post:
+      operationId: createInvite
+      tags: [members]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InviteInput" }
+      responses:
+        "201":
+          description: Convite criado (código exibido uma única vez)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Invite" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "402": { $ref: "#/components/responses/PaymentRequired" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "409": { $ref: "#/components/responses/Conflict" }
+  /family/invites/accept:
+    post:
+      operationId: acceptInvite
+      tags: [members]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InviteAcceptInput" }
+      responses:
+        "200":
+          description: Entrou na família
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FamilyOverview" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409": { $ref: "#/components/responses/Conflict" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /family/members/{memberId}:
+    patch:
+      operationId: updateMember
+      tags: [members]
+      parameters:
+        - $ref: "#/components/parameters/MemberId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/MemberUpdate" }
+      responses:
+        "200":
+          description: Papel atualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/FamilyMember" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: removeMember
+      tags: [members]
+      parameters:
+        - $ref: "#/components/parameters/MemberId"
+      responses:
+        "204":
+          description: Membro removido (ou saiu da família)
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /family/push-tokens:
+    post:
+      operationId: registerGuardianPushToken
+      tags: [members]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushTokenInput" }
+      responses:
+        "204":
+          description: Token registrado
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /family/reports/usage:
+    get:
+      operationId: getUsageReport
+      tags: [reports]
+      parameters:
+        - in: query
+          name: childId
+          required: false
+          schema: { type: string, format: uuid }
+        - in: query
+          name: days
+          required: false
+          schema: { type: integer, minimum: 1, maximum: 365, default: 7 }
+      responses:
+        "200":
+          description: Dados agregados para os gráficos do responsável
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/UsageReport" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /family/audit:
     get:
       operationId: listAuditEvents
@@ -276,6 +558,109 @@ paths:
               schema:
                 $ref: "#/components/schemas/FamilyExport"
         "401": { $ref: "#/components/responses/Unauthorized" }
+  /child/overview:
+    get:
+      operationId: getChildOverview
+      tags: [child]
+      responses:
+        "200":
+          description: Child-facing rules and transparency summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChildOverview"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /child/usage:
+    post:
+      operationId: syncChildUsage
+      tags: [child]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceUsageInput"
+      responses:
+        "204":
+          description: Allowed usage metrics synchronized
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /child/protection:
+    post:
+      operationId: syncChildProtection
+      tags: [child]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceProtectionInput"
+      responses:
+        "204":
+          description: Device protection state synchronized
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /child/installed-apps:
+    post:
+      operationId: syncInstalledApps
+      tags: [child]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InstalledAppsInput" }
+      responses:
+        "200":
+          description: Inventário registrado; devolve os pacotes bloqueados e pendentes
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/InstalledAppsResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /child/events:
+    post:
+      operationId: reportDeviceEvents
+      tags: [child]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/DeviceEventsInput" }
+      responses:
+        "204":
+          description: Eventos registrados
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+  /child/verify-pin:
+    post:
+      operationId: verifyGuardianPin
+      tags: [child]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PinVerifyInput" }
+      responses:
+        "200":
+          description: Resultado da verificação
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PinVerifyResult" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "429": { $ref: "#/components/responses/TooManyRequests" }
+  /child/push-token:
+    post:
+      operationId: registerDevicePushToken
+      tags: [child]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushTokenInput" }
+      responses:
+        "204":
+          description: Token registrado
+        "401": { $ref: "#/components/responses/Unauthorized" }
 components:
   parameters:
     DeviceId:
@@ -283,11 +668,26 @@ components:
       name: deviceId
       required: true
       schema: { type: string, format: uuid }
+    ChildId:
+      in: path
+      name: childId
+      required: true
+      schema: { type: string, format: uuid }
+    MemberId:
+      in: path
+      name: memberId
+      required: true
+      schema: { type: string, format: uuid }
     AppId:
       in: path
       name: appId
       required: true
-      schema: { type: string }
+      schema: { type: string, minLength: 1, maxLength: 200 }
+    PackageName:
+      in: path
+      name: packageName
+      required: true
+      schema: { type: string, minLength: 1, maxLength: 200 }
     RoutineId:
       in: path
       name: routineId
@@ -309,13 +709,28 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorResponse" }
+    PaymentRequired:
+      description: Recurso ou limite exclusivo do Premium
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
     Forbidden:
-      description: Owner access required
+      description: Papel sem permissão para a ação
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorResponse" }
     NotFound:
       description: Not found
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    Conflict:
+      description: Conflito (limite atingido ou registro duplicado)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/ErrorResponse" }
+    TooManyRequests:
+      description: Muitas tentativas
       content:
         application/json:
           schema: { $ref: "#/components/schemas/ErrorResponse" }
@@ -325,6 +740,7 @@ components:
       required: [error]
       properties:
         error: { type: string }
+        code: { type: string }
     HealthStatus:
       type: object
       required: [status]
@@ -337,14 +753,53 @@ components:
         name: { type: string, minLength: 2, maxLength: 80 }
         guardianName: { type: string, minLength: 2, maxLength: 80 }
         childName: { type: string, minLength: 1, maxLength: 50 }
-        childBirthYear: { type: integer, minimum: 2008, maximum: 2026 }
+        childBirthYear: { type: integer, minimum: 2006, maximum: 2030 }
         consentAccepted: { type: boolean }
+        timezone: { type: string, minLength: 3, maxLength: 64 }
+    FamilySettings:
+      type: object
+      required: [timezone, offlineLeaseHours, quarantineNewApps, hasGuardianPin]
+      properties:
+        timezone: { type: string }
+        offlineLeaseHours: { type: integer }
+        quarantineNewApps: { type: boolean }
+        hasGuardianPin: { type: boolean }
+    FamilySettingsUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 2, maxLength: 80 }
+        timezone: { type: string, minLength: 3, maxLength: 64 }
+        offlineLeaseHours: { type: integer, minimum: 12, maximum: 720 }
+        quarantineNewApps: { type: boolean }
+    FamilyLimits:
+      type: object
+      required: [plan, maxChildren, maxDevices, maxGuardians, children, devices, guardians]
+      properties:
+        plan: { type: string, enum: [free, premium] }
+        maxChildren: { type: integer }
+        maxDevices: { type: integer }
+        maxGuardians: { type: integer }
+        children: { type: integer }
+        devices: { type: integer }
+        guardians: { type: integer }
+    GuardianPinInput:
+      type: object
+      required: [pin]
+      properties:
+        pin: { type: string, pattern: "^[0-9]{4,8}$" }
     ChildInput:
       type: object
       required: [displayName, birthYear]
       properties:
         displayName: { type: string, minLength: 1, maxLength: 50 }
-        birthYear: { type: integer, minimum: 2008, maximum: 2026 }
+        birthYear: { type: integer, minimum: 2006, maximum: 2030 }
+        color: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
+    ChildUpdate:
+      type: object
+      properties:
+        displayName: { type: string, minLength: 1, maxLength: 50 }
+        birthYear: { type: integer, minimum: 2006, maximum: 2030 }
+        color: { type: string, pattern: "^#[0-9A-Fa-f]{6}$" }
     PairingCodeInput:
       type: object
       required: [childId]
@@ -354,21 +809,33 @@ components:
       type: object
       required: [code, name, platform]
       properties:
-        code: { type: string, pattern: "^[0-9]{6}$" }
+        code: { type: string, pattern: "^[A-Za-z0-9-]{6,12}$" }
         name: { type: string, minLength: 1, maxLength: 80 }
         platform: { type: string, enum: [ios, android] }
+        osVersion: { type: string, maxLength: 40 }
+        model: { type: string, maxLength: 80 }
+        appVersion: { type: string, maxLength: 40 }
+        timezone: { type: string, maxLength: 64 }
+    DeviceUpdate:
+      type: object
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
+        childId: { type: string, format: uuid }
     DeviceUsageInput:
       type: object
       required: [samples]
       properties:
+        localDate: { type: string, pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+        localHour: { type: integer, minimum: 0, maximum: 23 }
+        precision: { type: string, enum: [exact, estimated] }
         samples:
           type: array
-          maxItems: 50
+          maxItems: 200
           items:
             type: object
             required: [appId, usageTodayMinutes]
             properties:
-              appId: { type: string, minLength: 1, maxLength: 100 }
+              appId: { type: string, minLength: 1, maxLength: 200 }
               usageTodayMinutes: { type: integer, minimum: 0, maximum: 1440 }
     DeviceProtectionInput:
       type: object
@@ -379,6 +846,87 @@ components:
           type: array
           maxItems: 10
           items: { type: string, minLength: 1, maxLength: 80 }
+        osVersion: { type: string, maxLength: 40 }
+        model: { type: string, maxLength: 80 }
+        appVersion: { type: string, maxLength: 40 }
+        timezone: { type: string, maxLength: 64 }
+        batteryLevel: { type: integer, minimum: 0, maximum: 100 }
+        boundRuleIds:
+          type: array
+          maxItems: 200
+          items: { type: string, format: uuid }
+    InstalledAppsInput:
+      type: object
+      required: [apps, snapshot]
+      properties:
+        snapshot:
+          type: boolean
+          description: true quando a lista é o inventário completo (apps ausentes são marcados como removidos)
+        apps:
+          type: array
+          maxItems: 600
+          items:
+            type: object
+            required: [packageName, label]
+            properties:
+              packageName: { type: string, minLength: 1, maxLength: 200 }
+              label: { type: string, minLength: 1, maxLength: 120 }
+              installedAt: { type: string, format: date-time }
+    InstalledAppsResult:
+      type: object
+      required: [blockedPackages, pendingPackages]
+      properties:
+        blockedPackages:
+          type: array
+          items: { type: string }
+        pendingPackages:
+          type: array
+          items: { type: string }
+    DeviceEventsInput:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            required: [type]
+            properties:
+              type:
+                type: string
+                enum: [protection_disabled, protection_enabled, tamper_attempt, uninstall_attempt, app_installed, app_removed, limit_reached, routine_block, device_reboot, pin_failed]
+              detail: { type: string, maxLength: 240 }
+              occurredAt: { type: string, format: date-time }
+    PinVerifyInput:
+      type: object
+      required: [pin]
+      properties:
+        pin: { type: string, pattern: "^[0-9]{4,8}$" }
+    PinVerifyResult:
+      type: object
+      required: [valid]
+      properties:
+        valid: { type: boolean }
+    PushTokenInput:
+      type: object
+      required: [token, platform]
+      properties:
+        token: { type: string, minLength: 10, maxLength: 300 }
+        platform: { type: string, enum: [ios, android] }
+    AppRuleInput:
+      type: object
+      properties:
+        catalogAppId: { type: string, minLength: 1, maxLength: 200 }
+        name: { type: string, minLength: 1, maxLength: 80 }
+        category: { type: string, minLength: 1, maxLength: 40 }
+        androidPackages:
+          type: array
+          maxItems: 10
+          items: { type: string, minLength: 3, maxLength: 200 }
+        dailyLimitMinutes: { type: integer, minimum: 0, maximum: 1440 }
+        status: { type: string, enum: [allowed, attention, blocked] }
     AppRuleUpdate:
       type: object
       required: [childId]
@@ -386,19 +934,50 @@ components:
         childId: { type: string, format: uuid }
         status: { type: string, enum: [allowed, attention, blocked] }
         dailyLimitMinutes: { type: integer, minimum: 0, maximum: 1440 }
+    RoutineInput:
+      type: object
+      required: [title, days, startTime, endTime]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 160 }
+        days: { type: string, pattern: "^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$" }
+        startTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        endTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        icon: { type: string, maxLength: 40 }
+        enabled: { type: boolean }
     RoutineUpdate:
       type: object
       properties:
         title: { type: string, minLength: 1, maxLength: 80 }
+        description: { type: string, maxLength: 160 }
+        days: { type: string, pattern: "^(dom|seg|ter|qua|qui|sex|sab)(,(dom|seg|ter|qua|qui|sex|sab))*$" }
         startTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
         endTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+        icon: { type: string, maxLength: 40 }
         enabled: { type: boolean }
+    TimeGrantInput:
+      type: object
+      required: [appId, minutes]
+      properties:
+        appId: { type: string, minLength: 1, maxLength: 200 }
+        minutes: { type: integer, minimum: 5, maximum: 240 }
+    TimeGrant:
+      type: object
+      required: [id, childId, appId, minutes, validOn, source, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        childId: { type: string, format: uuid }
+        appId: { type: string }
+        minutes: { type: integer }
+        validOn: { type: string }
+        source: { type: string, enum: [manual, request] }
+        createdAt: { type: string, format: date-time }
     TimeRequestInput:
       type: object
       required: [childId, appId, requestedMinutes, message]
       properties:
         childId: { type: string, format: uuid }
-        appId: { type: string }
+        appId: { type: string, minLength: 1, maxLength: 200 }
         requestedMinutes: { type: integer, minimum: 5, maximum: 120 }
         message: { type: string, maxLength: 240 }
     TimeRequestResolution:
@@ -406,6 +985,43 @@ components:
       required: [status]
       properties:
         status: { type: string, enum: [approved, denied] }
+        grantedMinutes: { type: integer, minimum: 5, maximum: 240 }
+    InviteInput:
+      type: object
+      required: [role]
+      properties:
+        role: { type: string, enum: [guardian, viewer] }
+    Invite:
+      type: object
+      required: [code, role, expiresAt]
+      properties:
+        code: { type: string }
+        role: { type: string, enum: [guardian, viewer] }
+        expiresAt: { type: string, format: date-time }
+    InviteAcceptInput:
+      type: object
+      required: [code, displayName, consentAccepted]
+      properties:
+        code: { type: string, minLength: 6, maxLength: 20 }
+        displayName: { type: string, minLength: 2, maxLength: 80 }
+        consentAccepted: { type: boolean }
+    MemberUpdate:
+      type: object
+      required: [role]
+      properties:
+        role: { type: string, enum: [guardian, viewer] }
+    CatalogApp:
+      type: object
+      required: [id, name, category, icon, iconColor, androidPackages]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        category: { type: string }
+        icon: { type: string }
+        iconColor: { type: string }
+        androidPackages:
+          type: array
+          items: { type: string }
     Family:
       type: object
       required: [id, name, createdAt]
@@ -415,21 +1031,26 @@ components:
         createdAt: { type: string, format: date-time }
     FamilyMember:
       type: object
-      required: [id, displayName, role]
+      required: [id, displayName, role, isCurrentUser]
       properties:
         id: { type: string, format: uuid }
         displayName: { type: string }
-        role: { type: string, enum: [owner, guardian] }
+        role: { type: string, enum: [owner, guardian, viewer] }
+        isCurrentUser: { type: boolean }
     ChildProfile:
       type: object
-      required: [id, displayName, birthYear]
+      required: [id, displayName, birthYear, color, ageBand]
       properties:
         id: { type: string, format: uuid }
         displayName: { type: string }
         birthYear: { type: integer }
+        color: { type: string }
+        ageBand:
+          type: string
+          enum: [ate9, de10a12, de13a15, de16a17, adulto]
     Device:
       type: object
-      required: [id, childId, name, platform, status, protectionState, protectionIssues, lastSeenAt]
+      required: [id, childId, name, platform, status, protectionState, protectionIssues, lastSeenAt, online]
       properties:
         id: { type: string, format: uuid }
         childId: { type: string, format: uuid }
@@ -442,6 +1063,11 @@ components:
           items: { type: string }
         protectionUpdatedAt: { type: [string, "null"], format: date-time }
         lastSeenAt: { type: string, format: date-time }
+        online: { type: boolean }
+        osVersion: { type: [string, "null"] }
+        model: { type: [string, "null"] }
+        appVersion: { type: [string, "null"] }
+        batteryLevel: { type: [integer, "null"] }
     DevicePairResult:
       type: object
       required: [device, deviceToken]
@@ -454,9 +1080,37 @@ components:
       properties:
         code: { type: string }
         expiresAt: { type: string, format: date-time }
+    DeviceApp:
+      type: object
+      required: [id, deviceId, packageName, label, status, firstSeenAt, lastSeenAt]
+      properties:
+        id: { type: string, format: uuid }
+        deviceId: { type: string, format: uuid }
+        packageName: { type: string }
+        label: { type: string }
+        status: { type: string, enum: [approved, blocked, pending] }
+        installedAt: { type: [string, "null"], format: date-time }
+        removedAt: { type: [string, "null"], format: date-time }
+        firstSeenAt: { type: string, format: date-time }
+        lastSeenAt: { type: string, format: date-time }
+    DeviceAppUpdate:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string, enum: [approved, blocked] }
+    DeviceEvent:
+      type: object
+      required: [id, deviceId, childId, type, occurredAt]
+      properties:
+        id: { type: string, format: uuid }
+        deviceId: { type: string, format: uuid }
+        childId: { type: string, format: uuid }
+        type: { type: string }
+        detail: { type: [string, "null"] }
+        occurredAt: { type: string, format: date-time }
     AppRule:
       type: object
-      required: [id, childId, appId, appName, category, icon, iconColor, usageTodayMinutes, dailyLimitMinutes, status]
+      required: [id, childId, appId, appName, category, icon, iconColor, androidPackages, usageTodayMinutes, dailyLimitMinutes, extraTodayMinutes, effectiveLimitMinutes, status]
       properties:
         id: { type: string, format: uuid }
         childId: { type: string, format: uuid }
@@ -465,8 +1119,15 @@ components:
         category: { type: string }
         icon: { type: string }
         iconColor: { type: string }
+        androidPackages:
+          type: array
+          items: { type: string }
         usageTodayMinutes: { type: integer }
-        dailyLimitMinutes: { type: integer }
+        dailyLimitMinutes:
+          type: integer
+          description: No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.
+        extraTodayMinutes: { type: integer }
+        effectiveLimitMinutes: { type: integer }
         status: { type: string, enum: [allowed, attention, blocked] }
     Routine:
       type: object
@@ -494,6 +1155,7 @@ components:
         message: { type: string }
         status: { type: string, enum: [pending, approved, denied] }
         createdAt: { type: string, format: date-time }
+        resolvedAt: { type: [string, "null"], format: date-time }
     AuditEvent:
       type: object
       required: [id, action, summary, createdAt]
@@ -501,6 +1163,7 @@ components:
         id: { type: string, format: uuid }
         action: { type: string }
         summary: { type: string }
+        actorName: { type: [string, "null"] }
         createdAt: { type: string, format: date-time }
     PrivacySummary:
       type: object
@@ -513,9 +1176,10 @@ components:
           items: { type: string }
     FamilyOverview:
       type: object
-      required: [family, members, children, devices, apps, routines, timeRequests, privacy]
+      required: [family, members, children, devices, apps, routines, timeRequests, privacy, limits, settings, pendingApps, recentEvents, today]
       properties:
         family: { $ref: "#/components/schemas/Family" }
+        today: { type: string, description: Data de hoje no fuso da família (YYYY-MM-DD) }
         members:
           type: array
           items: { $ref: "#/components/schemas/FamilyMember" }
@@ -534,12 +1198,47 @@ components:
         timeRequests:
           type: array
           items: { $ref: "#/components/schemas/TimeRequest" }
+        pendingApps:
+          type: array
+          items: { $ref: "#/components/schemas/DeviceApp" }
+        recentEvents:
+          type: array
+          items: { $ref: "#/components/schemas/DeviceEvent" }
+        limits: { $ref: "#/components/schemas/FamilyLimits" }
+        settings: { $ref: "#/components/schemas/FamilySettings" }
         privacy: { $ref: "#/components/schemas/PrivacySummary" }
+    PinVerifier:
+      type: object
+      required: [algorithm, salt, hash]
+      description: Verificador para checagem offline do PIN no aparelho (scrypt N=16384, r=8, p=1, 32 bytes)
+      properties:
+        algorithm: { type: string }
+        salt: { type: string }
+        hash: { type: string }
+    ChildPolicy:
+      type: object
+      required: [leaseHours, quarantineNewApps, blockedPackages, pendingPackages, timezone, serverTime]
+      properties:
+        leaseHours: { type: integer }
+        quarantineNewApps: { type: boolean }
+        timezone: { type: string }
+        serverTime: { type: string, format: date-time }
+        blockedPackages:
+          type: array
+          items: { type: string }
+        pendingPackages:
+          type: array
+          items: { type: string }
+        pinVerifier:
+          oneOf:
+            - $ref: "#/components/schemas/PinVerifier"
+            - type: "null"
     ChildOverview:
       type: object
-      required: [child, apps, routines, collectedData]
+      required: [child, deviceId, apps, routines, collectedData, policy, pendingRequests]
       properties:
         child: { $ref: "#/components/schemas/ChildProfile" }
+        deviceId: { type: string, format: uuid }
         apps:
           type: array
           items: { $ref: "#/components/schemas/AppRule" }
@@ -549,6 +1248,96 @@ components:
         collectedData:
           type: array
           items: { type: string }
+        policy: { $ref: "#/components/schemas/ChildPolicy" }
+        pendingRequests:
+          type: array
+          items: { $ref: "#/components/schemas/TimeRequest" }
+    UsageReport:
+      type: object
+      required: [from, to, precision, totals, daily, apps, heatmap, devices, children, compliance, protection]
+      properties:
+        from: { type: string }
+        to: { type: string }
+        precision:
+          type: string
+          enum: [exact, estimated, mixed, none]
+        totals:
+          type: object
+          required: [minutes, dailyAverage, previousPeriodMinutes]
+          properties:
+            minutes: { type: integer }
+            dailyAverage: { type: integer }
+            previousPeriodMinutes: { type: integer }
+        daily:
+          type: array
+          items:
+            type: object
+            required: [date, minutes, limitMinutes]
+            properties:
+              date: { type: string }
+              minutes: { type: integer }
+              limitMinutes: { type: integer }
+        apps:
+          type: array
+          items:
+            type: object
+            required: [appId, appName, iconColor, minutes, precision]
+            properties:
+              appId: { type: string }
+              appName: { type: string }
+              iconColor: { type: string }
+              minutes: { type: integer }
+              precision: { type: string, enum: [exact, estimated] }
+        heatmap:
+          type: array
+          items:
+            type: object
+            required: [weekday, hour, minutes]
+            properties:
+              weekday: { type: integer, minimum: 0, maximum: 6 }
+              hour: { type: integer, minimum: 0, maximum: 23 }
+              minutes: { type: integer }
+        devices:
+          type: array
+          items:
+            type: object
+            required: [deviceId, name, platform, minutes]
+            properties:
+              deviceId: { type: string, format: uuid }
+              name: { type: string }
+              platform: { type: string, enum: [ios, android] }
+              minutes: { type: integer }
+        children:
+          type: array
+          items:
+            type: object
+            required: [childId, name, color, minutes]
+            properties:
+              childId: { type: string, format: uuid }
+              name: { type: string }
+              color: { type: string }
+              minutes: { type: integer }
+        compliance:
+          type: object
+          required: [limitsReached, requestsCreated, requestsApproved, requestsDenied, extraMinutesGranted]
+          properties:
+            limitsReached: { type: integer }
+            requestsCreated: { type: integer }
+            requestsApproved: { type: integer }
+            requestsDenied: { type: integer }
+            extraMinutesGranted: { type: integer }
+        protection:
+          type: array
+          items:
+            type: object
+            required: [deviceId, name, platform, state, lastSeenAt, tamperEvents]
+            properties:
+              deviceId: { type: string, format: uuid }
+              name: { type: string }
+              platform: { type: string, enum: [ios, android] }
+              state: { type: string }
+              lastSeenAt: { type: string, format: date-time }
+              tamperEvents: { type: integer }
     FamilyExport:
       type: object
       required: [exportedAt, data, auditEvents]
@@ -557,4 +1346,5 @@ components:
         data: { $ref: "#/components/schemas/FamilyOverview" }
         auditEvents:
           type: array
-          items: { $ref: "#/components/schemas/AuditEvent" }
+          items:
+            $ref: "#/components/schemas/AuditEvent"

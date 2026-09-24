@@ -18,3 +18,26 @@ Requisitos do dono (2026-09-24):
 | 5. Lançamento | TestFlight, teste interno Play, declaração de acessibilidade, notas de revisão, beta | aprovado nas lojas |
 
 Ações que dependem do dono estão em `docs/ACOES_DO_DONO.md`.
+
+## Registro de execução
+
+### Fase 0 ✅
+Ambiente fora do Expo Go e do Replit; migrations; testes; CI.
+
+### Fase 1 ✅ — fundação
+- **Modelo**: papéis (titular/co-responsável/observador) e convites; crianças com cor, faixa etária e arquivamento;
+  aparelhos com SO, modelo, versão, bateria, fuso e push; catálogo de 34 apps populares no BR (pacotes Android);
+  inventário Android com quarentena; vínculos de regra no iPhone; histórico `usage_daily` + `usage_hourly`;
+  liberações de tempo por dia (`temporary_grants`); eventos de aparelho; tokens de push; rate limit no Postgres.
+- **Limites**: grátis = 1 criança / 1 aparelho / 1 responsável / 7 dias de relatório;
+  Premium = **10 crianças / 10 aparelhos** / 4 responsáveis / 365 dias. Checagem com trava da linha da família
+  (testado com criações e pareamentos simultâneos). Premium vem da assinatura do titular.
+- **Bugs corrigidos**: tempo extra e aprovação de pedido aumentavam o limite para sempre (agora vale só hoje);
+  uso do dia nunca zerava e não tinha histórico; tela de detalhe quebrava sem apps; pedido de tempo por texto livre;
+  textos em inglês na tela da criança; aprovação de pedido e edição de limites bloqueadas no plano grátis.
+- **Segurança**: código de pareamento com 8 caracteres (≈8,5·10¹¹) + rate limit persistente; PIN do responsável
+  (scrypt) com verificação online limitada a 5/15 min e verificador offline; push imediato em adulteração.
+- **Relatórios** (`GET /family/reports/usage`): uso diário com linha de limite, ranking de apps, mapa de calor
+  dia×hora, por aparelho, por criança, cumprimento de regras e saúde da proteção. Dado do iPhone marcado como estimado.
+- **Testes**: 34 casos (API) cobrindo limites, concorrência, papéis, plataformas cruzadas, tempo extra, relatórios,
+  quarentena, PIN e push.

@@ -149,8 +149,21 @@ export default function SubscriptionScreen() {
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>Família Segura Premium</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            Monitoramento ilimitado, relatórios detalhados e controle total de segurança.
+            Até 10 crianças e 10 aparelhos (iPhone e Android), até 4 responsáveis e 12 meses de relatórios.
           </Text>
+          <View style={{ gap: 6, marginTop: 14, alignSelf: 'stretch' }}>
+            {[
+              'Até 10 crianças e 10 aparelhos na mesma família',
+              'Convide o outro responsável ou um observador',
+              'Gráficos de uso com histórico de até 12 meses',
+              'O básico continua grátis: 1 criança, 1 aparelho, limites e bloqueios',
+            ].map((item) => (
+              <View key={item} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
+                <Feather name="check" size={16} color={colors.primary} style={{ marginTop: 2 }} />
+                <Text style={{ flex: 1, fontFamily: 'Inter_500Medium', fontSize: 14, lineHeight: 20, color: colors.foreground }}>{item}</Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         <View style={styles.packagesList}>

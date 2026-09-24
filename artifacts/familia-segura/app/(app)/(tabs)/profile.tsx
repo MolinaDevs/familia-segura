@@ -10,7 +10,7 @@ import * as Haptics from 'expo-haptics';
 import React, { useState } from 'react';
 import { Share } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useSubscription } from '@/context/SubscriptionContext';
+import { showApiError } from '@/lib/apiErrors';
 
 function showMessage(title: string, message: string) {
   if (Platform.OS === 'web') window.alert(`${title}\n\n${message}`);
@@ -33,7 +33,6 @@ export default function ProfileScreen() {
   const insets = useSafeAreaInsets();
   const { data, refetch } = useFamily();
   const { signOut } = useAuth();
-  const { hasPremiumAccess } = useSubscription();
   
   const createCode = useCreatePairingCode();
   const exportData = useExportFamilyData({ query: { queryKey: getExportFamilyDataQueryKey(), enabled: false } });
@@ -53,8 +52,7 @@ export default function ProfileScreen() {
       setPairingCode(result.code);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     } catch (err) {
-      console.error(err);
-      showMessage("Erro", "Não foi possível gerar código de pareamento.");
+      showApiError(err, "Não foi possível gerar código de pareamento.");
     }
   };
 
@@ -110,10 +108,6 @@ export default function ProfileScreen() {
   };
 
   const handleResolveRequest = async (requestId: string, status: 'approved' | 'denied') => {
-    if (status === 'approved' && !hasPremiumAccess) {
-      router.push('/(app)/subscription');
-      return;
-    }
     try {
       await resolveTimeRequest.mutateAsync({
         requestId,
@@ -121,7 +115,7 @@ export default function ProfileScreen() {
       });
       refetch();
     } catch (err) {
-      showMessage("Erro", "Falha ao responder pedido.");
+      showApiError(err, "Falha ao responder pedido.");
     }
   };
 
@@ -153,7 +147,7 @@ export default function ProfileScreen() {
         <View style={[styles.codeCard, { backgroundColor: colors.card, borderColor: colors.primary }]}>
           <Text style={[styles.codeEyebrow, { color: colors.primary }]}>CÓDIGO DE PAREAMENTO</Text>
           <Text style={[styles.codeValue, { color: colors.foreground }]}>{pairingCode}</Text>
-          <Text style={[styles.codeSub, { color: colors.mutedForeground }]}>Abra o Família Segura no aparelho da criança e informe este código (válido por 10 minutos).</Text>
+          <Text style={[styles.codeSub, { color: colors.mutedForeground }]}>Abra o Família Segura no aparelho da criança e informe este código (válido por 15 minutos).</Text>
         </View>
       ) : (
         <Pressable testID="profile-pair-device" disabled={createCode.isPending} onPress={handleGenerateCode} style={({ pressed }) => [styles.actionButton, { backgroundColor: colors.card, borderColor: colors.border }, pressed && styles.pressed]}>
@@ -173,7 +167,7 @@ export default function ProfileScreen() {
             {data.timeRequests.filter(req => req.status === 'pending').map(req => (
               <View key={req.id} style={[styles.requestCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
                 <View style={styles.requestTop}>
-                  <Text style={[styles.requestApp, { color: colors.foreground }]}>{req.appName}</Text>
+                  <Text style={[styles.requestApp, { color: colors.foreground }]}>{req.appName} · {req.childName}</Text>
                   <Text style={[styles.requestTime, { color: colors.primary }]}>+{req.requestedMinutes} min</Text>
                 </View>
                 {req.message ? <Text style={[styles.requestMessage, { color: colors.mutedForeground }]}>"{req.message}"</Text> : null}
@@ -182,7 +176,7 @@ export default function ProfileScreen() {
                     <Text style={[styles.reqBtnText, { color: colors.secondaryForeground }]}>Negar</Text>
                   </Pressable>
                   <Pressable onPress={() => handleResolveRequest(req.id, 'approved')} style={[styles.reqBtn, { backgroundColor: colors.primary }]}>
-                    <Text style={[styles.reqBtnText, { color: colors.primaryForeground }]}>{hasPremiumAccess ? 'Aprovar' : 'Premium'}</Text>
+                    <Text style={[styles.reqBtnText, { color: colors.primaryForeground }]}>Aprovar</Text>
                   </Pressable>
                 </View>
               </View>

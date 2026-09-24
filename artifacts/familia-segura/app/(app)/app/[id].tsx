@@ -13,9 +13,19 @@ export default function AppDetailScreen() {
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { data, setAppLimit, addExtraTime, toggleApp } = useFamily();
-  const app = data.apps.find((item) => item.id === id) ?? data.apps[0];
-  const percent = app.dailyLimit ? Math.min(100, Math.round((app.usageToday / app.dailyLimit) * 100)) : 0;
-  const limitOptions = [15, 30, 45, 60, 90];
+  const app = data.apps.find((item) => item.id === id);
+  const limitOptions = [15, 30, 45, 60, 90, 120];
+
+  if (!app) {
+    return (
+      <View style={{ flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center', padding: 24, gap: 12 }}>
+        <Feather name="alert-circle" size={28} color={colors.mutedForeground} />
+        <Text style={[styles.helper, { color: colors.mutedForeground, textAlign: 'center' }]}>Este app não tem mais regra para {data.childName}.</Text>
+        <Pressable testID="back-button" onPress={() => router.back()} hitSlop={10}><Text style={[styles.extraText, { color: colors.primary }]}>Voltar</Text></Pressable>
+      </View>
+    );
+  }
+  const percent = app.effectiveLimit ? Math.min(100, Math.round((app.usageToday / app.effectiveLimit) * 100)) : 0;
 
   return (
     <ScrollView showsVerticalScrollIndicator={false} style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 12, paddingBottom: Platform.OS === 'web' ? 40 : insets.bottom + 40 }]}>
@@ -30,13 +40,13 @@ export default function AppDetailScreen() {
       <View style={[styles.usageCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.usageHeader}><Text style={[styles.cardLabel, { color: colors.mutedForeground }]}>USO DE HOJE</Text><Text style={[styles.usageValue, { color: colors.foreground }]}>{app.usageToday} <Text style={styles.minutes}>min</Text></Text></View>
         <View style={[styles.track, { backgroundColor: colors.muted }]}><View style={[styles.progress, { width: `${percent}%`, backgroundColor: percent > 90 ? colors.destructive : app.iconColor }]} /></View>
-        <View style={styles.usageFooter}><Text style={[styles.footerText, { color: colors.mutedForeground }]}>Limite atual</Text><Text style={[styles.footerStrong, { color: colors.foreground }]}>{app.dailyLimit ? `${app.dailyLimit} min por dia` : 'Acesso bloqueado'}</Text></View>
+        <View style={styles.usageFooter}><Text style={[styles.footerText, { color: colors.mutedForeground }]}>Limite atual</Text><Text style={[styles.footerStrong, { color: colors.foreground }]}>{app.status === 'bloqueado' ? 'Acesso bloqueado' : app.dailyLimit ? `${app.dailyLimit} min por dia` : 'Acesso bloqueado'}{app.extraToday ? ` + ${app.extraToday} min hoje` : ''}</Text></View>
       </View>
 
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Escolha um limite diário</Text>
       <View style={styles.options}>
         {limitOptions.map((option) => (
-          <Pressable key={option} testID={`limit-${option}`} onPress={() => { void Haptics.selectionAsync(); setAppLimit(app.id, option); }} style={[styles.option, { borderColor: app.dailyLimit === option ? colors.primary : colors.border, backgroundColor: app.dailyLimit === option ? '#fff1ee' : colors.card }]}>
+          <Pressable key={option} testID={`limit-${option}`} onPress={() => { void Haptics.selectionAsync(); setAppLimit(app.id, option); }} style={[styles.option, { borderColor: app.dailyLimit === option ? colors.primary : colors.border, backgroundColor: app.dailyLimit === option ? colors.secondary : colors.card }]}>
             <Text style={[styles.optionText, { color: app.dailyLimit === option ? colors.primary : colors.foreground }]}>{option}</Text>
             <Text style={[styles.optionUnit, { color: app.dailyLimit === option ? colors.primary : colors.mutedForeground }]}>min</Text>
           </Pressable>
@@ -49,9 +59,9 @@ export default function AppDetailScreen() {
       </Pressable>
 
       <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 28 }]}>Exceção temporária</Text>
-      <Text style={[styles.helper, { color: colors.mutedForeground }]}>Adicione alguns minutos sem alterar o limite diário.</Text>
+      <Text style={[styles.helper, { color: colors.mutedForeground }]}>Libera minutos só para hoje, sem alterar o limite diário.</Text>
       <View style={styles.extraRow}>
-        {[15, 30].map((minutes) => <Pressable key={minutes} testID={`extra-${minutes}`} onPress={() => { void Haptics.selectionAsync(); addExtraTime(app.id, minutes); }} style={[styles.extraButton, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="plus" size={15} color={colors.primary} /><Text style={[styles.extraText, { color: colors.foreground }]}>{minutes} min</Text></Pressable>)}
+        {[15, 30, 60].map((minutes) => <Pressable key={minutes} testID={`extra-${minutes}`} onPress={() => { void Haptics.selectionAsync(); addExtraTime(app.id, minutes); }} style={[styles.extraButton, { backgroundColor: colors.card, borderColor: colors.border }]}><Feather name="plus" size={15} color={colors.primary} /><Text style={[styles.extraText, { color: colors.foreground }]}>{minutes} min</Text></Pressable>)}
       </View>
     </ScrollView>
   );

@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { DeviceProtectionInputState } from './deviceProtectionInputState';
 
@@ -15,4 +15,19 @@ export interface DeviceProtectionInput {
      * @items.maxLength 80
      */
   issues: string[];
+  /** @maxLength 40 */
+  osVersion?: string;
+  /** @maxLength 80 */
+  model?: string;
+  /** @maxLength 40 */
+  appVersion?: string;
+  /** @maxLength 64 */
+  timezone?: string;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  batteryLevel?: number;
+  /** @maxItems 200 */
+  boundRuleIds?: string[];
 }

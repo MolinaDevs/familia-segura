@@ -3,7 +3,7 @@
  * Do not edit manually.
  * Api
  * API segura do Família Segura
- * OpenAPI spec version: 0.2.0
+ * OpenAPI spec version: 0.3.0
  */
 import type { FamilyMemberRole } from './familyMemberRole';
 
@@ -11,4 +11,5 @@ export interface FamilyMember {
   id: string;
   displayName: string;
   role: FamilyMemberRole;
+  isCurrentUser: boolean;
 }
