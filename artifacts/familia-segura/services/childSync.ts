@@ -72,6 +72,32 @@ export async function clearChildDevice() {
   await Promise.all(['deviceId', 'childId', 'deviceToken'].map((key) => SecureStore.deleteItemAsync(key).catch(() => undefined)));
 }
 
+const EVENTS_BUFFER_KEY = '@familia-segura/pending-device-events';
+type BufferedEvent = { type: DeviceEventsInputEventsItemType; detail?: string; occurredAt: string };
+
+/**
+ * Eventos nativos (adulteração, instalação, reinício) passam por um buffer persistente:
+ * a fila nativa é esvaziada na leitura, então só apagamos o buffer depois que o servidor confirmar.
+ */
+async function flushDeviceEvents(headers: Record<string, string>) {
+  const fresh: BufferedEvent[] = drainAndroidEvents()
+    .filter((event): event is typeof event & { type: DeviceEventsInputEventsItemType } => EVENT_TYPES.includes(event.type as DeviceEventsInputEventsItemType))
+    .map((event) => ({ type: event.type, detail: event.detail ? event.detail.slice(0, 240) : undefined, occurredAt: new Date(event.at).toISOString() }));
+  let buffered: BufferedEvent[] = [];
+  try {
+    buffered = JSON.parse((await AsyncStorage.getItem(EVENTS_BUFFER_KEY)) ?? '[]') as BufferedEvent[];
+  } catch {
+    buffered = [];
+  }
+  const pending = [...buffered, ...fresh].slice(-200);
+  if (pending.length === 0) return;
+  await AsyncStorage.setItem(EVENTS_BUFFER_KEY, JSON.stringify(pending));
+  for (let i = 0; i < pending.length; i += 50) {
+    await reportDeviceEvents({ events: pending.slice(i, i + 50) }, { headers });
+  }
+  await AsyncStorage.removeItem(EVENTS_BUFFER_KEY);
+}
+
 const localDateParts = () => {
   const now = new Date();
   const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -80,6 +106,8 @@ const localDateParts = () => {
 
 async function syncAndroid(overview: ChildOverview, headers: Record<string, string>) {
   applyAndroidPolicies(overview.apps, overview.routines, overview.policy);
+  // Alertas primeiro: não podem esperar o inventário (mais pesado) dar certo.
+  await flushDeviceEvents(headers).catch(() => undefined);
 
   const installed = getAndroidInstalledApps();
   if (installed.length > 0) {
@@ -91,15 +119,9 @@ async function syncAndroid(overview: ChildOverview, headers: Record<string, stri
         installedAt: app.installedAt ? new Date(app.installedAt).toISOString() : undefined,
       })),
     }, { headers });
-    // Reaplica com as listas mais recentes (app aprovado ou bloqueado agora mesmo).
-    applyAndroidPolicies(overview.apps, overview.routines, { ...overview.policy, ...result });
+    // Reaplica com as listas mais recentes; só agora a quarentena local libera o que o servidor já conhece.
+    applyAndroidPolicies(overview.apps, overview.routines, { ...overview.policy, ...result }, installed.map((app) => app.packageName));
   }
-
-  const events = drainAndroidEvents()
-    .filter((event): event is typeof event & { type: DeviceEventsInputEventsItemType } => EVENT_TYPES.includes(event.type as DeviceEventsInputEventsItemType))
-    .slice(-50)
-    .map((event) => ({ type: event.type, detail: event.detail ? event.detail.slice(0, 240) : undefined, occurredAt: new Date(event.at).toISOString() }));
-  if (events.length > 0) await reportDeviceEvents({ events }, { headers });
 
   const protection = getAndroidProtectionSummary();
   await syncChildProtection({

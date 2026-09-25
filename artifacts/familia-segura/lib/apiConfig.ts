@@ -8,3 +8,6 @@ import { setBaseUrl } from '@workspace/api-client-react';
 const apiUrl = process.env.EXPO_PUBLIC_API_URL;
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 setBaseUrl(apiUrl ? apiUrl : Platform.OS === 'web' ? null : domain ? `https://${domain}` : null);
+
+/** false quando o build não sabe onde está a API (falta EXPO_PUBLIC_API_URL no EAS). */
+export const apiConfigured = Platform.OS === 'web' || Boolean(apiUrl || domain);

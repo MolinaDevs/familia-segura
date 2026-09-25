@@ -23,6 +23,8 @@ export type AndroidPolicy = {
   blockAppRemoval: boolean;
   blockedPackages: string[];
   pendingPackages: string[];
+  /** Pacotes que o servidor acabou de receber no inventário (podem sair da quarentena local). */
+  inventorySyncedPackages?: string[];
   apps: Array<{
     ruleId: string;
     otherDevicesMinutes: number;

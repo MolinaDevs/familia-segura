@@ -20,6 +20,9 @@ export default function Index() {
       .catch(() => setIsChild(false));
   }, []);
 
+  // Modo criança não espera o login carregar (pode estar sem internet).
+  if (isChild) return <Redirect href="/(child)" />;
+
   if (!isLoaded || isChild === null) {
     return (
       <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
@@ -28,7 +31,6 @@ export default function Index() {
     );
   }
 
-  if (isChild) return <Redirect href="/(child)" />;
   if (isSignedIn) return <Redirect href="/(app)" />;
 
   const paddingTop = Platform.OS === 'web' ? Math.max(insets.top, 67) : Math.max(insets.top, 40);

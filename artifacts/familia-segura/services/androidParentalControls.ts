@@ -67,7 +67,7 @@ export const removeAndroidDeviceAdmin = () => AndroidControls?.removeDeviceAdmin
 export const setAndroidGuardianUnlock = (minutes: number) => AndroidControls?.setGuardianUnlock(minutes);
 
 /** Grava as regras para o serviço nativo. Só deve ser chamado após uma resposta autenticada do servidor. */
-export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], policy?: ChildPolicy) {
+export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], policy?: ChildPolicy, inventorySyncedPackages?: string[]) {
   if (!AndroidControls) return { configuredRules: 0, configuredRoutines: 0, skippedRules: rules.length };
   const apps = rules.flatMap((rule) => packagesForRule(rule).map((packageName) => ({
     ruleId: rule.id,
@@ -86,6 +86,7 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
     blockAppRemoval: policy?.blockAppRemoval ?? false,
     blockedPackages: policy?.blockedPackages ?? [],
     pendingPackages: policy?.pendingPackages ?? [],
+    ...(inventorySyncedPackages ? { inventorySyncedPackages } : {}),
     apps,
     routines: routines.map((routine) => ({
       days: routine.days,

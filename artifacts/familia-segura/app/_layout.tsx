@@ -18,10 +18,11 @@ import { AppProvider } from '@/context/AppContext';
 import { ClerkProvider, ClerkLoaded, ClerkLoading, useAuth } from "@clerk/expo";
 import { tokenCache } from "@/utils/cache";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
-import "@/lib/apiConfig";
+import { apiConfigured } from "@/lib/apiConfig";
 import "@/services/backgroundSync";
 import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { reloadAppAsync } from 'expo';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '@/hooks/useColors';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -88,6 +89,11 @@ function AuthInterceptor({ children }: React.PropsWithChildren) {
 
 export default function RootLayout() {
   const [fontWaitExpired, setFontWaitExpired] = useState(false);
+  // Aparelho da criança não depende do login (Clerk): abre mesmo sem internet e usa a credencial do aparelho.
+  const [childMode, setChildMode] = useState<boolean | null>(null);
+  useEffect(() => {
+    AsyncStorage.getItem('childMode').then((v) => setChildMode(v === 'true')).catch(() => setChildMode(false));
+  }, []);
   const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
@@ -106,37 +112,46 @@ export default function RootLayout() {
     }
   }, [fontsLoaded, fontError, fontWaitExpired]);
 
-  if (!fontsLoaded && !fontError && !fontWaitExpired) return <StartupScreen />;
+  if ((!fontsLoaded && !fontError && !fontWaitExpired) || childMode === null) return <StartupScreen />;
+
+  const appTree = (
+    <SubscriptionProvider>
+      <AppProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <KeyboardProvider>
+            <Stack screenOptions={{ headerShown: false }}>
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="(app)" options={{ headerShown: false }} />
+              <Stack.Screen name="(child)" options={{ headerShown: false }} />
+            </Stack>
+          </KeyboardProvider>
+        </GestureHandlerRootView>
+      </AppProvider>
+    </SubscriptionProvider>
+  );
 
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        {!publishableKey ? (
+        {!publishableKey || !apiConfigured ? (
           <StartupScreen missingConfiguration />
         ) : (
           <ClerkProvider
+            telemetry={{ disabled: true }}
             publishableKey={publishableKey}
             tokenCache={tokenCache}
             proxyUrl={proxyUrl}
           >
-            <ClerkLoading><StartupScreen /></ClerkLoading>
-            <ClerkLoaded>
-              <AuthInterceptor>
-                <SubscriptionProvider>
-                  <AppProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
-                      <KeyboardProvider>
-                        <Stack screenOptions={{ headerShown: false }}>
-                          <Stack.Screen name="index" options={{ headerShown: false }} />
-                          <Stack.Screen name="(app)" options={{ headerShown: false }} />
-                          <Stack.Screen name="(child)" options={{ headerShown: false }} />
-                        </Stack>
-                      </KeyboardProvider>
-                    </GestureHandlerRootView>
-                  </AppProvider>
-                </SubscriptionProvider>
-              </AuthInterceptor>
-            </ClerkLoaded>
+            {childMode ? (
+              <SessionQueries key="child-device">{appTree}</SessionQueries>
+            ) : (
+              <>
+                <ClerkLoading><StartupScreen /></ClerkLoading>
+                <ClerkLoaded>
+                  <AuthInterceptor>{appTree}</AuthInterceptor>
+                </ClerkLoaded>
+              </>
+            )}
           </ClerkProvider>
         )}
       </ErrorBoundary>

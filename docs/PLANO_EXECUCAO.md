@@ -106,3 +106,16 @@ Riscos que só aparelho/loja confirmam (não são bloqueios de código): Kotlin/
 telas não vistas em aparelho; detecção de telas de Configurações varia por fabricante; confirmar com a política
 do Google Play o uso de Device Admin contra desinstalação em apps de controle parental; sem monitoramento de
 falhas (recomendado Sentry — exige conta).
+
+### Segunda revisão pré-lançamento (2026-09-24) ✅
+Corrigido:
+- **Modo criança dependia do login (Clerk) para abrir**: sem internet o aparelho da criança podia ficar preso em
+  "Preparando…". Agora abre direto com a credencial do aparelho; o interceptador do Clerk não sobrescreve mais o
+  token do aparelho; desvincular recarrega o app.
+- **Uso do Android calculado por eventos** (`UsageCalculator`), não por baldes agregados que contavam uso de antes
+  da meia-noite (limite vencia cedo).
+- **Anti-desinstalação não expira mais com o prazo offline**: vale enquanto o aparelho estiver pareado.
+- **Quarentena local só libera app que o servidor já recebeu** no inventário (antes podia escapar se a rede caísse).
+- **Alertas de adulteração não se perdem**: buffer persistente, enviados antes do inventário.
+- Telemetria do Clerk desligada (app e API); build sem `EXPO_PUBLIC_API_URL` mostra "configuração ausente".
+- Verificado: API compilada sobe e responde em modo produção; 50 testes; pacotes Android/iOS.

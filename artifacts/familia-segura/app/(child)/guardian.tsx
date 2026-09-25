@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
+import { reloadAppAsync } from 'expo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { checkGuardianPin } from '@/services/guardianPin';
@@ -81,7 +82,8 @@ export default function GuardianAreaScreen() {
             if (Platform.OS === 'android') removeAndroidDeviceAdmin();
             await unregisterChildBackgroundSync();
             await clearChildDevice();
-            router.replace('/');
+            // Recarrega para sair do modo criança (volta a exigir login do responsável).
+            await reloadAppAsync().catch(() => router.replace('/'));
           },
         },
       ],

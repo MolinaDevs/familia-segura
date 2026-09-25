@@ -14,7 +14,6 @@ import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 import expo.modules.kotlin.objects.ReadableArguments
 import org.json.JSONObject
-import java.util.Calendar
 
 class FamiliaSeguraAndroidControlsModule : Module() {
   private val context: Context get() = requireNotNull(appContext.reactContext)
@@ -109,19 +108,13 @@ class FamiliaSeguraAndroidControlsModule : Module() {
     }
 
     Function("getUsageToday") { packageNames: List<String> ->
-      val manager = context.getSystemService(Context.USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
-      val start = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
-      val stats = manager.queryAndAggregateUsageStats(start, System.currentTimeMillis())
-      packageNames.distinct().associateWith { pkg -> stats[pkg]?.totalTimeInForeground?.div(60000L) ?: 0L }
+      val today = UsageCalculator.todayMinutes(context)
+      packageNames.distinct().associateWith { pkg -> today[pkg] ?: 0L }
     }
 
     /** Uso de hoje de todos os apps (para relatórios dos apps sem regra). */
     Function("getAllUsageToday") {
-      val manager = context.getSystemService(Context.USAGE_STATS_SERVICE) as android.app.usage.UsageStatsManager
-      val start = Calendar.getInstance().apply { set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0) }.timeInMillis
-      manager.queryAndAggregateUsageStats(start, System.currentTimeMillis())
-        .mapValues { (_, stat) -> stat.totalTimeInForeground / 60000L }
-        .filter { (pkg, minutes) -> minutes > 0 && pkg != context.packageName }
+      UsageCalculator.todayMinutes(context).filter { (pkg, minutes) -> minutes > 0 && pkg != context.packageName }
     }
   }
 

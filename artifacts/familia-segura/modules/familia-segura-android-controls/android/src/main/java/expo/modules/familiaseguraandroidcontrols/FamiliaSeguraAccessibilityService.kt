@@ -1,7 +1,6 @@
 package expo.modules.familiaseguraandroidcontrols
 
 import android.accessibilityservice.AccessibilityService
-import android.app.usage.UsageStatsManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -140,7 +139,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
    */
   private fun isTamperScreen(pkg: String): Boolean {
     if (pkg !in SETTINGS_PACKAGES && pkg !in INSTALLER_PACKAGES && pkg != PLAY_STORE) return false
-    val policy = PolicyStore.read(this) ?: return false
+    val policy = PolicyStore.readIgnoringLease(this) ?: return false
     if (!PolicyStore.tamperProtectionEnabled(policy) || PolicyStore.guardianUnlocked(this)) return false
     val text = windowText() ?: return false
     val mentionsUs = text.contains(appLabelLower) || text.contains(getString(R.string.accessibility_service_label).lowercase())
@@ -194,7 +193,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
       else -> {
         // O limite é da criança: soma todos os pacotes da mesma regra neste aparelho + o uso nos outros aparelhos.
         val limit = app.optInt("dailyLimitMinutes", -1)
-        val used = rulePackages(policy, app).sumOf { usageToday(it) } + app.optLong("otherDevicesMinutes", 0L)
+        val used = rulePackages(policy, app).sumOf { UsageCalculator.minutes(this, it) } + app.optLong("otherDevicesMinutes", 0L)
         if (limit < 0 || used < limit) return
         PolicyStore.appendEvent(this, "limit_reached", appName)
         getString(R.string.block_reason_limit, limit, appName)
@@ -245,14 +244,6 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val home = packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName
     val keyboard = android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.DEFAULT_INPUT_METHOD)
     return pkg == home || (keyboard != null && keyboard.startsWith("$pkg/"))
-  }
-
-  private fun usageToday(pkg: String): Long {
-    val manager = getSystemService(USAGE_STATS_SERVICE) as UsageStatsManager
-    val start = Calendar.getInstance().apply {
-      set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
-    }.timeInMillis
-    return manager.queryAndAggregateUsageStats(start, System.currentTimeMillis())[pkg]?.totalTimeInForeground?.div(60000L) ?: 0L
   }
 
   private fun routineActive(policy: JSONObject): Boolean {

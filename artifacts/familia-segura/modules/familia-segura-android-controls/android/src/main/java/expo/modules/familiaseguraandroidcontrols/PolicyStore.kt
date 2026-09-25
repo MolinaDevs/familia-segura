@@ -23,9 +23,12 @@ internal object PolicyStore {
 
   fun save(context: Context, policy: JSONObject) {
     prefs(context).edit().putString(KEY, policy.toString()).apply()
-    // O servidor já conhece o inventário: pendências locais passam a vir da política.
-    val serverPending = policy.optJSONArray("pendingPackages")
-    if (serverPending != null) prefs(context).edit().remove(KEY_LOCAL_PENDING).apply()
+    // Só sai da quarentena local o app que o servidor já recebeu no inventário (ele passa a decidir por
+    // pendingPackages/blockedPackages). Se o envio do inventário falhar, o app continua bloqueado.
+    val synced = policy.optJSONArray("inventorySyncedPackages") ?: return
+    val known = (0 until synced.length()).map { synced.optString(it) }.toSet()
+    val remaining = localPending(context) - known
+    prefs(context).edit().putString(KEY_LOCAL_PENDING, JSONArray(remaining.toList()).toString()).apply()
   }
 
   fun read(context: Context): JSONObject? = try {
@@ -35,6 +38,14 @@ internal object PolicyStore {
   } catch (_: Exception) { null }
 
   fun leaseActive(context: Context): Boolean = read(context) != null
+
+  /**
+   * Política sem checar o prazo offline. Usada só pela proteção contra desligar/desinstalar:
+   * ela vale enquanto o aparelho estiver pareado (o PIN funciona offline); revogar ou desvincular zera tudo.
+   */
+  fun readIgnoringLease(context: Context): JSONObject? = try {
+    prefs(context).getString(KEY, null)?.let { JSONObject(it) }
+  } catch (_: Exception) { null }
 
   fun apps(policy: JSONObject?): JSONArray = policy?.optJSONArray("apps") ?: JSONArray()
   fun routines(policy: JSONObject?): JSONArray = policy?.optJSONArray("routines") ?: JSONArray()
