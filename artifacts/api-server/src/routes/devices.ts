@@ -47,7 +47,7 @@ router.post("/family/pairing-codes", requireMember(...EDITORS), async (req: Auth
 router.post("/family/devices/pair", async (req, res): Promise<void> => {
   const input = PairDeviceBody.safeParse(req.body);
   if (!input.success) { fail(res, 400, input.error.message); return; }
-  if (!(await consumeRateLimit(`pair:${req.ip ?? "unknown"}`, Number(process.env.RATE_LIMIT_PAIR ?? 10), 10 * 60 * 1000))) {
+  if (!(await consumeRateLimit(`pair:${req.ip ?? "unknown"}`, Number(process.env.RATE_LIMIT_PAIR ?? 30), 10 * 60 * 1000))) {
     fail(res, 429, "Too many pairing attempts"); return;
   }
   const codeHash = sha256(normalizeCode(input.data.code));

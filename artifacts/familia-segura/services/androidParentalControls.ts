@@ -70,6 +70,8 @@ export const setAndroidGuardianUnlock = (minutes: number) => AndroidControls?.se
 export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], policy?: ChildPolicy) {
   if (!AndroidControls) return { configuredRules: 0, configuredRoutines: 0, skippedRules: rules.length };
   const apps = rules.flatMap((rule) => packagesForRule(rule).map((packageName) => ({
+    ruleId: rule.id,
+    otherDevicesMinutes: rule.otherDevicesUsageMinutes ?? 0,
     packageName,
     appName: rule.appName,
     status: rule.status,

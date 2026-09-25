@@ -26,11 +26,15 @@ export default function GuardianAreaScreen() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    loadCachedOverview().then((cached) => {
-      const exists = Boolean(cached?.policy.pinVerifier);
-      setHasPin(exists);
-      if (!exists) setUnlocked(true);
-    });
+    // Sincroniza antes: um PIN recém-definido pela família precisa valer aqui (não confiar só no cache).
+    runChildSync()
+      .catch(() => null)
+      .then(() => loadCachedOverview())
+      .then((cached) => {
+        const exists = Boolean(cached?.policy.pinVerifier);
+        setHasPin(exists);
+        if (!exists) setUnlocked(true);
+      });
   }, []);
 
   const submit = async () => {
@@ -40,7 +44,12 @@ export default function GuardianAreaScreen() {
     const result = await checkGuardianPin(pin);
     setChecking(false);
     setPin('');
-    if (result.valid) { setUnlocked(true); return; }
+    if (result.valid) {
+      setUnlocked(true);
+      // Libera as Configurações do Android enquanto o responsável configura/ajusta o aparelho.
+      if (Platform.OS === 'android') setAndroidGuardianUnlock(UNLOCK_MINUTES);
+      return;
+    }
     if (result.lockedUntil) {
       const minutes = Math.max(1, Math.ceil((result.lockedUntil - Date.now()) / 60000));
       setError(`Muitas tentativas. Tente de novo em ${minutes} min. Sua família foi avisada.`);
@@ -82,7 +91,7 @@ export default function GuardianAreaScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}>
       <View style={styles.nav}>
-        <Pressable testID="guardian-back" onPress={() => router.back()} hitSlop={10}>
+        <Pressable testID="guardian-back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(child)'))} hitSlop={10}>
           <Feather name="arrow-left" size={23} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Área do responsável</Text>

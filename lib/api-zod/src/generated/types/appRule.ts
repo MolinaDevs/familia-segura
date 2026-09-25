@@ -17,6 +17,8 @@ export interface AppRule {
   iconColor: string;
   androidPackages: string[];
   usageTodayMinutes: number;
+  /** Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0. */
+  otherDevicesUsageMinutes: number;
   /** No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje. */
   dailyLimitMinutes: number;
   extraTodayMinutes: number;

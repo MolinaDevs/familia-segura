@@ -51,4 +51,12 @@ app.use(
 
 app.use("/api", router);
 
+// Erros não tratados viram JSON (sem stack para o cliente); o detalhe fica no log.
+app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  req.log?.error({ err }, "Erro não tratado");
+  if (res.headersSent) return;
+  const status = (err as { status?: number; type?: string }).type === "entity.too.large" ? 413 : (err as { status?: number }).status === 400 ? 400 : 500;
+  res.status(status).json({ error: status === 500 ? "Erro interno. Tente novamente." : "Requisição inválida" });
+});
+
 export default app;

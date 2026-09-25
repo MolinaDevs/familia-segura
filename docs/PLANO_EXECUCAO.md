@@ -86,3 +86,23 @@ Ambiente fora do Expo Go e do Replit; migrations; testes; CI.
 - Documentos: `docs/DEPLOY.md`, `docs/TESTE_BETA.md` (matriz iPhone↔Android, 10 aparelhos, anti-desinstalação),
   notas de revisão das lojas com declarações do Google Play, checklist final, README, `replit.md` atualizado.
 - **Pendente do dono** (contas, entitlement Apple, aparelhos, jurídico, envio): `docs/ACOES_DO_DONO.md`.
+
+### Revisão pré-lançamento (2026-09-24) ✅
+Corrigido:
+- **Permissões sem uso** (expo-location, expo-image-picker, expo-crypto) removidas + `blockedPermissions` no Android
+  (localização, câmera, microfone, mídia, contatos, SMS, sobreposição, QUERY_ALL_PACKAGES). Contradiziam a política.
+- **Exclusão de conta** para qualquer papel, incluindo o login no Clerk (`DELETE /api/account`) — exigência Apple 5.1.1(v).
+- **Co-responsável pagando sem efeito**: tela de assinatura explica que o Premium é do titular.
+- **Configuração do Android travada pela própria proteção** quando o PIN já existia: PIN certo na Área do
+  responsável libera o aparelho por 15 min; após parear, o app abre direto a Área do responsável.
+- **Limite burlável com vários aparelhos**: o servidor envia `otherDevicesUsageMinutes`; Android soma os pacotes
+  da regra + outros aparelhos; iOS dispara no tempo restante (nome do monitor estável).
+- Erros não tratados viram JSON sem stack; rate limit de pareamento 30/10 min (NAT de operadora).
+- Deploy de produção no Replit aplica as migrations antes do build.
+- Onboarding com aceite dos Termos de Uso.
+- 50 testes de API.
+
+Riscos que só aparelho/loja confirmam (não são bloqueios de código): Kotlin/Swift ainda não compilados (CI);
+telas não vistas em aparelho; detecção de telas de Configurações varia por fabricante; confirmar com a política
+do Google Play o uso de Device Admin contra desinstalação em apps de controle parental; sem monitoramento de
+falhas (recomendado Sentry — exige conta).

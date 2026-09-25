@@ -46,3 +46,51 @@ describe("robustez da API (Fase 5)", () => {
     expect(res.headers["x-powered-by"]).toBeUndefined();
   });
 });
+
+describe("exclusão de conta (exigência Apple 5.1.1)", () => {
+  const deleted = () => (globalThis as { __clerkDeleted?: string[] }).__clerkDeleted ?? [];
+
+  it("co-responsável exclui a própria conta sem apagar a família; titular apaga tudo", async () => {
+    process.env.CLERK_SECRET_KEY = "sk_test";
+    const { invite } = await import("./helpers");
+    const family = await createFamily();
+    await invite("user_owner", "user_guardian", "guardian");
+    await api().delete("/api/account").set(asGuardian("user_guardian")).expect(204);
+    expect(deleted()).toContain("user_guardian");
+    expect((await api().get("/api/family").set(asGuardian("user_guardian"))).status).toBe(404);
+    const overview = await api().get("/api/family").set(asGuardian("user_owner"));
+    expect(overview.body.members).toHaveLength(1);
+
+    const { deviceToken } = await pairDevice("user_owner", family.children[0].id);
+    await api().delete("/api/account").set(asGuardian("user_owner")).expect(204);
+    expect(deleted()).toContain("user_owner");
+    expect((await api().get("/api/family").set(asGuardian("user_owner"))).status).toBe(404);
+    expect((await api().get("/api/child/overview").set(asDevice(deviceToken))).status).toBe(401);
+    delete process.env.CLERK_SECRET_KEY;
+  });
+});
+
+describe("limite por criança com vários aparelhos", () => {
+  it("cada aparelho recebe quanto já foi usado nos outros", async () => {
+    const family = await createFamily();
+    const childId = family.children[0].id;
+    const phone = await pairDevice("user_owner", childId, "android", "Celular");
+    const tablet = await pairDevice("user_owner", childId, "ios", "Tablet");
+    await api().post("/api/child/usage").set(asDevice(phone.deviceToken)).send({ samples: [{ appId: "youtube", usageTodayMinutes: 40 }] }).expect(204);
+    await api().post("/api/child/usage").set(asDevice(tablet.deviceToken)).send({ samples: [{ appId: "youtube", usageTodayMinutes: 15 }] }).expect(204);
+    const onPhone = (await api().get("/api/child/overview").set(asDevice(phone.deviceToken))).body.apps[0];
+    const onTablet = (await api().get("/api/child/overview").set(asDevice(tablet.deviceToken))).body.apps[0];
+    expect(onPhone).toMatchObject({ usageTodayMinutes: 55, otherDevicesUsageMinutes: 15 });
+    expect(onTablet).toMatchObject({ usageTodayMinutes: 55, otherDevicesUsageMinutes: 40 });
+    const guardian = (await api().get("/api/family").set(asGuardian("user_owner"))).body.apps[0];
+    expect(guardian).toMatchObject({ usageTodayMinutes: 55, otherDevicesUsageMinutes: 0 });
+  });
+});
+
+describe("erros viram JSON", () => {
+  it("JSON malformado responde 400 em JSON, sem stack", async () => {
+    const res = await api().post("/api/family").set(asGuardian("u")).set("Content-Type", "application/json").send("{quebrado");
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({ error: "Requisição inválida" });
+  });
+});

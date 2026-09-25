@@ -80,6 +80,15 @@ paths:
           description: Family deleted
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
+  /account:
+    delete:
+      operationId: deleteAccount
+      tags: [privacy]
+      description: Exclui a conta de quem está logado. Titular exclui também a família inteira; demais responsáveis saem da família.
+      responses:
+        "204":
+          description: Conta excluída
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /family/settings:
     patch:
       operationId: updateFamilySettings
@@ -1116,7 +1125,7 @@ components:
         occurredAt: { type: string, format: date-time }
     AppRule:
       type: object
-      required: [id, childId, appId, appName, category, icon, iconColor, androidPackages, usageTodayMinutes, dailyLimitMinutes, extraTodayMinutes, effectiveLimitMinutes, status]
+      required: [id, childId, appId, appName, category, icon, iconColor, androidPackages, usageTodayMinutes, otherDevicesUsageMinutes, dailyLimitMinutes, extraTodayMinutes, effectiveLimitMinutes, status]
       properties:
         id: { type: string, format: uuid }
         childId: { type: string, format: uuid }
@@ -1129,6 +1138,9 @@ components:
           type: array
           items: { type: string }
         usageTodayMinutes: { type: integer }
+        otherDevicesUsageMinutes:
+          type: integer
+          description: Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.
         dailyLimitMinutes:
           type: integer
           description: No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.

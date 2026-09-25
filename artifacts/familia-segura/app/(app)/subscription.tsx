@@ -8,6 +8,7 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { useSubscription } from '@/context/SubscriptionContext';
+import { useFamily } from '@/context/AppContext';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 export default function SubscriptionScreen() {
@@ -80,6 +81,7 @@ export default function SubscriptionScreen() {
     }
   };
 
+  const { data } = useFamily();
   const active = hasPremiumAccess;
 
   const renderContent = () => {
@@ -100,6 +102,26 @@ export default function SubscriptionScreen() {
           <Feather name="wifi-off" size={28} color={colors.mutedForeground} />
           <Text style={[styles.loadingText, { color: colors.mutedForeground, textAlign: 'center' }]}>
             Os planos não estão disponíveis agora. Tente novamente em instantes.
+          </Text>
+        </View>
+      );
+    }
+
+    // A família herda o Premium do titular: co-responsável não deve assinar (pagaria sem liberar nada).
+    if (!active && data.role !== 'owner') {
+      const familyPremium = data.limits?.plan === 'premium';
+      return (
+        <View style={styles.activeContainer}>
+          <View style={[styles.statusBadge, { backgroundColor: familyPremium ? colors.primary : colors.muted }]}>
+            <Feather name={familyPremium ? 'shield' : 'info'} size={32} color={familyPremium ? colors.primaryForeground : colors.mutedForeground} />
+          </View>
+          <Text style={[styles.activeTitle, { color: colors.foreground }]}>
+            {familyPremium ? 'Sua família já é Premium' : 'A assinatura é do titular'}
+          </Text>
+          <Text style={[styles.activeDesc, { color: colors.mutedForeground }]}>
+            {familyPremium
+              ? 'O titular da família assina o Premium e todos os responsáveis usam os recursos.'
+              : 'O Premium é contratado pelo titular da família e vale para todos os responsáveis. Peça para ele assinar pelo app.'}
           </Text>
         </View>
       );

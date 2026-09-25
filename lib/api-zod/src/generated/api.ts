@@ -70,6 +70,7 @@ export const GetFamilyOverviewResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),
@@ -214,6 +215,7 @@ export const CreateFamilyResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),
@@ -288,6 +290,12 @@ export const CreateFamilyResponse = zod.object({
 
 
 export const DeleteFamilyResponse = zod.void()
+
+
+/**
+ * Exclui a conta de quem está logado. Titular exclui também a família inteira; demais responsáveis saem da família.
+ */
+export const DeleteAccountResponse = zod.void()
 
 
 export const updateFamilySettingsBodyNameMin = 2;
@@ -428,6 +436,7 @@ export const CreateAppRuleResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),
@@ -677,6 +686,7 @@ export const UpdateAppRuleResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),
@@ -858,6 +868,7 @@ export const AcceptInviteResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),
@@ -1099,6 +1110,7 @@ export const ExportFamilyDataResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),
@@ -1199,6 +1211,7 @@ export const GetChildOverviewResponse = zod.object({
   "iconColor": zod.string(),
   "androidPackages": zod.array(zod.string()),
   "usageTodayMinutes": zod.number().int(),
+  "otherDevicesUsageMinutes": zod.number().int().describe('Na visão do aparelho da criança, minutos já usados hoje nos OUTROS aparelhos dela (o limite é da criança, não do aparelho). No painel do responsável é 0.'),
   "dailyLimitMinutes": zod.number().int().describe('No painel do responsável é o limite base. Na visão da criança já inclui o tempo extra de hoje.'),
   "extraTodayMinutes": zod.number().int(),
   "effectiveLimitMinutes": zod.number().int(),

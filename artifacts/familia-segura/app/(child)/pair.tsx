@@ -44,7 +44,8 @@ export default function PairDeviceScreen() {
       }
       
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.replace('/(child)');
+      // Próximo passo: o responsável conclui a configuração da proteção neste aparelho.
+      router.replace('/(child)/guardian');
     } catch (err) {
       const status = (err as { status?: number }).status;
       Alert.alert(

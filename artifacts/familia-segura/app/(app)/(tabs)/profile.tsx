@@ -3,7 +3,7 @@ import { Alert, Platform, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { useAuth } from '@clerk/expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { getExportFamilyDataQueryKey, useDeleteFamily, useExportFamilyData } from '@workspace/api-client-react';
+import { getExportFamilyDataQueryKey, useDeleteAccount, useExportFamilyData } from '@workspace/api-client-react';
 import { useChildColor } from '@/components/charts';
 import { Button, Card, Divider, Row, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
@@ -23,7 +23,7 @@ export default function FamilyScreen() {
   const { data, overview, canEdit, refetch } = useFamily();
   const { hasPremiumAccess } = useSubscription();
   const exportData = useExportFamilyData({ query: { queryKey: getExportFamilyDataQueryKey(), enabled: false } });
-  const deleteFamily = useDeleteFamily();
+  const deleteAccount = useDeleteAccount();
   const limits = data.limits;
   const isOwner = data.role === 'owner';
 
@@ -34,17 +34,20 @@ export default function FamilyScreen() {
   };
 
   const handleDelete = () => {
-    Alert.alert('Excluir família', 'Todos os dados da família (crianças, aparelhos, regras e relatórios) serão apagados. Esta ação é irreversível. Se houver assinatura, cancele também na App Store ou no Google Play: a exclusão não interrompe a cobrança da loja.', [
+    const message = isOwner
+      ? 'Sua conta e todos os dados da família (crianças, aparelhos, regras e relatórios) serão apagados, e os aparelhos das crianças deixam de ser controlados. Esta ação é irreversível. Se houver assinatura, cancele também na App Store ou no Google Play: a exclusão não interrompe a cobrança da loja.'
+      : 'Sua conta será apagada e você sairá desta família. As crianças e as regras continuam com os demais responsáveis. Esta ação é irreversível.';
+    Alert.alert('Excluir minha conta', message, [
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Excluir tudo', style: 'destructive', onPress: async () => {
           try {
-            await deleteFamily.mutateAsync();
+            await deleteAccount.mutateAsync();
             const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith('@familia-segura'));
             await AsyncStorage.multiRemove(keys);
             await signOut();
           } catch (error) {
-            showApiError(error, 'Não foi possível excluir a família.');
+            showApiError(error, 'Não foi possível excluir a conta.');
           }
         },
       },
@@ -113,12 +116,9 @@ export default function FamilyScreen() {
         <Row icon="file-text" title="Política de privacidade" onPress={() => void openLegal('privacy')} />
         <Divider />
         <Row icon="book" title="Termos de uso" onPress={() => void openLegal('terms')} />
-        {isOwner && (
-          <>
-            <Divider />
-            <Row icon="trash-2" destructive title="Excluir família e dados" onPress={handleDelete} />
-          </>
-        )}
+        <Divider />
+        <Row icon="trash-2" destructive title="Excluir minha conta"
+          detail={isOwner ? 'Apaga a conta e todos os dados da família' : 'Apaga a sua conta e sai da família'} onPress={handleDelete} />
       </Card>
 
       <Button label="Sair da conta" variant="secondary" icon="log-out" onPress={() => void signOut()} style={{ marginTop: 24 }} />

@@ -24,6 +24,8 @@ export type AndroidPolicy = {
   blockedPackages: string[];
   pendingPackages: string[];
   apps: Array<{
+    ruleId: string;
+    otherDevicesMinutes: number;
     packageName: string;
     appName: string;
     status: string;

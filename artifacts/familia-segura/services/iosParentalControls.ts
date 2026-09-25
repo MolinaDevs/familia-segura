@@ -53,6 +53,10 @@ export async function requestNativeControlAuthorization(): Promise<NativeControl
 export const selectionIdForRule = (ruleId: string) => `familia-segura-rule-${ruleId}`;
 
 const safeName = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, '-').slice(0, 48);
+/** Minutos que ainda restam neste aparelho: o limite é da criança e desconta o uso nos outros aparelhos. */
+const remainingMinutes = (rule: AppRule) => rule.dailyLimitMinutes - (rule.otherDevicesUsageMinutes ?? 0);
+// O nome segue o limite (muda só com tempo extra, quando desbloquear é o esperado); o gatilho usa o tempo restante.
+// Assim o registro de "limite atingido hoje" sobrevive às sincronizações.
 const activityNameForRule = (rule: AppRule) =>
   `fs-limit-${safeName(rule.id)}-${Math.max(1, rule.dailyLimitMinutes)}-${selectionIdForRule(rule.id)}`;
 
@@ -215,7 +219,7 @@ export async function applyNativePolicies(
       shieldId,
     );
 
-    if (rule.status === 'blocked' || rule.dailyLimitMinutes === 0) {
+    if (rule.status === 'blocked' || rule.dailyLimitMinutes === 0 || remainingMinutes(rule) <= 0) {
       native.blockSelection({ activitySelectionId: selectionId }, 'guardian-rule');
       configuredRules++;
       continue;
@@ -255,11 +259,11 @@ export async function applyNativePolicies(
         warningTime: { minute: 5 },
       },
       [
-        ...usageEvents(selection, Math.max(1, rule.dailyLimitMinutes)),
+        ...usageEvents(selection, Math.max(1, remainingMinutes(rule))),
         {
           eventName,
           familyActivitySelection: selection,
-          threshold: { minute: Math.max(1, rule.dailyLimitMinutes) },
+          threshold: { minute: Math.max(1, remainingMinutes(rule)) },
           includesPastActivity: true,
         },
       ],
@@ -340,9 +344,10 @@ export async function getAllowedUsageSamples(rules: AppRule[]) {
       const value = Number(event.eventName.slice('usage-'.length));
       return Number.isFinite(value) ? Math.max(highest, value) : highest;
     }, 0);
+    // Uso deste aparelho apenas (o servidor soma os aparelhos da criança).
     return {
       appId: rule.appId,
-      usageTodayMinutes: reached ? rule.dailyLimitMinutes : thresholdEstimate,
+      usageTodayMinutes: reached ? Math.max(0, remainingMinutes(rule)) : thresholdEstimate,
     };
   });
 }

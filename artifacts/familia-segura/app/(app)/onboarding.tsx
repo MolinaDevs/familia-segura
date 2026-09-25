@@ -224,12 +224,17 @@ export default function Onboarding() {
                 {consentAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
               </View>
               <Text style={[styles.consentText, { color: colors.foreground }]}>
-                Declaro ser pai, mãe ou responsável legal por esta criança e autorizo, em nome dela, o tratamento dos dados necessários ao controle parental (tempo de uso por app, apps instalados, estado da proteção dos aparelhos), conforme o art. 14 da LGPD e a Política de Privacidade. Posso exportar ou apagar tudo quando quiser.
+                Declaro ser pai, mãe ou responsável legal por esta criança e autorizo, em nome dela, o tratamento dos dados necessários ao controle parental (tempo de uso por app, apps instalados, estado da proteção dos aparelhos), conforme o art. 14 da LGPD e a Política de Privacidade, e aceito os Termos de Uso. Posso exportar ou apagar tudo quando quiser.
               </Text>
             </Pressable>
-            <Pressable onPress={() => void openLegal('privacy')} hitSlop={8}>
-              <Text style={[styles.inviteText, { color: colors.primary }]}>Ler a Política de Privacidade</Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', gap: 18 }}>
+              <Pressable onPress={() => void openLegal('privacy')} hitSlop={8}>
+                <Text style={[styles.inviteText, { color: colors.primary }]}>Política de Privacidade</Text>
+              </Pressable>
+              <Pressable onPress={() => void openLegal('terms')} hitSlop={8}>
+                <Text style={[styles.inviteText, { color: colors.primary }]}>Termos de Uso</Text>
+              </Pressable>
+            </View>
           </>
         )}
 

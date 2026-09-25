@@ -38,9 +38,10 @@ export const timeRequestView = (r: TimeRequest, childName: string) => ({
 type Totals = Map<string, number>;
 const key = (childId: string, appId: string) => `${childId}:${appId}`;
 
-export async function usageToday(familyId: string, day: string, childId?: string): Promise<Totals> {
+export async function usageToday(familyId: string, day: string, childId?: string, deviceId?: string): Promise<Totals> {
   const conditions = [eq(usageDailyTable.familyId, familyId), eq(usageDailyTable.day, day)];
   if (childId) conditions.push(eq(usageDailyTable.childId, childId));
+  if (deviceId) conditions.push(eq(usageDailyTable.deviceId, deviceId));
   const rows = await db.select({ childId: usageDailyTable.childId, appId: usageDailyTable.appId, minutes: sql<number>`sum(${usageDailyTable.minutes})::int` })
     .from(usageDailyTable).where(and(...conditions)).groupBy(usageDailyTable.childId, usageDailyTable.appId);
   return new Map(rows.map((r) => [key(r.childId, r.appId), Number(r.minutes)]));
@@ -59,7 +60,7 @@ export async function grantsToday(familyId: string, day: string, childId?: strin
  * - guardian: `dailyLimitMinutes` é o limite base (o que o responsável configurou).
  * - child: `dailyLimitMinutes` já inclui o extra; app bloqueado com extra vira "permitido só pelo extra".
  */
-export function ruleView(rule: AppRule, usage: Totals, grants: Totals, audience: "guardian" | "child") {
+export function ruleView(rule: AppRule, usage: Totals, grants: Totals, audience: "guardian" | "child", thisDeviceUsage?: Totals) {
   const extra = grants.get(key(rule.childId, rule.appId)) ?? 0;
   const blocked = rule.status === "blocked";
   const effective = blocked || rule.dailyLimitMinutes === 0 ? extra : rule.dailyLimitMinutes + extra;
@@ -69,6 +70,9 @@ export function ruleView(rule: AppRule, usage: Totals, grants: Totals, audience:
     id: rule.id, childId: rule.childId, appId: rule.appId, appName: rule.appName, category: rule.category,
     icon: rule.icon, iconColor: rule.iconColor, androidPackages: rule.androidPackages,
     usageTodayMinutes: usage.get(key(rule.childId, rule.appId)) ?? 0,
+    otherDevicesUsageMinutes: thisDeviceUsage
+      ? Math.max(0, (usage.get(key(rule.childId, rule.appId)) ?? 0) - (thisDeviceUsage.get(key(rule.childId, rule.appId)) ?? 0))
+      : 0,
     dailyLimitMinutes: audience === "child" ? effective : rule.dailyLimitMinutes,
     extraTodayMinutes: extra,
     effectiveLimitMinutes: effective,
@@ -153,18 +157,19 @@ export async function childOverview(device: Device) {
     .where(and(eq(childrenTable.id, device.childId), eq(childrenTable.familyId, device.familyId), isNull(childrenTable.archivedAt)));
   if (!family || !child) return undefined;
   const today = localDate(family.timezone);
-  const [rules, routines, apps, requests, usage, grants] = await Promise.all([
+  const [rules, routines, apps, requests, usage, grants, deviceUsage] = await Promise.all([
     db.select().from(appRulesTable).where(and(eq(appRulesTable.childId, child.id), eq(appRulesTable.familyId, family.id))).orderBy(appRulesTable.appName),
     db.select().from(routinesTable).where(and(eq(routinesTable.childId, child.id), eq(routinesTable.familyId, family.id))),
     db.select().from(deviceAppsTable).where(and(eq(deviceAppsTable.deviceId, device.id), isNull(deviceAppsTable.removedAt), inArray(deviceAppsTable.status, ["blocked", "pending"]))),
     db.select().from(timeRequestsTable).where(and(eq(timeRequestsTable.childId, child.id), eq(timeRequestsTable.status, "pending"))).orderBy(desc(timeRequestsTable.createdAt)).limit(20),
     usageToday(family.id, today, child.id),
     grantsToday(family.id, today, child.id),
+    usageToday(family.id, today, child.id, device.id),
   ]);
   return {
     child: childView(child),
     deviceId: device.id,
-    apps: rules.map((r) => ruleView(r, usage, grants, "child")),
+    apps: rules.map((r) => ruleView(r, usage, grants, "child", deviceUsage)),
     routines: routines.map(routineView),
     collectedData: ["tempo de uso dos apps com regra", "apps instalados (Android)", "estado da proteção do aparelho", "seus pedidos de tempo"],
     policy: {

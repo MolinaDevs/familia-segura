@@ -17,6 +17,7 @@ import { hashPin, newReadableCode, normalizeCode, sha256 } from "../lib/codes";
 import { familyPlan, PLAN_LIMITS } from "../lib/limits";
 import { consumeRateLimit } from "../lib/rateLimit";
 import { lockFamily } from "../lib/tx";
+import { deleteClerkUser } from "../lib/clerkAdmin";
 import { isValidTimezone } from "../lib/time";
 import { notifyDevicesPolicyChanged } from "../lib/push";
 import { childView, countFamily, familyOverview, settingsView } from "../lib/views";
@@ -57,7 +58,27 @@ router.delete("/family", requireMember("owner"), async (req: AuthedRequest, res)
     await tx.delete(familiesTable).where(eq(familiesTable.id, m.familyId));
     await tx.delete(usersTable).where(eq(usersTable.id, m.userId));
   });
+  await deleteClerkUser(req.userId!);
   req.log.info({ familyId: m.familyId }, "Family deleted");
+  res.sendStatus(204);
+});
+
+/**
+ * Exclusão da conta de quem está logado (qualquer papel).
+ * Titular: apaga a família inteira. Co-responsável/observador: sai da família e tem os dados apagados.
+ */
+router.delete("/account", requireAuth, async (req: AuthedRequest, res): Promise<void> => {
+  const member = await findMembership(req.userId!);
+  await db.transaction(async (tx) => {
+    if (member?.role === "owner") await tx.delete(familiesTable).where(eq(familiesTable.id, member.familyId));
+    else if (member) {
+      await tx.insert(auditEventsTable).values({ familyId: member.familyId, action: "member.account_deleted", summary: `${member.displayName} excluiu a própria conta` });
+    }
+    // Apagar o usuário remove em cascata participação, tokens de push e consentimentos.
+    await tx.delete(usersTable).where(eq(usersTable.clerkUserId, req.userId!));
+  });
+  await deleteClerkUser(req.userId!);
+  req.log.info({ role: member?.role ?? "none" }, "Account deleted");
   res.sendStatus(204);
 });
 

@@ -192,8 +192,10 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
       app == null -> return
       app.optString("status").equals("blocked", true) -> getString(R.string.block_reason_permanent)
       else -> {
+        // O limite é da criança: soma todos os pacotes da mesma regra neste aparelho + o uso nos outros aparelhos.
         val limit = app.optInt("dailyLimitMinutes", -1)
-        if (limit < 0 || usageToday(pkg) < limit) return
+        val used = rulePackages(policy, app).sumOf { usageToday(it) } + app.optLong("otherDevicesMinutes", 0L)
+        if (limit < 0 || used < limit) return
         PolicyStore.appendEvent(this, "limit_reached", appName)
         getString(R.string.block_reason_limit, limit, appName)
       }
@@ -217,6 +219,16 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
   private fun labelOf(pkg: String): String = try {
     packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
   } catch (_: Exception) { pkg }
+
+  private fun rulePackages(policy: JSONObject, app: JSONObject): List<String> {
+    val ruleId = app.optString("ruleId")
+    if (ruleId.isBlank()) return listOf(app.optString("packageName"))
+    val apps = PolicyStore.apps(policy)
+    return (0 until apps.length()).mapNotNull { apps.optJSONObject(it) }
+      .filter { it.optString("ruleId") == ruleId }
+      .map { it.optString("packageName") }
+      .distinct()
+  }
 
   private fun findApp(policy: JSONObject, pkg: String): JSONObject? {
     val apps = PolicyStore.apps(policy)
