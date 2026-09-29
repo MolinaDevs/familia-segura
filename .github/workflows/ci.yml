@@ -62,6 +62,13 @@ jobs:
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
+      - name: Selecionar Xcode 26
+        # Expo 57 / RN 0.86 geram o projeto de pods no formato do Xcode 26 (o 16.4 padrão não abre).
+        run: |
+          ls -d /Applications/Xcode_26*.app
+          XC=$(ls -d /Applications/Xcode_26*.app | grep -v -i beta | sort -V | tail -1)
+          sudo xcode-select -s "$XC/Contents/Developer"
+          xcodebuild -version
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
