@@ -58,15 +58,15 @@ jobs:
 
   ios-native:
     # Compila o app iOS (módulo Swift próprio + extensões Screen Time) para simulador, sem assinatura.
-    runs-on: macos-15
+    runs-on: macos-26
     timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
-      - name: Selecionar Xcode 26
-        # Expo 57 / RN 0.86 geram o projeto de pods no formato do Xcode 26 (o 16.4 padrão não abre).
+      - name: Selecionar Xcode mais novo
+        # Expo 57 (expo-modules-jsi) é feito para o Xcode 27; o 26.3 rejeita as anotações de interop C++.
         run: |
-          ls -d /Applications/Xcode_26*.app
-          XC=$(ls -d /Applications/Xcode_26*.app | grep -v -i beta | sort -V | tail -1)
+          ls -d /Applications/Xcode*.app
+          XC=$(ls -d /Applications/Xcode_2[6-9]*.app | grep -v -i beta | sort -V | tail -1)
           sudo xcode-select -s "$XC/Contents/Developer"
           xcodebuild -version
       - uses: pnpm/action-setup@v4
