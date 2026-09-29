@@ -80,5 +80,12 @@ jobs:
         run: |
           WS=$(ls -d *.xcworkspace | head -1)
           SCHEME=$(basename "$WS" .xcworkspace)
-          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Debug -sdk iphonesimulator             -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build | tail -50
-          exit ${PIPESTATUS[0]}
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Debug -sdk iphonesimulator             -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build > build.log 2>&1 && STATUS=0 || STATUS=$?
+          tail -30 build.log
+          if [ "$STATUS" -ne 0 ]; then
+            echo "===== primeiros erros ====="
+            grep -n -E "error:|fatal error|The following build commands failed" build.log | head -40
+            grep -n -B2 -A12 "The following build commands failed" build.log | head -40
+          fi
+          xcodebuild -version
+          exit $STATUS
