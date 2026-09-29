@@ -90,6 +90,8 @@ export * from './timeGrantInput';
 export * from './timeGrantSource';
 export * from './timeRequest';
 export * from './timeRequestInput';
+export * from './timeRequestInputKind';
+export * from './timeRequestKind';
 export * from './timeRequestResolution';
 export * from './timeRequestResolutionStatus';
 export * from './timeRequestStatus';

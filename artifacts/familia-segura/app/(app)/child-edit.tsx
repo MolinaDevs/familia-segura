@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useArchiveChild, useCreateChild, useUpdateChild, type ChildProfileAgeBand } from '@workspace/api-client-react';
 import { Button, Card, Notice, Screen, SectionTitle } from '@/components/ui';

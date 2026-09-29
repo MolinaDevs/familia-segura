@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, eq, isNull, sql } from "drizzle-orm";
-import { db, appRulesTable, auditEventsTable, childrenTable, familiesTable, temporaryGrantsTable, timeRequestsTable } from "@workspace/db";
+import { db, appRulesTable, auditEventsTable, childrenTable, devicesTable, familiesTable, temporaryGrantsTable, timeRequestsTable } from "@workspace/db";
 import {
   CreateTimeRequestBody, CreateTimeRequestResponse, ResolveTimeRequestBody, ResolveTimeRequestParams, ResolveTimeRequestResponse,
 } from "@workspace/api-zod";
@@ -29,20 +29,30 @@ router.post("/family/time-requests", async (req: AuthedRequest, res): Promise<vo
   const [child] = await db.select().from(childrenTable)
     .where(and(eq(childrenTable.id, childId), eq(childrenTable.familyId, familyId), isNull(childrenTable.archivedAt)));
   if (!child) { fail(res, 404, "Child not found"); return; }
-  const [rule] = await db.select().from(appRulesTable)
-    .where(and(eq(appRulesTable.childId, child.id), eq(appRulesTable.appId, input.data.appId)));
-  if (!rule) { fail(res, 404, "Este app não tem regra configurada", "RULE_NOT_FOUND"); return; }
+  const kind = input.data.kind ?? "time";
+  // Pedido de instalação: vem do aparelho (é ele que será liberado); o app pedido ainda não tem regra.
+  if (kind === "install" && !device) { fail(res, 400, "Pedido de instalação só pelo aparelho da criança", "DEVICE_REQUIRED"); return; }
+  const [rule] = kind === "time"
+    ? await db.select().from(appRulesTable).where(and(eq(appRulesTable.childId, child.id), eq(appRulesTable.appId, input.data.appId)))
+    : [undefined];
+  if (kind === "time" && !rule) { fail(res, 404, "Este app não tem regra configurada", "RULE_NOT_FOUND"); return; }
+  const appName = rule?.appName ?? input.data.appId.trim().slice(0, 80);
   const [{ pending }] = await db.select({ pending: sql<number>`count(*)::int` }).from(timeRequestsTable)
     .where(and(eq(timeRequestsTable.childId, child.id), eq(timeRequestsTable.status, "pending")));
   if (Number(pending) >= MAX_PENDING_PER_CHILD) { fail(res, 409, "Aguarde a resposta dos pedidos anteriores", "TOO_MANY_PENDING"); return; }
   const [request] = await db.insert(timeRequestsTable).values({
-    familyId, childId: child.id, deviceId: device?.id, appId: rule.appId, appName: rule.appName,
-    requestedMinutes: input.data.requestedMinutes, message: input.data.message,
+    familyId, childId: child.id, deviceId: device?.id, kind, appId: rule?.appId ?? "install", appName,
+    requestedMinutes: kind === "install" ? Math.min(60, input.data.requestedMinutes) : input.data.requestedMinutes, message: input.data.message,
   }).returning();
-  await db.insert(auditEventsTable).values({ familyId, action: "time_request.created", summary: `${child.displayName} pediu +${request.requestedMinutes} min de ${rule.appName}` });
+  await db.insert(auditEventsTable).values({
+    familyId, action: "time_request.created",
+    summary: kind === "install" ? `${child.displayName} pediu para instalar ${appName}` : `${child.displayName} pediu +${request.requestedMinutes} min de ${appName}`,
+  });
   await notifyGuardians(familyId, {
-    title: `${child.displayName} pediu mais tempo`,
-    body: `+${request.requestedMinutes} min de ${rule.appName}${request.message ? `: "${request.message}"` : ""}`,
+    title: kind === "install" ? `${child.displayName} quer instalar um app` : `${child.displayName} pediu mais tempo`,
+    body: kind === "install"
+      ? `${appName}${request.message ? `: "${request.message}"` : ""}`
+      : `+${request.requestedMinutes} min de ${appName}${request.message ? `: "${request.message}"` : ""}`,
     data: { type: "time_request", requestId: request.id },
   });
   res.status(201).json(CreateTimeRequestResponse.parse(timeRequestView(request, child.displayName)));
@@ -62,7 +72,13 @@ router.patch("/family/time-requests/:requestId", requireMember(...EDITORS), asyn
       .returning();
     if (!request) return undefined;
     const minutes = input.data.grantedMinutes ?? request.requestedMinutes;
-    if (input.data.status === "approved") {
+    if (input.data.status === "approved" && request.kind === "install") {
+      // Aprovar pedido de instalação = liberar a instalação no aparelho que pediu.
+      if (request.deviceId) {
+        await tx.update(devicesTable).set({ installUnlockUntil: new Date(Date.now() + Math.min(60, minutes) * 60_000) })
+          .where(and(eq(devicesTable.id, request.deviceId), eq(devicesTable.familyId, m.familyId)));
+      }
+    } else if (input.data.status === "approved") {
       await tx.insert(temporaryGrantsTable).values({
         familyId: m.familyId, childId: request.childId, appId: request.appId, minutes, validOn: today,
         source: "request", timeRequestId: request.id, createdBy: m.userId,
@@ -70,7 +86,8 @@ router.patch("/family/time-requests/:requestId", requireMember(...EDITORS), asyn
     }
     await tx.insert(auditEventsTable).values({
       familyId: m.familyId, userId: m.userId, action: "time_request.resolved",
-      summary: input.data.status === "approved" ? `+${minutes} min de ${request.appName} liberados hoje` : `Pedido de ${request.appName} negado`,
+      summary: input.data.status !== "approved" ? `Pedido de ${request.appName} negado`
+        : request.kind === "install" ? `Instalação liberada por ${Math.min(60, minutes)} min para ${request.appName}` : `+${minutes} min de ${request.appName} liberados hoje`,
     });
     return request;
   });

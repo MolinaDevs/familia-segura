@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.net.ConnectivityManager
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
@@ -46,9 +47,9 @@ class FamiliaSeguraAndroidControlsModule : Module() {
         "model" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
         "osVersion" to Build.VERSION.RELEASE,
         "batteryLevel" to batteryLevel(),
-        // Filtro web no Android: DNS privado (Android 9+). "hostname" + servidor familiar = filtro ativo.
-        "privateDnsMode" to (Settings.Global.getString(context.contentResolver, "private_dns_mode") ?: ""),
-        "privateDnsHost" to (Settings.Global.getString(context.contentResolver, "private_dns_specifier") ?: ""),
+        // Filtro web no Android: DNS privado (Android 9+), lido pela API pública da rede ativa.
+        "privateDnsMode" to privateDns().first,
+        "privateDnsHost" to privateDns().second,
       )
     }
 
@@ -124,6 +125,24 @@ class FamiliaSeguraAndroidControlsModule : Module() {
     Function("getAllUsageToday") {
       UsageCalculator.todayMinutes(context).filter { (pkg, minutes) -> minutes > 0 && pkg != context.packageName }
     }
+  }
+
+  /**
+   * ("hostname" | "opportunistic" | "off" | "unknown", servidor). "unknown" = sem rede ativa para conferir.
+   * Usa LinkProperties (API pública); não lê a chave interna private_dns_mode, bloqueada no Android 12+.
+   */
+  private fun privateDns(): Pair<String, String> {
+    if (Build.VERSION.SDK_INT < 28) return "off" to ""
+    return try {
+      val cm = context.getSystemService(ConnectivityManager::class.java)
+      val props = cm.getLinkProperties(cm.activeNetwork) ?: return "unknown" to ""
+      val host = props.privateDnsServerName ?: ""
+      when {
+        host.isNotBlank() -> "hostname" to host
+        props.isPrivateDnsActive -> "opportunistic" to ""
+        else -> "off" to ""
+      }
+    } catch (_: Exception) { "unknown" to "" }
   }
 
   private fun isAdminActive(): Boolean =

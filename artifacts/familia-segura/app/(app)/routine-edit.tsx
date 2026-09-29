@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCreateRoutine, useDeleteRoutine, useUpdateRoutine } from '@workspace/api-client-react';
 import { Button, Chip, Notice, Screen, SectionTitle } from '@/components/ui';

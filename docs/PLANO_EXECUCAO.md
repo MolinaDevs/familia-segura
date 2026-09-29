@@ -137,3 +137,12 @@ Como repetir: `docs/TESTE_LOCAL.md`.
   com auto-aprovação do que for instalado na janela). Migration 0003.
 - **Apps fora da lista**: "Não encontrou o app? Adicionar outro" (nome, categoria, limite, identificador Android opcional).
 - Anúncios/apps sugeridos: não bloqueáveis dentro dos apps; o efeito (instalar) é bloqueado — ver docs/ANDROID_PROTECAO.md.
+
+### Revisão (2026-09-29, 2) ✅
+- Filtro DNS no Android: bloqueia só a janela de escolha do DNS (não a tela de rede/Wi-Fi); detecção pela API
+  pública `LinkProperties` (a chave interna `private_dns_mode` é bloqueada no Android 12+); sem rede não acusa falso problema.
+- Liberações de instalação vencidas: servidor limpa o prazo a cada minuto e manda push para o aparelho bloquear na hora.
+- Lista de apps instalados só é enviada quando muda (ou a cada 6 h), não mais a cada minuto.
+- **Pedido para instalar app** pela criança (migration 0004, `kind: "install"`): aprovar libera 15 min no aparelho que pediu.
+- `Alert` compatível com a web (modo demonstração); critério único de "sem contato" (3 h) em todas as telas.
+- 54 testes de API; fluxo de pedido de instalação testado no navegador.

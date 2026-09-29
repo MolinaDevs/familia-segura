@@ -127,3 +127,42 @@ describe("liberação de instalação à distância", () => {
     expect(blocked.status).toBe(400);
   });
 });
+
+describe("fim da liberação de instalação", () => {
+  it("prazo vencido é apagado e o aparelho recebe push para bloquear de novo", async () => {
+    const { setPushTransport } = await import("../src/lib/push");
+    const { expireInstallUnlocks } = await import("../src/lib/unlockExpiry");
+    const family = await createFamily();
+    const { device, deviceToken } = await pairDevice("user_owner", family.children[0].id, "ios");
+    await api().post("/api/child/push-token").set(asDevice(deviceToken)).send({ token: "ExponentPushToken[ipad]", platform: "ios" }).expect(204);
+    await api().post(`/api/family/devices/${device.id}/install-unlock`).set(asGuardian("user_owner")).send({ minutes: 5 }).expect(200);
+    const sent: Array<{ to: string }> = [];
+    setPushTransport(async (m) => { sent.push(...m); });
+    expect(await expireInstallUnlocks(new Date(Date.now() + 60_000))).toBe(0);
+    expect(await expireInstallUnlocks(new Date(Date.now() + 6 * 60_000))).toBe(1);
+    expect(sent.map((m) => m.to)).toEqual(["ExponentPushToken[ipad]"]);
+    setPushTransport(null);
+    const policy = (await api().get("/api/child/overview").set(asDevice(deviceToken))).body.policy;
+    expect(policy.installUnlockUntil).toBeNull();
+  });
+});
+
+describe("pedido para instalar app", () => {
+  it("criança pede, responsável aprova e o aparelho fica liberado; sem aparelho é recusado", async () => {
+    const family = await createFamily();
+    const childId = family.children[0].id;
+    const { device, deviceToken } = await pairDevice("user_owner", childId, "ios");
+    const req = await api().post("/api/family/time-requests").set(asDevice(deviceToken))
+      .send({ kind: "install", childId, appId: "Minecraft", requestedMinutes: 15, message: "trabalho da escola" });
+    expect(req.status).toBe(201);
+    expect(req.body).toMatchObject({ kind: "install", appName: "Minecraft", deviceId: device.id });
+    await api().patch(`/api/family/time-requests/${req.body.id}`).set(asGuardian("user_owner")).send({ status: "approved" }).expect(200);
+    const policy = (await api().get("/api/child/overview").set(asDevice(deviceToken))).body.policy;
+    expect(new Date(policy.installUnlockUntil).getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
+    const overview = (await api().get("/api/family").set(asGuardian("user_owner"))).body;
+    expect(overview.apps.every((a: { extraTodayMinutes: number }) => a.extraTodayMinutes === 0)).toBe(true);
+    const byGuardian = await api().post("/api/family/time-requests").set(asGuardian("user_owner"))
+      .send({ kind: "install", childId, appId: "Roblox", requestedMinutes: 15, message: "" });
+    expect(byGuardian.status).toBe(400);
+  });
+});

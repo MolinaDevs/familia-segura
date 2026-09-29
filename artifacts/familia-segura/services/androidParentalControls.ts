@@ -57,7 +57,8 @@ export function getAndroidProtectionSummary(webFilter: 'off' | 'adult' = 'off'):
   if (!status.deviceAdminActive) issues.push('Proteção contra desinstalação desativada');
   if (!status.batteryOptimizationExempt) issues.push('Otimização de bateria ativa');
   if (!status.policyLeaseActive) issues.push('Regras precisam ser atualizadas');
-  if (webFilter === 'adult' && !androidWebFilterActive(status)) issues.push('Filtro de conteúdo adulto inativo (DNS privado)');
+  // Sem rede não dá para conferir o DNS: não acusa falso problema.
+  if (webFilter === 'adult' && status.privateDnsMode !== 'unknown' && !androidWebFilterActive(status)) issues.push('Filtro de conteúdo adulto inativo (DNS privado)');
   if (status.guardianUnlockedUntil > Date.now()) issues.push('Liberado temporariamente pelo responsável');
   const corePermissions = status.usageAccessGranted && status.accessibilityEnabled;
   const state: AndroidProtectionState = corePermissions

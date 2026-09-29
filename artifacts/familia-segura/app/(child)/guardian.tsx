@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { reloadAppAsync } from 'expo';

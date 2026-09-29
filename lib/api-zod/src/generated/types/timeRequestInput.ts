@@ -5,8 +5,11 @@
  * API segura do Família Segura
  * OpenAPI spec version: 0.3.0
  */
+import type { TimeRequestInputKind } from './timeRequestInputKind';
 
 export interface TimeRequestInput {
+  /** "install" = pedido para instalar um app novo (appId = nome do app pedido). Só pelo aparelho da criança. */
+  kind?: TimeRequestInputKind;
   childId: string;
   /**
      * @minLength 1

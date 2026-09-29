@@ -29,6 +29,13 @@
       "when": 1790698683821,
       "tag": "0003_liberacao_instalacao_remota",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790699964010,
+      "tag": "0004_pedido_instalacao",
+      "breakpoints": true
     }
   ]
 }

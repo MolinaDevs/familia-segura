@@ -90,6 +90,8 @@ export const GetFamilyOverviewResponse = zod.object({
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),
@@ -236,6 +238,8 @@ export const CreateFamilyResponse = zod.object({
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),
@@ -788,6 +792,7 @@ export const createTimeRequestBodyMessageMax = 240;
 
 
 export const CreateTimeRequestBody = zod.object({
+  "kind": zod.enum(['time', 'install']).optional().describe('"install" = pedido para instalar um app novo (appId = nome do app pedido). Só pelo aparelho da criança.'),
   "childId": zod.string().uuid(),
   "appId": zod.string().min(1).max(createTimeRequestBodyAppIdMax),
   "requestedMinutes": zod.number().int().min(createTimeRequestBodyRequestedMinutesMin).max(createTimeRequestBodyRequestedMinutesMax),
@@ -796,6 +801,8 @@ export const CreateTimeRequestBody = zod.object({
 
 export const CreateTimeRequestResponse = zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),
@@ -824,6 +831,8 @@ export const ResolveTimeRequestBody = zod.object({
 
 export const ResolveTimeRequestResponse = zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),
@@ -927,6 +936,8 @@ export const AcceptInviteResponse = zod.object({
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),
@@ -1170,6 +1181,8 @@ export const ExportFamilyDataResponse = zod.object({
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),
@@ -1289,6 +1302,8 @@ export const GetChildOverviewResponse = zod.object({
 }),
   "pendingRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
+  "kind": zod.enum(['time', 'install']),
+  "deviceId": zod.string().uuid().nullish(),
   "childId": zod.string().uuid(),
   "childName": zod.string(),
   "appId": zod.string(),

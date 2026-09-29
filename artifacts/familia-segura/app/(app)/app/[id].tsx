@@ -1,7 +1,8 @@
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
 import React from 'react';
-import { Alert, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { useDeleteAppRule } from '@workspace/api-client-react';
 import { AppIcon } from '@/components/AppIcon';
 import { StatusPill } from '@/components/StatusPill';

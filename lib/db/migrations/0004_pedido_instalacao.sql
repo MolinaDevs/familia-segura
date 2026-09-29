@@ -1,0 +1,1 @@
+ALTER TABLE "time_requests" ADD COLUMN "kind" text DEFAULT 'time' NOT NULL;

@@ -463,7 +463,20 @@ export interface TimeGrant {
   createdAt: string;
 }
 
+/**
+ * "install" = pedido para instalar um app novo (appId = nome do app pedido). Só pelo aparelho da criança.
+ */
+export type TimeRequestInputKind = typeof TimeRequestInputKind[keyof typeof TimeRequestInputKind];
+
+
+export const TimeRequestInputKind = {
+  time: 'time',
+  install: 'install',
+} as const;
+
 export interface TimeRequestInput {
+  /** "install" = pedido para instalar um app novo (appId = nome do app pedido). Só pelo aparelho da criança. */
+  kind?: TimeRequestInputKind;
   childId: string;
   /**
      * @minLength 1
@@ -753,6 +766,14 @@ export interface Routine {
   icon: string;
 }
 
+export type TimeRequestKind = typeof TimeRequestKind[keyof typeof TimeRequestKind];
+
+
+export const TimeRequestKind = {
+  time: 'time',
+  install: 'install',
+} as const;
+
 export type TimeRequestStatus = typeof TimeRequestStatus[keyof typeof TimeRequestStatus];
 
 
@@ -764,6 +785,9 @@ export const TimeRequestStatus = {
 
 export interface TimeRequest {
   id: string;
+  kind: TimeRequestKind;
+  /** @nullable */
+  deviceId?: string | null;
   childId: string;
   childName: string;
   appId: string;

@@ -2,6 +2,8 @@
   xmlns:tools="http://schemas.android.com/tools">
   <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" tools:ignore="ProtectedPermissions" />
   <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+  <!-- Conferir se o DNS familiar (filtro de conteúdo adulto) está ativo. -->
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
   <!-- Visibilidade de pacotes (Android 11+): só apps com ícone na tela inicial, sem QUERY_ALL_PACKAGES. -->
   <queries>

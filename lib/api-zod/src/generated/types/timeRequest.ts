@@ -5,10 +5,14 @@
  * API segura do Família Segura
  * OpenAPI spec version: 0.3.0
  */
+import type { TimeRequestKind } from './timeRequestKind';
 import type { TimeRequestStatus } from './timeRequestStatus';
 
 export interface TimeRequest {
   id: string;
+  kind: TimeRequestKind;
+  /** @nullable */
+  deviceId?: string | null;
   childId: string;
   childName: string;
   appId: string;

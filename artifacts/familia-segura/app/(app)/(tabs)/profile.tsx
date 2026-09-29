@@ -1,5 +1,6 @@
 import React from 'react';
-import { Alert, Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { Platform, Share, StyleSheet, Text, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -11,6 +12,9 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 import { openLegal } from '@/lib/legal';
+
+/** Mesmo critério da Home: "sem contato" só após 3 h (sincronização em segundo plano leva ~15 min). */
+const isStale = (lastSeenAt: string | Date) => Date.now() - new Date(lastSeenAt).getTime() > 3 * 3600_000;
 
 const STATE_TEXT: Record<string, string> = {
   active: 'Protegido', partial: 'Proteção incompleta', disabled: 'Proteção desligada', unavailable: 'Sem suporte', unknown: 'Aguardando',
@@ -90,9 +94,9 @@ export default function FamilyScreen() {
             <View key={device.id}>
               {index > 0 && <Divider />}
               <Row icon="smartphone"
-                iconColor={device.protectionState === 'active' && device.online ? colors.success : device.protectionState === 'disabled' ? colors.destructive : colors.warning}
+                iconColor={device.protectionState === 'active' && !isStale(device.lastSeenAt) ? colors.success : device.protectionState === 'disabled' ? colors.destructive : colors.warning}
                 title={`${device.name} · ${child?.displayName ?? ''}`}
-                detail={`${device.platform === 'ios' ? 'iPhone/iPad' : 'Android'} · ${STATE_TEXT[device.protectionState] ?? device.protectionState}${device.online ? '' : ' · sem contato'}`}
+                detail={`${device.platform === 'ios' ? 'iPhone/iPad' : 'Android'} · ${STATE_TEXT[device.protectionState] ?? device.protectionState}${isStale(device.lastSeenAt) ? ' · sem contato' : ''}`}
                 onPress={() => router.push({ pathname: '/(app)/device/[id]', params: { id: device.id } })} />
             </View>
           );

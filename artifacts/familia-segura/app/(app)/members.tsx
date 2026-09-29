@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, Share, StyleSheet, Text, View } from 'react-native';
+import { Share, StyleSheet, Text, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import { useCreateInvite, useRemoveMember, useUpdateMember, type FamilyMember } from '@workspace/api-client-react';

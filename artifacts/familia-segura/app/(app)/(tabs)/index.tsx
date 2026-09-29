@@ -94,16 +94,18 @@ export default function HomeScreen() {
 
       {pendingRequests.length > 0 && (
         <>
-          <SectionTitle>Pedidos de tempo</SectionTitle>
+          <SectionTitle>Pedidos</SectionTitle>
           <View style={{ gap: 10 }}>
             {pendingRequests.slice(0, 5).map((req) => (
               <Card key={req.id}>
-                <Text style={[styles.reqTitle, { color: colors.foreground }]}>{req.childName} pediu +{req.requestedMinutes} min de {req.appName}</Text>
+                <Text style={[styles.reqTitle, { color: colors.foreground }]}>
+                  {req.kind === 'install' ? `${req.childName} quer instalar ${req.appName}` : `${req.childName} pediu +${req.requestedMinutes} min de ${req.appName}`}
+                </Text>
                 {req.message ? <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>“{req.message}”</Text> : null}
                 {canEdit && (
                   <View style={styles.actions}>
                     <Button label="Negar" variant="secondary" onPress={() => resolve(req.id, 'denied')} style={{ flex: 1 }} />
-                    <Button label="Liberar hoje" onPress={() => resolve(req.id, 'approved')} style={{ flex: 1 }} testID={`approve-${req.id}`} />
+                    <Button label={req.kind === 'install' ? `Liberar ${req.requestedMinutes} min` : 'Liberar hoje'} onPress={() => resolve(req.id, 'approved')} style={{ flex: 1 }} testID={`approve-${req.id}`} />
                   </View>
                 )}
               </Card>

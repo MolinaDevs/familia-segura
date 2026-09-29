@@ -67,9 +67,29 @@ export async function clearChildDevice() {
       // sem autorização: nada aplicado
     }
   }
-  await AsyncStorage.removeItem(CHILD_MODE_KEY).catch(() => undefined);
+  await AsyncStorage.multiRemove([CHILD_MODE_KEY, INVENTORY_KEY]).catch(() => undefined);
   if (deviceId) await AsyncStorage.removeItem(cacheKey(deviceId)).catch(() => undefined);
   await Promise.all(['deviceId', 'childId', 'deviceToken'].map((key) => SecureStore.deleteItemAsync(key).catch(() => undefined)));
+}
+
+const INVENTORY_KEY = '@familia-segura/inventory-sent';
+const INVENTORY_MAX_AGE_MS = 6 * 60 * 60 * 1000;
+const inventoryKey = (packages: string[]) => [...packages].sort().join('|');
+
+/** Lista de apps (até 600) só vai ao servidor quando muda ou a cada 6 h — economiza bateria e dados. */
+async function inventoryChanged(packages: string[]) {
+  try {
+    const raw = await AsyncStorage.getItem(INVENTORY_KEY);
+    if (!raw) return true;
+    const sent = JSON.parse(raw) as { key: string; at: number };
+    return sent.key !== inventoryKey(packages) || Date.now() - sent.at > INVENTORY_MAX_AGE_MS;
+  } catch {
+    return true;
+  }
+}
+
+async function markInventorySent(packages: string[]) {
+  await AsyncStorage.setItem(INVENTORY_KEY, JSON.stringify({ key: inventoryKey(packages), at: Date.now() })).catch(() => undefined);
 }
 
 const EVENTS_BUFFER_KEY = '@familia-segura/pending-device-events';
@@ -110,7 +130,7 @@ async function syncAndroid(overview: ChildOverview, headers: Record<string, stri
   await flushDeviceEvents(headers).catch(() => undefined);
 
   const installed = getAndroidInstalledApps();
-  if (installed.length > 0) {
+  if (installed.length > 0 && (await inventoryChanged(installed.map((app) => app.packageName)))) {
     const result = await syncInstalledApps({
       snapshot: true,
       apps: installed.slice(0, 600).map((app) => ({
@@ -121,6 +141,7 @@ async function syncAndroid(overview: ChildOverview, headers: Record<string, stri
     }, { headers });
     // Reaplica com as listas mais recentes; só agora a quarentena local libera o que o servidor já conhece.
     applyAndroidPolicies(overview.apps, overview.routines, { ...overview.policy, ...result }, installed.map((app) => app.packageName));
+    await markInventorySent(installed.map((app) => app.packageName));
   }
 
   const protection = getAndroidProtectionSummary(overview.policy.webFilter);

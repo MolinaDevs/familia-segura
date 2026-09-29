@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, Alert, Platform } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, Platform } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { useRouter } from 'expo-router';
 import { usePairDevice } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   getListDeviceAppsQueryKey, useListDeviceApps, useRevokeDevice, useUnlockDeviceInstalls, useUpdateDevice, useUpdateDeviceApp,
@@ -51,7 +52,7 @@ export default function DeviceScreen() {
     <Screen back title={device.name} subtitle={`${device.platform === 'ios' ? 'iPhone/iPad' : 'Android'} de ${child?.displayName ?? ''}${device.model ? ` · ${device.model}` : ''}`}>
       <View style={{ height: 16 }} />
       <Notice icon={state.tone === 'success' ? 'shield' : 'alert-triangle'} tone={state.tone}>
-        {state.label}{device.online ? '' : ' · sem contato recente'}
+        {state.label}{Date.now() - new Date(device.lastSeenAt).getTime() > 3 * 3600_000 ? ` · sem contato desde ${new Date(device.lastSeenAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}
       </Notice>
       {device.protectionIssues.length > 0 && (
         <Card style={{ marginTop: 12, gap: 4 }}>

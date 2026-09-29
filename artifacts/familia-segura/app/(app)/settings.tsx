@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Alert, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router } from 'expo-router';
 import { useSetGuardianPin, useUpdateFamilySettings, type FamilySettingsUpdate } from '@workspace/api-client-react';
 import { Button, Card, Chip, Divider, Notice, Row, Screen, SectionTitle } from '@/components/ui';

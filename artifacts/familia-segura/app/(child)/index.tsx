@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator, Alert, AppState, Platform, RefreshControl } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, TextInput, ActivityIndicator, AppState, Platform, RefreshControl } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -25,6 +26,8 @@ export default function ChildDashboard() {
   const [appId, setAppId] = useState('');
   const [minutes, setMinutes] = useState('');
   const [message, setMessage] = useState('');
+  const [installName, setInstallName] = useState('');
+  const [installSending, setInstallSending] = useState(false);
 
   const sync = useCallback(async () => {
     const result = await runChildSync();
@@ -79,6 +82,25 @@ export default function ChildDashboard() {
       setLoading(false);
     }
   };
+
+  // Pedido para instalar um app novo (a instalação fica bloqueada; o responsável libera por alguns minutos).
+  const handleRequestInstall = async () => {
+    if (!overview || !installName.trim() || isOffline) return;
+    setInstallSending(true);
+    try {
+      await createRequest.mutateAsync({ data: { kind: 'install', childId: overview.child.id, appId: installName.trim(), requestedMinutes: 15, message: '' } });
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Alert.alert('Enviado', 'Sua família vai receber o pedido. Quando aprovarem, você terá alguns minutos para instalar.');
+      setInstallName('');
+      void sync();
+    } catch (err) {
+      const code = (err as { status?: number }).status;
+      Alert.alert('Erro', code === 409 ? 'Aguarde a resposta dos pedidos anteriores.' : 'Não foi possível enviar o pedido.');
+    } finally {
+      setInstallSending(false);
+    }
+  };
+  const installUnlockedUntil = overview?.policy.installUnlockUntil ? new Date(overview.policy.installUnlockUntil) : null;
 
   if (!overview && status === 'loading') {
     return (
@@ -178,7 +200,9 @@ export default function ChildDashboard() {
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Aguardando resposta</Text>
           {overview.pendingRequests.map((request) => (
             <View key={request.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>+{request.requestedMinutes} min de {request.appName}</Text>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>
+                {request.kind === 'install' ? `Instalar ${request.appName}` : `+${request.requestedMinutes} min de ${request.appName}`}
+              </Text>
             </View>
           ))}
         </View>
@@ -240,6 +264,38 @@ export default function ChildDashboard() {
               {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Pedir tempo</Text>}
             </Pressable>
           </View>
+        </>
+      )}
+
+      {overview.policy.blockAppInstalls && (
+        <>
+          <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 24 }]}>Quero instalar um app</Text>
+          {installUnlockedUntil && installUnlockedUntil.getTime() > Date.now() ? (
+            <View style={[styles.row, { borderColor: colors.border, backgroundColor: colors.secondary }]}>
+              <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.secondaryForeground }}>
+                Instalação liberada até {installUnlockedUntil.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </View>
+          ) : (
+            <View style={[styles.form, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <TextInput
+                testID="install-request-name"
+                style={[styles.input, { backgroundColor: colors.background, borderColor: colors.border, color: colors.foreground }]}
+                value={installName}
+                onChangeText={setInstallName}
+                maxLength={80}
+                placeholder="Nome do app"
+                placeholderTextColor={colors.mutedForeground}
+              />
+              <Pressable
+                style={({ pressed }) => [styles.button, { backgroundColor: colors.primary }, pressed && styles.pressed, (!installName.trim() || installSending || isOffline) && { opacity: 0.5 }]}
+                onPress={handleRequestInstall}
+                disabled={!installName.trim() || installSending || isOffline}
+              >
+                {installSending ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Pedir para instalar</Text>}
+              </Pressable>
+            </View>
+          )}
         </>
       )}
 

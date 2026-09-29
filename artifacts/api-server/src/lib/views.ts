@@ -33,7 +33,7 @@ export const deviceAppView = (a: DeviceApp) => ({
 });
 
 export const timeRequestView = (r: TimeRequest, childName: string) => ({
-  id: r.id, childId: r.childId, childName, appId: r.appId, appName: r.appName, requestedMinutes: r.requestedMinutes,
+  id: r.id, kind: r.kind as "time" | "install", deviceId: r.deviceId, childId: r.childId, childName, appId: r.appId, appName: r.appName, requestedMinutes: r.requestedMinutes,
   message: r.message, status: r.status as "pending" | "approved" | "denied", createdAt: r.createdAt, resolvedAt: r.resolvedAt,
 });
 

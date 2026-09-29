@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { Alert } from '@/lib/alert';
 import { router } from 'expo-router';
 
 type ErrorLike = { status?: number; data?: { error?: string; code?: string } | null };

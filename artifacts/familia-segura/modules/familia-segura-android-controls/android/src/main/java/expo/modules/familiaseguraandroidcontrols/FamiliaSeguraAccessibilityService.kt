@@ -145,7 +145,9 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val mentionsUs = text.contains(appLabelLower) || text.contains(getString(R.string.accessibility_service_label).lowercase())
     val uninstallText = text.contains("desinstalar") || text.contains("uninstall")
     val installText = !uninstallText && (text.contains("instalar") || text.contains("install"))
-    val dnsText = text.contains("dns privado") || text.contains("private dns")
+    // Só a janela de escolha do DNS (tem a opção de nome do host); a tela de rede em si continua livre (trocar Wi-Fi).
+    val dnsText = (text.contains("dns privado") || text.contains("private dns")) &&
+      (text.contains("nome do host") || text.contains("hostname") || text.contains("host name"))
     val (type, reason) = when {
       mentionsUs && (pkg in INSTALLER_PACKAGES || TAMPER_WORDS.any { text.contains(it) }) ->
         (if (uninstallText || pkg in INSTALLER_PACKAGES) "uninstall_attempt" else "tamper_attempt") to getString(R.string.block_reason_tamper)

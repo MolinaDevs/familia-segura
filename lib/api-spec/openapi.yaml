@@ -1011,6 +1011,10 @@ components:
       type: object
       required: [childId, appId, requestedMinutes, message]
       properties:
+        kind:
+          type: string
+          enum: [time, install]
+          description: '"install" = pedido para instalar um app novo (appId = nome do app pedido). Só pelo aparelho da criança.'
         childId: { type: string, format: uuid }
         appId: { type: string, minLength: 1, maxLength: 200 }
         requestedMinutes: { type: integer, minimum: 5, maximum: 120 }
@@ -1188,9 +1192,11 @@ components:
         icon: { type: string }
     TimeRequest:
       type: object
-      required: [id, childId, childName, appId, appName, requestedMinutes, message, status, createdAt]
+      required: [id, kind, childId, childName, appId, appName, requestedMinutes, message, status, createdAt]
       properties:
         id: { type: string, format: uuid }
+        kind: { type: string, enum: [time, install] }
+        deviceId: { type: [string, "null"], format: uuid }
         childId: { type: string, format: uuid }
         childName: { type: string }
         appId: { type: string }

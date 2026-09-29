@@ -118,6 +118,8 @@ export const timeRequestsTable = pgTable("time_requests", {
   deviceId: uuid("device_id").references(() => devicesTable.id, { onDelete: "set null" }),
   appId: text("app_id").notNull(), appName: text("app_name").notNull(), requestedMinutes: integer("requested_minutes").notNull(),
   message: text("message").notNull(), status: text("status").notNull().default("pending"),
+  /** "time" = mais tempo num app com regra; "install" = liberar instalação de um app novo no aparelho. */
+  kind: text("kind").notNull().default("time"),
   resolvedBy: uuid("resolved_by").references(() => usersTable.id, { onDelete: "set null" }),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   createdAt: created(),
