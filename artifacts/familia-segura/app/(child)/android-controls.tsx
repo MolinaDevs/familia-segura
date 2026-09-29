@@ -11,10 +11,13 @@ import {
   openAndroidAccessibilitySettings,
   openAndroidBatterySettings,
   openAndroidUsageSettings,
+  openAndroidNetworkSettings,
+  androidWebFilterActive,
+  RECOMMENDED_FAMILY_DNS,
   requestAndroidDeviceAdmin,
   type AndroidProtectionSummary,
 } from '@/services/androidParentalControls';
-import { runChildSync } from '@/services/childSync';
+import { loadCachedOverview, runChildSync } from '@/services/childSync';
 
 import { goBack } from '@/lib/navigation';
 const DISCLOSURE_KEY = '@familia-segura/android-accessibility-disclosure';
@@ -34,16 +37,21 @@ export default function AndroidControlsScreen() {
   const [disclosureAccepted, setDisclosureAccepted] = useState(false);
   const [policyResult, setPolicyResult] = useState<{ configuredRules: number; configuredRoutines: number; skippedRules: number } | null>(null);
 
+  const [webFilter, setWebFilter] = useState<'off' | 'adult'>('off');
+
   const refresh = useCallback(async () => {
     setBusy(true);
-    setSummary(getAndroidProtectionSummary());
+    const cachedFilter = (await loadCachedOverview())?.policy.webFilter ?? 'off';
+    setWebFilter(cachedFilter);
+    setSummary(getAndroidProtectionSummary(cachedFilter));
     if (Platform.OS === 'android') {
       // A sincronização aplica as regras (só com resposta autenticada) e envia o estado da proteção.
       const result = await runChildSync();
       if (result.status === 'ok' && result.overview) {
         setPolicyResult(applyAndroidPolicies(result.overview.apps, result.overview.routines, result.overview.policy));
+        setWebFilter(result.overview.policy.webFilter);
       }
-      setSummary(getAndroidProtectionSummary());
+      setSummary(getAndroidProtectionSummary(result.overview?.policy.webFilter ?? cachedFilter));
     }
     setBusy(false);
   }, []);
@@ -183,6 +191,33 @@ export default function AndroidControlsScreen() {
             </Pressable>
           </View>
 
+          {webFilter === 'adult' && (
+            <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={styles.stepHeader}>
+                <View style={[styles.stepNumber, { backgroundColor: androidWebFilterActive(status) ? colors.secondary : colors.muted }]}>
+                  <Feather name={androidWebFilterActive(status) ? 'check' : 'globe'} size={18} color={androidWebFilterActive(status) ? colors.secondaryForeground : colors.foreground} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.stepTitle, { color: colors.foreground }]}>5. Filtro de conteúdo adulto</Text>
+                  <Text style={[styles.stepDetail, { color: colors.mutedForeground }]}>
+                    Usa um DNS familiar gratuito: bloqueia sites adultos e força a busca segura e o modo restrito do YouTube em todo o aparelho.
+                  </Text>
+                </View>
+              </View>
+              {!androidWebFilterActive(status) && (
+                <>
+                  <Text style={[styles.stepDetail, { color: colors.foreground, marginTop: 12 }]}>
+                    Em Configurações, procure "DNS privado" (em Rede e internet ou Conexões → Mais configurações), escolha "Nome do host do provedor" e digite:
+                  </Text>
+                  <Text selectable style={[styles.dnsHost, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}>{RECOMMENDED_FAMILY_DNS}</Text>
+                </>
+              )}
+              <Pressable testID="android-dns-settings" onPress={openAndroidNetworkSettings} style={({ pressed }) => [styles.secondaryButton, { borderColor: colors.border }, pressed && styles.pressed]}>
+                <Text style={[styles.secondaryButtonText, { color: colors.foreground }]}>{androidWebFilterActive(status) ? 'Filtro ativo · revisar' : 'Abrir configurações de rede'}</Text>
+              </Pressable>
+            </View>
+          )}
+
           {policyResult && (
             <Text style={[styles.summary, { color: colors.mutedForeground }]}>
               {policyResult.configuredRules} regras e {policyResult.configuredRoutines} rotinas salvas no aparelho. {policyResult.skippedRules > 0 ? `${policyResult.skippedRules} regras precisam de um pacote Android compatível.` : ''}
@@ -224,6 +259,7 @@ const styles = StyleSheet.create({
   primaryButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 14, textAlign: 'center' },
   secondaryButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginTop: 16, paddingHorizontal: 12 },
   secondaryButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 13, textAlign: 'center' },
+  dnsHost: { fontFamily: 'Inter_700Bold', fontSize: 14, textAlign: 'center', borderWidth: 1, borderRadius: 12, paddingVertical: 12, marginTop: 10 },
   summary: { fontFamily: 'Inter_500Medium', fontSize: 12, lineHeight: 18, marginTop: 18 },
   note: { flexDirection: 'row', gap: 10, borderRadius: 18, padding: 15, marginTop: 22 },
   noteText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 12, lineHeight: 18 },

@@ -14,6 +14,8 @@ Fase 2 do plano. Objetivo: a criança não consegue **desinstalar**, **instalar 
 | Anti-desligamento | Com PIN definido, o serviço fecha as telas de Configurações/instalador/Play Store que mencionam o Família Segura junto com ações perigosas (desinstalar, forçar parada, desativar, limpar dados, acesso ao uso, bateria) | `isTamperScreen()` |
 | Apps novos | App instalado depois do pareamento fica bloqueado na hora (lista local) e vira "pendente" no servidor até o responsável aprovar | `packageReceiver` + `POST /child/installed-apps` |
 | Lojas | Play Store pode ser bloqueada como qualquer app (está no catálogo) | regra normal |
+| Filtro de conteúdo adulto | **DNS privado familiar** (CleanBrowsing Family, AdGuard Family ou Cloudflare Family): bloqueia sites adultos e força busca segura e YouTube restrito em todo o aparelho. Configurado na Área do responsável; o app detecta se está ativo e bloqueia a tela "DNS privado" sem o PIN | `androidWebFilterActive`, `isTamperScreen()` |
+| Liberar instalação à distância | O responsável libera 15/30/60 min pelo app dele; loja e instalador ficam liberados e o que for instalado nesse período entra aprovado | `installUnlockUntil` |
 | Eventos | Fila local (reinício, adulteração, instalação, limite atingido) enviada ao servidor; adulteração gera push ao responsável | `PolicyStore` + `POST /child/events` |
 | Offline | Regras valem pelo prazo configurado pela família (`offlineLeaseHours`, 12 h a 30 dias; padrão 72 h). Só renova com resposta autenticada do servidor | `applyAndroidPolicies` |
 
@@ -33,6 +35,13 @@ de mesmo algoritmo e o mesmo limite local.
 `services/childSync.ts` roda ao abrir o app, ao voltar ao primeiro plano, a cada minuto com o app aberto,
 em segundo plano (~15 min, `expo-background-task`) e ao receber push silencioso `policy_changed`
 (mudança feita pelo responsável).
+
+## Anúncios e apps sugeridos em vídeos
+
+Não há como um app bloquear o anúncio dentro do YouTube ou de outro app. O que o Família Segura garante é que o
+anúncio não vire instalação: loja bloqueada, apps novos em quarentena e liberação só pelo responsável. O DNS
+familiar ainda força o modo restrito do YouTube e reduz parte do conteúdo inadequado. Para crianças menores,
+a sugestão por idade troca o YouTube pelo YouTube Kids.
 
 ## Limites conhecidos (sem Device Owner)
 

@@ -34,7 +34,15 @@ export function packagesForRule(rule: Pick<AppRule, 'appId' | 'androidPackages'>
 
 export const isAndroidNative = () => Platform.OS === 'android' && Boolean(AndroidControls?.isAvailable());
 
-export function getAndroidProtectionSummary(): AndroidProtectionSummary {
+/** Servidores de DNS familiar aceitos (bloqueiam conteúdo adulto e forçam busca segura/YouTube restrito). */
+export const FAMILY_DNS_HOSTS = ['family-filter-dns.cleanbrowsing.org', 'family.adguard-dns.com', 'family.cloudflare-dns.com'];
+export const RECOMMENDED_FAMILY_DNS = FAMILY_DNS_HOSTS[0];
+
+export function androidWebFilterActive(status: AndroidProtectionStatus | null) {
+  return Boolean(status && status.privateDnsMode === 'hostname' && FAMILY_DNS_HOSTS.includes(status.privateDnsHost.trim().toLowerCase()));
+}
+
+export function getAndroidProtectionSummary(webFilter: 'off' | 'adult' = 'off'): AndroidProtectionSummary {
   if (Platform.OS !== 'android') {
     return { state: 'unavailable', issues: ['Disponível apenas no Android'], nativeBuildRequired: false, status: null };
   }
@@ -49,6 +57,7 @@ export function getAndroidProtectionSummary(): AndroidProtectionSummary {
   if (!status.deviceAdminActive) issues.push('Proteção contra desinstalação desativada');
   if (!status.batteryOptimizationExempt) issues.push('Otimização de bateria ativa');
   if (!status.policyLeaseActive) issues.push('Regras precisam ser atualizadas');
+  if (webFilter === 'adult' && !androidWebFilterActive(status)) issues.push('Filtro de conteúdo adulto inativo (DNS privado)');
   if (status.guardianUnlockedUntil > Date.now()) issues.push('Liberado temporariamente pelo responsável');
   const corePermissions = status.usageAccessGranted && status.accessibilityEnabled;
   const state: AndroidProtectionState = corePermissions
@@ -60,6 +69,7 @@ export function getAndroidProtectionSummary(): AndroidProtectionSummary {
 export const openAndroidUsageSettings = () => AndroidControls?.openUsageAccessSettings();
 export const openAndroidAccessibilitySettings = () => AndroidControls?.openAccessibilitySettings();
 export const openAndroidBatterySettings = () => AndroidControls?.openBatteryOptimizationSettings();
+export const openAndroidNetworkSettings = () => AndroidControls?.openNetworkSettings();
 export const requestAndroidDeviceAdmin = () => AndroidControls?.requestDeviceAdmin(
   'Impede que o Família Segura seja desinstalado sem o PIN do responsável. Desativar esta proteção avisa a família.',
 );
@@ -84,6 +94,8 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
     quarantineNewApps: policy?.quarantineNewApps ?? false,
     blockAppInstalls: policy?.blockAppInstalls ?? false,
     blockAppRemoval: policy?.blockAppRemoval ?? false,
+    webFilter: policy?.webFilter ?? 'off',
+    installUnlockUntilEpochMs: policy?.installUnlockUntil ? new Date(policy.installUnlockUntil).getTime() : 0,
     blockedPackages: policy?.blockedPackages ?? [],
     pendingPackages: policy?.pendingPackages ?? [],
     ...(inventorySyncedPackages ? { inventorySyncedPackages } : {}),
@@ -105,6 +117,7 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
 export function clearAndroidPolicies() {
   AndroidControls?.savePolicies({
     validUntilEpochMs: 0, tamperProtection: false, quarantineNewApps: false, blockAppInstalls: false, blockAppRemoval: false,
+    webFilter: 'off', installUnlockUntilEpochMs: 0,
     blockedPackages: [], pendingPackages: [], apps: [], routines: [],
   });
 }

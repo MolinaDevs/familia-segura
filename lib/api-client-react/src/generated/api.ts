@@ -50,6 +50,7 @@ import type {
   GetUsageReportParams,
   GuardianPinInput,
   HealthStatus,
+  InstallUnlockInput,
   InstalledAppsInput,
   InstalledAppsResult,
   Invite,
@@ -1566,6 +1567,92 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getRevokeDeviceMutationOptions(options));
+    }
+
+export const getUnlockDeviceInstallsUrl = (deviceId: string,) => {
+
+
+
+
+  return `/api/family/devices/${deviceId}/install-unlock`
+}
+
+/**
+ * Libera a instalação de apps no aparelho da criança por alguns minutos (0 encerra). Funciona no iPhone e no Android, à distância.
+ */
+export const unlockDeviceInstalls = async (deviceId: string,
+    installUnlockInput: InstallUnlockInput, options?: Parameters<typeof customFetch>[1]): Promise<Device> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<Device>(getUnlockDeviceInstallsUrl(deviceId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(installUnlockInput)
+  }
+);}
+
+
+
+
+
+export const getUnlockDeviceInstallsMutationKey = () => ['unlockDeviceInstalls'] as const;
+
+export const getUnlockDeviceInstallsMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockDeviceInstalls>>, TError,UnlockDeviceInstallsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockDeviceInstalls>>, TError,UnlockDeviceInstallsMutationVariables, TContext> => {
+
+const mutationKey = getUnlockDeviceInstallsMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockDeviceInstalls>>, UnlockDeviceInstallsMutationVariables> = (props) => {
+          const {deviceId,data} = props ?? {};
+
+          return  unlockDeviceInstalls(deviceId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockDeviceInstallsMutationResult = NonNullable<Awaited<ReturnType<typeof unlockDeviceInstalls>>>
+    export type UnlockDeviceInstallsMutationBody = BodyType<InstallUnlockInput>
+    export type UnlockDeviceInstallsMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type UnlockDeviceInstallsMutationVariables = {deviceId: string;data: BodyType<InstallUnlockInput>}
+
+    export const useUnlockDeviceInstalls = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockDeviceInstalls>>, TError,UnlockDeviceInstallsMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unlockDeviceInstalls>>,
+        TError,
+        UnlockDeviceInstallsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnlockDeviceInstallsMutationOptions(options));
     }
 
 export const getListDeviceAppsUrl = (deviceId: string,) => {

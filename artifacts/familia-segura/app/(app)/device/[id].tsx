@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
-  getListDeviceAppsQueryKey, useListDeviceApps, useRevokeDevice, useUpdateDevice, useUpdateDeviceApp,
+  getListDeviceAppsQueryKey, useListDeviceApps, useRevokeDevice, useUnlockDeviceInstalls, useUpdateDevice, useUpdateDeviceApp,
 } from '@workspace/api-client-react';
 import { Button, Card, Chip, Divider, EmptyState, Notice, Row, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
@@ -30,6 +30,7 @@ export default function DeviceScreen() {
   const updateDevice = useUpdateDevice();
   const revokeDevice = useRevokeDevice();
   const updateApp = useUpdateDeviceApp();
+  const unlockInstalls = useUnlockDeviceInstalls();
   const apps = useListDeviceApps(id ?? '', { query: { queryKey: getListDeviceAppsQueryKey(id ?? ''), enabled: Boolean(id) && device?.platform === 'android' } });
 
   if (!device) {
@@ -69,6 +70,33 @@ export default function DeviceScreen() {
 
       {canEdit && (
         <>
+          <SectionTitle>Instalar apps</SectionTitle>
+          <Card style={{ gap: 10 }}>
+            {device.installUnlockUntil ? (
+              <>
+                <Notice icon="unlock" tone="warning">
+                  {`Instalação liberada até ${new Date(device.installUnlockUntil).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`}
+                </Notice>
+                <Button label="Bloquear agora" variant="secondary" icon="lock" loading={unlockInstalls.isPending}
+                  onPress={() => unlockInstalls.mutate({ deviceId: device.id, data: { minutes: 0 } }, done)} />
+              </>
+            ) : (
+              <>
+                <Text style={[styles.hint, { color: colors.mutedForeground, marginTop: 0 }]}>
+                  {device.platform === 'ios'
+                    ? 'No iPhone a instalação fica bloqueada. Libere por alguns minutos para a criança instalar um app que você aprovou (a Apple não permite aprovar app por app).'
+                    : 'A loja fica bloqueada e apps novos aguardam sua aprovação. Libere por alguns minutos para instalar um app combinado: o que for instalado nesse período já entra aprovado.'}
+                </Text>
+                <View style={styles.chips}>
+                  {[15, 30, 60].map((minutes) => (
+                    <Chip key={minutes} label={`Liberar ${minutes} min`}
+                      onPress={() => unlockInstalls.mutate({ deviceId: device.id, data: { minutes } }, done)} />
+                  ))}
+                </View>
+              </>
+            )}
+          </Card>
+
           <SectionTitle>Nome do aparelho</SectionTitle>
           <View style={styles.inline}>
             <TextInput value={name} onChangeText={setName} maxLength={80} style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.foreground }]} />

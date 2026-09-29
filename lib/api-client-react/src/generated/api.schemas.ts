@@ -646,6 +646,8 @@ export interface Device {
   appVersion?: string | null;
   /** @nullable */
   batteryLevel?: number | null;
+  /** @nullable */
+  installUnlockUntil?: string | null;
 }
 
 export interface DevicePairResult {
@@ -679,6 +681,14 @@ export interface DeviceApp {
   removedAt?: string | null;
   firstSeenAt: string;
   lastSeenAt: string;
+}
+
+export interface InstallUnlockInput {
+  /**
+     * @minimum 0
+     * @maximum 60
+     */
+  minutes: number;
 }
 
 export type DeviceAppUpdateStatus = typeof DeviceAppUpdateStatus[keyof typeof DeviceAppUpdateStatus];
@@ -821,6 +831,11 @@ export interface ChildPolicy {
   blockAppInstalls: boolean;
   blockAppRemoval: boolean;
   webFilter: ChildPolicyWebFilter;
+  /**
+     * Até quando o responsável liberou (à distância) a instalação de apps neste aparelho.
+     * @nullable
+     */
+  installUnlockUntil?: string | null;
   timezone: string;
   serverTime: string;
   blockedPackages: string[];

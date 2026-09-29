@@ -77,7 +77,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
         Intent.ACTION_PACKAGE_ADDED -> if (!replacing) {
           val label = labelOf(pkg)
           val policy = PolicyStore.read(context)
-          if (policy?.optBoolean("quarantineNewApps", false) == true && !PolicyStore.guardianUnlocked(context)) {
+          if (policy?.optBoolean("quarantineNewApps", false) == true && !PolicyStore.guardianUnlocked(context) && !PolicyStore.installUnlocked(policy)) {
             PolicyStore.addLocalPending(context, pkg)
           }
           PolicyStore.appendEvent(context, "app_installed", label)
@@ -145,13 +145,17 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val mentionsUs = text.contains(appLabelLower) || text.contains(getString(R.string.accessibility_service_label).lowercase())
     val uninstallText = text.contains("desinstalar") || text.contains("uninstall")
     val installText = !uninstallText && (text.contains("instalar") || text.contains("install"))
+    val dnsText = text.contains("dns privado") || text.contains("private dns")
     val (type, reason) = when {
       mentionsUs && (pkg in INSTALLER_PACKAGES || TAMPER_WORDS.any { text.contains(it) }) ->
         (if (uninstallText || pkg in INSTALLER_PACKAGES) "uninstall_attempt" else "tamper_attempt") to getString(R.string.block_reason_tamper)
       policy.optBoolean("blockAppRemoval", false) && uninstallText ->
         "uninstall_attempt" to getString(R.string.block_reason_removal)
-      policy.optBoolean("blockAppInstalls", false) && pkg in INSTALLER_PACKAGES && installText ->
+      policy.optBoolean("blockAppInstalls", false) && !PolicyStore.installUnlocked(policy) && pkg in INSTALLER_PACKAGES && installText ->
         "tamper_attempt" to getString(R.string.block_reason_install)
+      // Filtro de conteúdo adulto no Android = DNS privado familiar; a criança não pode trocar sem o PIN.
+      policy.optString("webFilter") == "adult" && pkg in SETTINGS_PACKAGES && dnsText ->
+        "tamper_attempt" to getString(R.string.block_reason_dns)
       else -> return false
     }
     PolicyStore.appendEvent(this, type, if (pkg == PLAY_STORE) "Loja de apps" else if (pkg in INSTALLER_PACKAGES) "Instalador de apps" else "Configurações do aparelho")
@@ -183,7 +187,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val blockedPackages = PolicyStore.packageSet(policy, "blockedPackages")
     val pendingPackages = PolicyStore.packageSet(policy, "pendingPackages") + PolicyStore.localPending(this)
     val reason = when {
-      pkg == PLAY_STORE && policy.optBoolean("blockAppInstalls", false) && !PolicyStore.guardianUnlocked(this) ->
+      pkg == PLAY_STORE && policy.optBoolean("blockAppInstalls", false) && !PolicyStore.guardianUnlocked(this) && !PolicyStore.installUnlocked(policy) ->
         getString(R.string.block_reason_store)
       routineActive(policy) -> getString(R.string.block_reason_routine)
       pkg in pendingPackages -> getString(R.string.block_reason_pending)

@@ -59,6 +59,10 @@ internal object PolicyStore {
   fun tamperProtectionEnabled(policy: JSONObject?): Boolean =
     policy?.optBoolean("tamperProtection", false) == true
 
+  /** Liberação de instalação dada à distância pelo responsável (vem na política do servidor). */
+  fun installUnlocked(policy: JSONObject?): Boolean =
+    (policy?.optLong("installUnlockUntilEpochMs", 0L) ?: 0L) > System.currentTimeMillis()
+
   fun setGuardianUnlock(context: Context, untilEpochMs: Long) {
     prefs(context).edit().putLong(KEY_UNLOCK, untilEpochMs).apply()
   }

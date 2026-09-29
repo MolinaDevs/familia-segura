@@ -29,4 +29,6 @@ export interface Device {
   appVersion?: string | null;
   /** @nullable */
   batteryLevel?: number | null;
+  /** @nullable */
+  installUnlockUntil?: Date | null;
 }

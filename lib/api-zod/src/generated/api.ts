@@ -58,7 +58,8 @@ export const GetFamilyOverviewResponse = zod.object({
   "osVersion": zod.string().nullish(),
   "model": zod.string().nullish(),
   "appVersion": zod.string().nullish(),
-  "batteryLevel": zod.number().int().nullish()
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -203,7 +204,8 @@ export const CreateFamilyResponse = zod.object({
   "osVersion": zod.string().nullish(),
   "model": zod.string().nullish(),
   "appVersion": zod.string().nullish(),
-  "batteryLevel": zod.number().int().nullish()
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -569,7 +571,8 @@ export const PairDeviceResponse = zod.object({
   "osVersion": zod.string().nullish(),
   "model": zod.string().nullish(),
   "appVersion": zod.string().nullish(),
-  "batteryLevel": zod.number().int().nullish()
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
 }),
   "deviceToken": zod.string()
 })
@@ -602,7 +605,8 @@ export const UpdateDeviceResponse = zod.object({
   "osVersion": zod.string().nullish(),
   "model": zod.string().nullish(),
   "appVersion": zod.string().nullish(),
-  "batteryLevel": zod.number().int().nullish()
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
 })
 
 
@@ -611,6 +615,41 @@ export const RevokeDeviceParams = zod.object({
 })
 
 export const RevokeDeviceResponse = zod.void()
+
+
+/**
+ * Libera a instalação de apps no aparelho da criança por alguns minutos (0 encerra). Funciona no iPhone e no Android, à distância.
+ */
+export const UnlockDeviceInstallsParams = zod.object({
+  "deviceId": zod.coerce.string().uuid()
+})
+
+export const unlockDeviceInstallsBodyMinutesMin = 0;
+export const unlockDeviceInstallsBodyMinutesMax = 60;
+
+
+
+export const UnlockDeviceInstallsBody = zod.object({
+  "minutes": zod.number().int().min(unlockDeviceInstallsBodyMinutesMin).max(unlockDeviceInstallsBodyMinutesMax)
+})
+
+export const UnlockDeviceInstallsResponse = zod.object({
+  "id": zod.string().uuid(),
+  "childId": zod.string().uuid(),
+  "name": zod.string(),
+  "platform": zod.enum(['ios', 'android']),
+  "status": zod.enum(['active', 'offline', 'revoked']),
+  "protectionState": zod.enum(['unknown', 'active', 'partial', 'disabled', 'unavailable']),
+  "protectionIssues": zod.array(zod.string()),
+  "protectionUpdatedAt": zod.coerce.date().nullish(),
+  "lastSeenAt": zod.coerce.date(),
+  "online": zod.boolean(),
+  "osVersion": zod.string().nullish(),
+  "model": zod.string().nullish(),
+  "appVersion": zod.string().nullish(),
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
+})
 
 
 export const ListDeviceAppsParams = zod.object({
@@ -856,7 +895,8 @@ export const AcceptInviteResponse = zod.object({
   "osVersion": zod.string().nullish(),
   "model": zod.string().nullish(),
   "appVersion": zod.string().nullish(),
-  "batteryLevel": zod.number().int().nullish()
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1098,7 +1138,8 @@ export const ExportFamilyDataResponse = zod.object({
   "osVersion": zod.string().nullish(),
   "model": zod.string().nullish(),
   "appVersion": zod.string().nullish(),
-  "batteryLevel": zod.number().int().nullish()
+  "batteryLevel": zod.number().int().nullish(),
+  "installUnlockUntil": zod.coerce.date().nullish()
 })),
   "apps": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1235,6 +1276,7 @@ export const GetChildOverviewResponse = zod.object({
   "blockAppInstalls": zod.boolean(),
   "blockAppRemoval": zod.boolean(),
   "webFilter": zod.enum(['off', 'adult']),
+  "installUnlockUntil": zod.coerce.date().nullish().describe('Até quando o responsável liberou (à distância) a instalação de apps neste aparelho.'),
   "timezone": zod.string(),
   "serverTime": zod.coerce.date(),
   "blockedPackages": zod.array(zod.string()),

@@ -14,6 +14,11 @@ export interface ChildPolicy {
   blockAppInstalls: boolean;
   blockAppRemoval: boolean;
   webFilter: ChildPolicyWebFilter;
+  /**
+     * Até quando o responsável liberou (à distância) a instalação de apps neste aparelho.
+     * @nullable
+     */
+  installUnlockUntil?: Date | null;
   timezone: string;
   serverTime: Date;
   blockedPackages: string[];

@@ -12,6 +12,7 @@ O app usa apenas APIs públicas da Apple: `FamilyControls`, `ManagedSettings`, `
 | Rotinas | "block all" em janelas semanais mescladas, isoladas dos bloqueios por app | idem |
 | **Não apagar apps** (inclusive o Família Segura) | `application.denyAppRemoval` num store próprio `familiaSeguraProtecao` | `modules/familia-segura-ios-controls` |
 | **Não instalar apps** | `application.denyAppInstallation` no mesmo store; liberável por 15 min com o PIN | idem + `services/iosDeviceProtection.ts` |
+| **Liberar instalação à distância** | O responsável libera 15/30/60 min pelo app dele (Família → aparelho). A Apple não deixa ver/aprovar app por app, então a aprovação é uma janela de tempo | `installUnlockUntil` na política + `services/iosDeviceProtection.ts` |
 | Filtro de conteúdo adulto | `webContent.blockedByFilter = .auto()` | biblioteca (`setWebContentFilterPolicy`) |
 
 As chaves vêm da família (`blockAppInstalls`, `blockAppRemoval`, `webFilter`) — padrão: tudo ligado.

@@ -311,6 +311,26 @@ paths:
           description: Device revoked
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /family/devices/{deviceId}/install-unlock:
+    post:
+      operationId: unlockDeviceInstalls
+      tags: [devices]
+      description: Libera a instalação de apps no aparelho da criança por alguns minutos (0 encerra). Funciona no iPhone e no Android, à distância.
+      parameters:
+        - $ref: "#/components/parameters/DeviceId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/InstallUnlockInput" }
+      responses:
+        "200":
+          description: Aparelho atualizado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Device" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /family/devices/{deviceId}/apps:
     get:
       operationId: listDeviceApps
@@ -1083,6 +1103,7 @@ components:
         model: { type: [string, "null"] }
         appVersion: { type: [string, "null"] }
         batteryLevel: { type: [integer, "null"] }
+        installUnlockUntil: { type: [string, "null"], format: date-time }
     DevicePairResult:
       type: object
       required: [device, deviceToken]
@@ -1108,6 +1129,11 @@ components:
         removedAt: { type: [string, "null"], format: date-time }
         firstSeenAt: { type: string, format: date-time }
         lastSeenAt: { type: string, format: date-time }
+    InstallUnlockInput:
+      type: object
+      required: [minutes]
+      properties:
+        minutes: { type: integer, minimum: 0, maximum: 60 }
     DeviceAppUpdate:
       type: object
       required: [status]
@@ -1242,6 +1268,10 @@ components:
         blockAppInstalls: { type: boolean }
         blockAppRemoval: { type: boolean }
         webFilter: { type: string, enum: [off, adult] }
+        installUnlockUntil:
+          type: [string, "null"]
+          format: date-time
+          description: Até quando o responsável liberou (à distância) a instalação de apps neste aparelho.
         timezone: { type: string }
         serverTime: { type: string, format: date-time }
         blockedPackages:

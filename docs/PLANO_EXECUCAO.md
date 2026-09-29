@@ -130,3 +130,10 @@ celular, claro e escuro. Encontrado e corrigido:
 - relatório marcava quase tudo como "aproximado" → só quando a maior parte vem de iPhone;
 - status "Atenção" a partir de 80% do limite; fonte dos gráficos; ícone de celular; textos neutros de gênero.
 Como repetir: `docs/TESTE_LOCAL.md`.
+
+### Pedidos do dono (2026-09-29) ✅
+- Filtro de conteúdo adulto no **Android** via DNS privado familiar (detecção + tela protegida por PIN).
+- **Aprovar apps no iPhone**: liberação de instalação à distância por 15/30/60 min (vale também no Android,
+  com auto-aprovação do que for instalado na janela). Migration 0003.
+- **Apps fora da lista**: "Não encontrou o app? Adicionar outro" (nome, categoria, limite, identificador Android opcional).
+- Anúncios/apps sugeridos: não bloqueáveis dentro dos apps; o efeito (instalar) é bloqueado — ver docs/ANDROID_PROTECAO.md.

@@ -141,7 +141,9 @@ router.post("/child/installed-apps", requireDevice, async (req: AuthedRequest, r
       if (reported.has(app.packageName)) continue;
       reported.add(app.packageName);
       const known = byPackage.get(app.packageName);
-      const quarantine = !initialInventory && Boolean(ctx?.quarantine);
+      // Instalado durante uma liberação do responsável: já entra aprovado.
+      const unlocked = Boolean(device.installUnlockUntil && device.installUnlockUntil.getTime() > now.getTime());
+      const quarantine = !initialInventory && Boolean(ctx?.quarantine) && !unlocked;
       if (!known) {
         const status = quarantine ? "pending" : "approved";
         await tx.insert(deviceAppsTable).values({

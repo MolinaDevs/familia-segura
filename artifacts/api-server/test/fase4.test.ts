@@ -107,3 +107,23 @@ describe("modo demonstração (somente desenvolvimento)", () => {
     delete process.env.DEV_AUTH;
   });
 });
+
+describe("liberação de instalação à distância", () => {
+  it("responsável libera por minutos; app instalado nesse período entra aprovado; 0 encerra", async () => {
+    const family = await createFamily();
+    const { device, deviceToken } = await pairDevice("user_owner", family.children[0].id);
+    await api().post("/api/child/installed-apps").set(asDevice(deviceToken)).send({ snapshot: true, apps: [{ packageName: "com.whatsapp", label: "WhatsApp" }] }).expect(200);
+    const unlocked = await api().post(`/api/family/devices/${device.id}/install-unlock`).set(asGuardian("user_owner")).send({ minutes: 15 });
+    expect(unlocked.status).toBe(200);
+    expect(unlocked.body.installUnlockUntil).toBeTruthy();
+    const policy = (await api().get("/api/child/overview").set(asDevice(deviceToken))).body.policy;
+    expect(new Date(policy.installUnlockUntil).getTime()).toBeGreaterThan(Date.now() + 14 * 60_000);
+    const res = await api().post("/api/child/installed-apps").set(asDevice(deviceToken))
+      .send({ snapshot: true, apps: [{ packageName: "com.whatsapp", label: "WhatsApp" }, { packageName: "br.escola.app", label: "App da Escola" }] });
+    expect(res.body.pendingPackages).toEqual([]);
+    await api().post(`/api/family/devices/${device.id}/install-unlock`).set(asGuardian("user_owner")).send({ minutes: 0 }).expect(200);
+    expect((await api().get("/api/child/overview").set(asDevice(deviceToken))).body.policy.installUnlockUntil).toBeNull();
+    const blocked = await api().post(`/api/family/devices/${device.id}/install-unlock`).set(asGuardian("user_owner")).send({ minutes: 120 });
+    expect(blocked.status).toBe(400);
+  });
+});

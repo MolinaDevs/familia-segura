@@ -123,7 +123,7 @@ async function syncAndroid(overview: ChildOverview, headers: Record<string, stri
     applyAndroidPolicies(overview.apps, overview.routines, { ...overview.policy, ...result }, installed.map((app) => app.packageName));
   }
 
-  const protection = getAndroidProtectionSummary();
+  const protection = getAndroidProtectionSummary(overview.policy.webFilter);
   await syncChildProtection({
     state: protection.state,
     issues: protection.issues.slice(0, 10),

@@ -12,6 +12,8 @@ export type AndroidProtectionStatus = {
   model: string;
   osVersion: string;
   batteryLevel: number;
+  privateDnsMode: string;
+  privateDnsHost: string;
 };
 
 export type AndroidPolicy = {
@@ -21,6 +23,9 @@ export type AndroidPolicy = {
   quarantineNewApps: boolean;
   blockAppInstalls: boolean;
   blockAppRemoval: boolean;
+  webFilter: 'off' | 'adult';
+  /** Liberação de instalação dada à distância pelo responsável. */
+  installUnlockUntilEpochMs: number;
   blockedPackages: string[];
   pendingPackages: string[];
   /** Pacotes que o servidor acabou de receber no inventário (podem sair da quarentena local). */
@@ -50,6 +55,7 @@ type AndroidControlsModule = {
   openUsageAccessSettings(): void;
   openAccessibilitySettings(): void;
   openBatteryOptimizationSettings(): void;
+  openNetworkSettings(): void;
   requestDeviceAdmin(explanation: string): void;
   removeDeviceAdmin(): void;
   savePolicies(policy: AndroidPolicy): void;

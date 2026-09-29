@@ -67,6 +67,8 @@ export const devicesTable = pgTable("devices", {
   osVersion: text("os_version"), appVersion: text("app_version"), model: text("model"),
   timezone: text("timezone"), batteryLevel: integer("battery_level"),
   pushToken: text("push_token"),
+  /** Liberação de instalação de apps dada à distância pelo responsável (iPhone e Android). */
+  installUnlockUntil: timestamp("install_unlock_until", { withTimezone: true }),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(), createdAt: created(),
 }, (t) => [index("devices_family_idx").on(t.familyId), index("devices_child_idx").on(t.childId)]);
 

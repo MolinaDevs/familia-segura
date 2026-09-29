@@ -83,7 +83,7 @@ export default function SettingsScreen() {
             <Row icon="clock" title="Aprovar apps novos (Android)" detail="App instalado fica bloqueado até você aprovar."
               right={toggle('Aprovar apps novos', settings.quarantineNewApps, (v) => save({ quarantineNewApps: v }))} />
             <Divider />
-            <Row icon="globe" title="Filtro de conteúdo adulto (iPhone)" detail="Usa o filtro da Apple nos navegadores."
+            <Row icon="globe" title="Filtro de conteúdo adulto" detail="iPhone: filtro da Apple. Android: DNS familiar (busca segura e YouTube restrito), configurado na Área do responsável do aparelho."
               right={toggle('Filtro de conteúdo adulto', settings.webFilter === 'adult', (v) => save({ webFilter: v ? 'adult' : 'off' }))} />
           </Card>
 

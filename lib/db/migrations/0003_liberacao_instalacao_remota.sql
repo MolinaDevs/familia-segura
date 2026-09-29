@@ -1,0 +1,1 @@
+ALTER TABLE "devices" ADD COLUMN "install_unlock_until" timestamp with time zone;

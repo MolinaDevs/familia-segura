@@ -19,7 +19,9 @@ async function installUnlockedUntil(): Promise<number> {
  */
 export async function applyIosDeviceProtection(policy: ChildPolicy) {
   if (Platform.OS !== 'ios') return;
-  const installUnlocked = (await installUnlockedUntil()) > Date.now();
+  // Liberação pelo PIN no aparelho OU à distância pelo responsável (app do responsável → aparelho → liberar instalação).
+  const remoteUntil = policy.installUnlockUntil ? new Date(policy.installUnlockUntil).getTime() : 0;
+  const installUnlocked = Math.max(await installUnlockedUntil(), remoteUntil) > Date.now();
   if (IosControls?.isAvailable()) {
     IosControls.applyDeviceProtection(policy.blockAppRemoval, policy.blockAppInstalls && !installUnlocked);
   }

@@ -46,11 +46,19 @@ class FamiliaSeguraAndroidControlsModule : Module() {
         "model" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
         "osVersion" to Build.VERSION.RELEASE,
         "batteryLevel" to batteryLevel(),
+        // Filtro web no Android: DNS privado (Android 9+). "hostname" + servidor familiar = filtro ativo.
+        "privateDnsMode" to (Settings.Global.getString(context.contentResolver, "private_dns_mode") ?: ""),
+        "privateDnsHost" to (Settings.Global.getString(context.contentResolver, "private_dns_specifier") ?: ""),
       )
     }
 
     Function("openUsageAccessSettings") { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
     Function("openAccessibilitySettings") { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    /** Configurações de rede, onde fica "DNS privado" (o caminho exato varia por fabricante). */
+    Function("openNetworkSettings") {
+      context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    }
+
     Function("openBatteryOptimizationSettings") {
       context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
     }

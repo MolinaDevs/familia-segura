@@ -11,6 +11,7 @@
   <string name="block_reason_store">A loja de aplicativos está bloqueada. Peça ao seu responsável para liberar a instalação.</string>
   <string name="block_reason_install">Instalar aplicativos está bloqueado neste aparelho. Peça ao seu responsável.</string>
   <string name="block_reason_removal">Apagar aplicativos está bloqueado neste aparelho. Peça ao seu responsável.</string>
+  <string name="block_reason_dns">O filtro de conteúdo da família fica nesta configuração. Peça ao seu responsável para liberar com o PIN.</string>
   <string name="block_reason_tamper">Estas configurações protegem o aparelho. Peça ao seu responsável para liberar com o PIN.</string>
   <string name="block_return_home">Voltar para a tela inicial</string>
   <string name="block_request_time">Abrir o Família Segura</string>

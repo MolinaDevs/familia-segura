@@ -23,6 +23,7 @@ export const deviceView = (d: Device) => ({
   protectionIssues: d.protectionIssues, protectionUpdatedAt: d.protectionUpdatedAt, lastSeenAt: d.lastSeenAt,
   online: d.status !== "revoked" && Date.now() - d.lastSeenAt.getTime() <= ONLINE_WINDOW_MS,
   osVersion: d.osVersion, model: d.model, appVersion: d.appVersion, batteryLevel: d.batteryLevel,
+  installUnlockUntil: d.installUnlockUntil && d.installUnlockUntil.getTime() > Date.now() ? d.installUnlockUntil : null,
 });
 
 export const deviceAppView = (a: DeviceApp) => ({
@@ -179,6 +180,7 @@ export async function childOverview(device: Device) {
       blockAppInstalls: family.blockAppInstalls,
       blockAppRemoval: family.blockAppRemoval,
       webFilter: family.webFilter as "off" | "adult",
+      installUnlockUntil: device.installUnlockUntil && device.installUnlockUntil.getTime() > Date.now() ? device.installUnlockUntil : null,
       timezone: family.timezone,
       serverTime: new Date(),
       blockedPackages: apps.filter((a) => a.status === "blocked").map((a) => a.packageName),

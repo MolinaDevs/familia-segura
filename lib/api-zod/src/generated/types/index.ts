@@ -64,6 +64,7 @@ export * from './healthStatus';
 export * from './installedAppsInput';
 export * from './installedAppsInputAppsItem';
 export * from './installedAppsResult';
+export * from './installUnlockInput';
 export * from './invite';
 export * from './inviteAcceptInput';
 export * from './inviteInput';

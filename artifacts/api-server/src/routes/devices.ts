@@ -4,7 +4,8 @@ import { db, auditEventsTable, childrenTable, deviceAppsTable, devicesTable, pai
 import {
   CreatePairingCodeBody, CreatePairingCodeResponse, ListDeviceAppsParams, ListDeviceAppsResponse, PairDeviceBody,
   PairDeviceResponse, RevokeDeviceParams, UpdateDeviceAppBody, UpdateDeviceAppParams, UpdateDeviceAppResponse,
-  UpdateDeviceBody, UpdateDeviceParams, UpdateDeviceResponse,
+  UpdateDeviceBody, UpdateDeviceParams, UpdateDeviceResponse, UnlockDeviceInstallsBody, UnlockDeviceInstallsParams,
+  UnlockDeviceInstallsResponse,
 } from "@workspace/api-zod";
 import { EDITORS, fail, requireMember, type AuthedRequest } from "../lib/auth";
 import { audit } from "../lib/audit";
@@ -106,6 +107,21 @@ router.delete("/family/devices/:deviceId", requireMember(...EDITORS), async (req
   if (!device) { fail(res, 404, "Device not found"); return; }
   await audit(m.familyId, m.userId, "device.revoked", `Aparelho "${device.name}" revogado`);
   res.sendStatus(204);
+});
+
+/** Liberação de instalação à distância (iPhone não permite ver/aprovar apps instalados: o responsável libera a janela). */
+router.post("/family/devices/:deviceId/install-unlock", requireMember(...EDITORS), async (req: AuthedRequest, res): Promise<void> => {
+  const p = UnlockDeviceInstallsParams.safeParse(req.params), input = UnlockDeviceInstallsBody.safeParse(req.body);
+  if (!p.success || !input.success) { fail(res, 400, "Invalid request"); return; }
+  const m = req.member!;
+  const until = input.data.minutes > 0 ? new Date(Date.now() + input.data.minutes * 60_000) : null;
+  const [device] = await db.update(devicesTable).set({ installUnlockUntil: until })
+    .where(and(eq(devicesTable.id, p.data.deviceId), eq(devicesTable.familyId, m.familyId), ne(devicesTable.status, "revoked"))).returning();
+  if (!device) { fail(res, 404, "Device not found"); return; }
+  await audit(m.familyId, m.userId, until ? "device.install_unlocked" : "device.install_locked",
+    until ? `Instalação de apps liberada em "${device.name}" por ${input.data.minutes} min` : `Instalação de apps bloqueada de novo em "${device.name}"`);
+  await notifyDevicesPolicyChanged(m.familyId, device.childId);
+  res.json(UnlockDeviceInstallsResponse.parse(deviceView(device)));
 });
 
 async function familyDevice(familyId: string, deviceId: string) {
