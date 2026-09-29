@@ -70,5 +70,14 @@
     "expo-task-manager": "57.0.19",
     "react-native-device-activity": "0.6.1",
     "react-native-purchases": "^10.10.0"
+  },
+  "expo": {
+    "autolinking": {
+      "ios": {
+        "exclude": [
+          "@clerk/expo"
+        ]
+      }
+    }
   }
 }
