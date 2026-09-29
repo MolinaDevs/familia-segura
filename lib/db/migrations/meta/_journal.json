@@ -36,6 +36,13 @@
       "when": 1790699964010,
       "tag": "0004_pedido_instalacao",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790712818454,
+      "tag": "0005_travar_tela_rotina",
+      "breakpoints": true
     }
   ]
 }

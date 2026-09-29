@@ -16,4 +16,5 @@ export interface Routine {
   endTime: string;
   enabled: boolean;
   icon: string;
+  lockScreen: boolean;
 }

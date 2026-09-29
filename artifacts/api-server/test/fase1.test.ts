@@ -231,6 +231,22 @@ describe("regras e rotinas", () => {
     await api().delete(`/api/family/routines/${created.body.id}`).set(asGuardian(OWNER)).expect(204);
   });
 
+  it("travar a tela: padrão desligado, liga por rotina e chega ao aparelho", async () => {
+    const family = await createFamily();
+    const childId = family.children[0].id;
+    // A rotina de dormir criada com a família já trava a tela.
+    const bedtime = family.routines.find((r: { title: string }) => r.title === "Hora de dormir");
+    expect(bedtime?.lockScreen).toBe(true);
+    const created = await api().post(`/api/family/children/${childId}/routines`).set(asGuardian(OWNER))
+      .send({ title: "Escola", days: "seg,ter,qua,qui,sex", startTime: "07:00", endTime: "12:00" });
+    expect(created.body.lockScreen).toBe(false);
+    const updated = await api().patch(`/api/family/routines/${created.body.id}`).set(asGuardian(OWNER)).send({ lockScreen: true });
+    expect(updated.body.lockScreen).toBe(true);
+    const { deviceToken } = await pairDevice(OWNER, childId, "android");
+    const overview = (await api().get("/api/child/overview").set(asDevice(deviceToken))).body;
+    expect(overview.routines.find((r: { id: string }) => r.id === created.body.id)?.lockScreen).toBe(true);
+  });
+
   it("plano gratuito também edita limites e bloqueios (o básico não é pago)", async () => {
     setPremium(false);
     const family = await createFamily();

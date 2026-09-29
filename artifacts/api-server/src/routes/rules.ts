@@ -116,7 +116,7 @@ router.post("/family/children/:childId/routines", requireMember(...EDITORS), asy
   const [routine] = await db.insert(routinesTable).values({
     familyId: m.familyId, childId: child.id, title: input.data.title, description: input.data.description ?? "",
     days: input.data.days, startTime: input.data.startTime, endTime: input.data.endTime,
-    icon: input.data.icon ?? "clock", enabled: input.data.enabled ?? true,
+    icon: input.data.icon ?? "clock", enabled: input.data.enabled ?? true, lockScreen: input.data.lockScreen ?? false,
   }).returning();
   await audit(m.familyId, m.userId, "routine.created", `Rotina "${routine.title}" criada para ${child.displayName}`);
   await notifyDevicesPolicyChanged(m.familyId, child.id);

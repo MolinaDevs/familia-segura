@@ -411,6 +411,8 @@ export interface RoutineInput {
   /** @maxLength 40 */
   icon?: string;
   enabled?: boolean;
+  /** Android: trava a tela durante a rotina (hora de dormir) */
+  lockScreen?: boolean;
 }
 
 export interface RoutineUpdate {
@@ -430,6 +432,8 @@ export interface RoutineUpdate {
   /** @maxLength 40 */
   icon?: string;
   enabled?: boolean;
+  /** Android: trava a tela durante a rotina (hora de dormir) */
+  lockScreen?: boolean;
 }
 
 export interface TimeGrantInput {
@@ -764,6 +768,7 @@ export interface Routine {
   endTime: string;
   enabled: boolean;
   icon: string;
+  lockScreen: boolean;
 }
 
 export type TimeRequestKind = typeof TimeRequestKind[keyof typeof TimeRequestKind];

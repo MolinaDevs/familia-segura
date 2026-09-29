@@ -44,6 +44,8 @@ export type Routine = {
   end: string;
   enabled: boolean;
   icon: string;
+  /** Android: trava a tela durante a rotina. */
+  lockScreen: boolean;
 };
 
 export type Role = 'owner' | 'guardian' | 'viewer';
@@ -137,7 +139,7 @@ function mapOverview(overview: FamilyOverview | undefined, selectedChildId: stri
         : statusLabel(app.status),
     })),
     routines: overview.routines.filter((r) => r.childId === childId).map((r) => ({
-      id: r.id, title: r.title, description: r.description, days: r.days, start: r.startTime, end: r.endTime, enabled: r.enabled, icon: r.icon,
+      id: r.id, title: r.title, description: r.description, days: r.days, start: r.startTime, end: r.endTime, enabled: r.enabled, icon: r.icon, lockScreen: r.lockScreen,
     })),
     devices: overview.devices.filter((d) => d.childId === childId),
     allDevices: overview.devices,

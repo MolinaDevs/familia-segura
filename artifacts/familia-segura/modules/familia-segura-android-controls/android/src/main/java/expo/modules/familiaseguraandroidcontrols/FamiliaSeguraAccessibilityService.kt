@@ -1,10 +1,13 @@
 package expo.modules.familiaseguraandroidcontrols
 
 import android.accessibilityservice.AccessibilityService
+import android.app.admin.DevicePolicyManager
 import android.content.BroadcastReceiver
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.media.AudioManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -18,7 +21,8 @@ import java.util.Calendar
  * Aplica as regras da família no Android:
  * - bloqueia apps por regra, limite diário, rotina, bloqueio do responsável e quarentena de apps novos;
  * - reavalia o app em primeiro plano a cada 30 s (o limite vence mesmo sem trocar de app);
- * - com PIN definido, impede abrir as telas que desligariam a proteção ou desinstalariam o app.
+ * - com PIN definido, impede abrir as telas que desligariam a proteção ou desinstalariam o app;
+ * - rotina com "travar a tela" (hora de dormir): trava o aparelho sempre que a criança o desbloquear.
  * Telefone e emergência nunca são bloqueados.
  */
 class FamiliaSeguraAccessibilityService : AccessibilityService() {
@@ -49,6 +53,8 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     )
     private const val CONTENT_CHECK_MS = 700L
     private const val SYSTEM_PACKAGES_TTL_MS = 60_000L
+    /** Tempo para ler o aviso (e o responsável abrir o app) antes de a tela travar. */
+    private const val BEDTIME_LOCK_GRACE_MS = 5_000L
     private val TAMPER_WORDS = listOf(
       "desinstalar", "uninstall", "forçar parada", "forcar parada", "force stop", "desativar", "deactivate", "disable",
       "limpar dados", "limpar armazenamento", "clear data", "clear storage", "remover", "turn off", "usar ",
@@ -65,13 +71,39 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
   private var systemPackagesAt = 0L
   private var homePackage: String? = null
   private var keyboardPackage: String? = null
+  private var bedtimeLockPending = false
+  /** O Família Segura (não a tela de pausa) está aberto: é onde o responsável digita o PIN. */
+  private var ownAppForeground = false
+
+  private val bedtimeLock = Runnable {
+    bedtimeLockPending = false
+    // Reconfere na hora: a rotina pode ter acabado, o responsável pode ter liberado ou a criança atendido uma ligação.
+    if (shouldLockForBedtime()) {
+      try {
+        getSystemService(DevicePolicyManager::class.java).lockNow()
+      } catch (_: SecurityException) {}
+    }
+  }
+
+  private val screenReceiver = object : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+      when (intent.action) {
+        // Espera a janela do app em primeiro plano ser informada antes de decidir.
+        Intent.ACTION_USER_PRESENT -> handler.postDelayed({ scheduleBedtimeLock() }, 1_500L)
+        Intent.ACTION_SCREEN_OFF -> { handler.removeCallbacks(bedtimeLock); bedtimeLockPending = false }
+      }
+    }
+  }
 
   private val ticker = object : Runnable {
     override fun run() {
       try {
         val pkg = foregroundPackage
         val power = getSystemService(Context.POWER_SERVICE) as PowerManager
-        if (pkg != null && power.isInteractive) evaluate(pkg)
+        if (power.isInteractive) {
+          if (pkg != null) evaluate(pkg)
+          scheduleBedtimeLock()
+        }
       } finally {
         handler.postDelayed(this, TICK_MS)
       }
@@ -110,6 +142,10 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     }
     if (Build.VERSION.SDK_INT >= 33) registerReceiver(packageReceiver, filter, Context.RECEIVER_EXPORTED)
     else registerReceiver(packageReceiver, filter)
+    registerReceiver(screenReceiver, IntentFilter().apply {
+      addAction(Intent.ACTION_USER_PRESENT)
+      addAction(Intent.ACTION_SCREEN_OFF)
+    })
     handler.postDelayed(ticker, TICK_MS)
     PolicyStore.appendEvent(this, "protection_enabled", "Serviço de proteção ligado")
   }
@@ -117,7 +153,9 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
   override fun onDestroy() {
     running = false
     handler.removeCallbacks(ticker)
+    handler.removeCallbacks(bedtimeLock)
     try { unregisterReceiver(packageReceiver) } catch (_: Exception) {}
+    try { unregisterReceiver(screenReceiver) } catch (_: Exception) {}
     PolicyStore.appendEvent(this, "protection_disabled", "Serviço de proteção desligado")
     super.onDestroy()
   }
@@ -129,7 +167,8 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val pkg = event.packageName?.toString() ?: return
     when (event.eventType) {
       AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
-        if (pkg != packageName && pkg != "com.android.systemui") foregroundPackage = pkg
+        if (pkg == packageName) ownAppForeground = event.className?.toString() != BlockActivity::class.java.name
+        else if (pkg != "com.android.systemui") { foregroundPackage = pkg; ownAppForeground = false }
         if (isTamperScreen(pkg)) return
         evaluate(pkg)
       }
@@ -208,7 +247,10 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val reason = when {
       pkg == PLAY_STORE && policy.optBoolean("blockAppInstalls", false) && !PolicyStore.guardianUnlocked(this) && !PolicyStore.installUnlocked(policy) ->
         getString(R.string.block_reason_store)
-      routineActive(policy) -> getString(R.string.block_reason_routine)
+      routineActive(policy) -> {
+        if (scheduleBedtimeLock()) return
+        getString(R.string.block_reason_routine)
+      }
       pkg in pendingPackages -> getString(R.string.block_reason_pending)
       pkg in blockedPackages -> getString(R.string.block_reason_permanent)
       app == null -> return
@@ -278,7 +320,40 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
       ?.substringBefore("/")
   }
 
-  private fun routineActive(policy: JSONObject): Boolean {
+  /**
+   * Agenda o travamento da tela se uma rotina com "travar a tela" estiver valendo. Mostra o aviso antes.
+   * Retorna true se o travamento está agendado.
+   */
+  private fun scheduleBedtimeLock(): Boolean {
+    if (!shouldLockForBedtime()) return false
+    if (bedtimeLockPending) return true
+    bedtimeLockPending = true
+    showBlock(getString(R.string.block_reason_bedtime), getString(R.string.block_app_generic_device), packageName, force = true)
+    handler.postDelayed(bedtimeLock, BEDTIME_LOCK_GRACE_MS)
+    return true
+  }
+
+  private fun shouldLockForBedtime(): Boolean {
+    val power = getSystemService(Context.POWER_SERVICE) as PowerManager
+    if (!power.isInteractive || PolicyStore.guardianUnlocked(this)) return false
+    val policy = PolicyStore.read(this) ?: return false
+    if (!activeRoutines(policy).any { it.optBoolean("lockScreen", false) }) return false
+    // Ligação, despertador e o próprio Família Segura (onde o responsável digita o PIN) nunca são interrompidos.
+    val pkg = foregroundPackage
+    if (ownAppForeground || (pkg != null && pkg in ALWAYS_ALLOWED)) return false
+    val audio = getSystemService(Context.AUDIO_SERVICE) as AudioManager
+    if (audio.mode == AudioManager.MODE_IN_CALL || audio.mode == AudioManager.MODE_IN_COMMUNICATION || audio.mode == AudioManager.MODE_RINGTONE) return false
+    val dpm = getSystemService(DevicePolicyManager::class.java)
+    val admin = ComponentName(this, FamiliaSeguraDeviceAdminReceiver::class.java)
+    return dpm.isAdminActive(admin) && try {
+      dpm.hasGrantedPolicy(admin, DevicePolicyManager.USES_POLICY_FORCE_LOCK)
+    } catch (_: SecurityException) { false }
+  }
+
+  private fun routineActive(policy: JSONObject): Boolean = activeRoutines(policy).isNotEmpty()
+
+  private fun activeRoutines(policy: JSONObject): List<JSONObject> {
+    val active = mutableListOf<JSONObject>()
     val now = Calendar.getInstance()
     val minute = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
     val day = now.get(Calendar.DAY_OF_WEEK)
@@ -289,14 +364,14 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
       val start = parseTime(routine.optString("startTime"))
       val end = parseTime(routine.optString("endTime"))
       if (end > start) {
-        if (dayMatches(routine.opt("days"), day) && minute >= start && minute < end) return true
+        if (dayMatches(routine.opt("days"), day) && minute >= start && minute < end) active.add(routine)
       } else {
         val previousDay = if (day == Calendar.SUNDAY) Calendar.SATURDAY else day - 1
         if ((minute >= start && dayMatches(routine.opt("days"), day)) ||
-          (minute < end && dayMatches(routine.opt("days"), previousDay))) return true
+          (minute < end && dayMatches(routine.opt("days"), previousDay))) active.add(routine)
       }
     }
-    return false
+    return active
   }
 
   private fun dayMatches(value: Any?, day: Int): Boolean {

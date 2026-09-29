@@ -23,4 +23,6 @@ export interface RoutineInput {
   /** @maxLength 40 */
   icon?: string;
   enabled?: boolean;
+  /** Android: trava a tela durante a rotina (hora de dormir) */
+  lockScreen?: boolean;
 }

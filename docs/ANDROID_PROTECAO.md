@@ -9,7 +9,8 @@ Fase 2 do plano. Objetivo: a criança não consegue **desinstalar**, **instalar 
 |---|---|---|
 | Bloqueio de apps | Serviço de acessibilidade detecta o app em primeiro plano e mostra a tela de pausa | `FamiliaSeguraAccessibilityService.kt` |
 | Limite diário | `UsageStatsManager` + reavaliação a cada 30 s (o limite vence mesmo sem trocar de app) | idem |
-| Rotinas | Janela por dia da semana; atravessa a meia-noite; **telefone e emergência nunca bloqueados** | idem |
+| Rotinas | Janela por dia da semana; atravessa a meia-noite; **telefone, emergência e despertador nunca bloqueados** | idem |
+| Travar a tela (hora de dormir) | Rotina com "Travar a tela": sempre que a criança desbloqueia o aparelho, aparece o aviso e a tela trava em 5 s (`lockNow` do Administrador do dispositivo). Não trava durante ligação, com o despertador na tela nem com o Família Segura aberto (onde o responsável digita o PIN). A "Hora de dormir" já vem com a opção ligada | `scheduleBedtimeLock()` |
 | Anti-desinstalação | Administrador do dispositivo (Device Admin): o Android exige desativá-lo antes de desinstalar | `FamiliaSeguraDeviceAdminReceiver.kt` |
 | Anti-desligamento | Com PIN definido, o serviço fecha as telas de Configurações/instalador/Play Store que mencionam o Família Segura junto com ações perigosas (desinstalar, forçar parada, desativar, limpar dados, acesso ao uso, bateria) | `isTamperScreen()` |
 | Apps novos | App instalado depois do pareamento fica bloqueado na hora (lista local) e vira "pendente" no servidor até o responsável aprovar | `packageReceiver` + `POST /child/installed-apps` |
@@ -45,6 +46,7 @@ a sugestão por idade troca o YouTube pelo YouTube Kids.
 
 ## Limites conhecidos (sem Device Owner)
 
+- **Desligar o aparelho** não é permitido a apps comuns: na hora de dormir a tela trava (acima), o aparelho não desliga.
 - **Restaurar o aparelho de fábrica** e **modo de segurança** não podem ser bloqueados por um app comum.
   O responsável recebe o alerta "proteção desligada" e o aparelho aparece como sem contato.
 - A detecção de telas de Configurações usa texto da tela; fabricantes com textos muito diferentes podem
@@ -56,7 +58,7 @@ a sugestão por idade troca o YouTube pelo YouTube Kids.
 
 1. **Accessibility API**: declarar uso para controle parental; vídeo mostrando a divulgação proeminente
    (texto em `app/(child)/android-controls.tsx`) antes de abrir as configurações.
-2. **Device Admin**: declarar a finalidade (impedir desinstalação sem autorização do responsável).
+2. **Device Admin**: declarar as finalidades — impedir desinstalação sem autorização do responsável (sem política) e travar a tela na hora de dormir (`force-lock`).
 3. **Package visibility**: usamos `<queries>` com `LAUNCHER` — **não** pedimos `QUERY_ALL_PACKAGES`.
 4. **Data safety**: apps instalados e tempo de uso são coletados para a funcionalidade parental.
 5. Política "Families" / público-alvo: o app é para responsáveis (adultos); o modo criança é pareado por eles.

@@ -989,6 +989,7 @@ components:
         endTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
         icon: { type: string, maxLength: 40 }
         enabled: { type: boolean }
+        lockScreen: { type: boolean, description: "Android: trava a tela durante a rotina (hora de dormir)" }
     RoutineUpdate:
       type: object
       properties:
@@ -999,6 +1000,7 @@ components:
         endTime: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
         icon: { type: string, maxLength: 40 }
         enabled: { type: boolean }
+        lockScreen: { type: boolean, description: "Android: trava a tela durante a rotina (hora de dormir)" }
     TimeGrantInput:
       type: object
       required: [appId, minutes]
@@ -1188,7 +1190,7 @@ components:
         status: { type: string, enum: [allowed, attention, blocked] }
     Routine:
       type: object
-      required: [id, childId, title, description, days, startTime, endTime, enabled, icon]
+      required: [id, childId, title, description, days, startTime, endTime, enabled, icon, lockScreen]
       properties:
         id: { type: string, format: uuid }
         childId: { type: string, format: uuid }
@@ -1199,6 +1201,7 @@ components:
         endTime: { type: string }
         enabled: { type: boolean }
         icon: { type: string }
+        lockScreen: { type: boolean }
     TimeRequest:
       type: object
       required: [id, kind, childId, childName, appId, appName, requestedMinutes, message, status, createdAt]

@@ -8,7 +8,7 @@ import { createAppRule, createRoutine, updateAppRule, type ChildProfileAgeBand, 
 export type AgePreset = {
   label: string;
   summary: string;
-  routines: Array<{ title: string; days: string; startTime: string; endTime: string; icon: string; description: string }>;
+  routines: Array<{ title: string; days: string; startTime: string; endTime: string; icon: string; description: string; lockScreen?: boolean }>;
   apps: Array<{ catalogAppId: string; dailyLimitMinutes: number; status?: 'allowed' | 'blocked' }>;
 };
 
@@ -21,8 +21,8 @@ export const AGE_PRESETS: Record<ChildProfileAgeBand, AgePreset> = {
     label: 'Até 9 anos',
     summary: 'Vídeo infantil com limite curto, sem redes sociais nem mensagens, sono a partir das 20h.',
     routines: [
-      { title: 'Hora de dormir', days: SCHOOL_NIGHTS, startTime: '20:00', endTime: '07:00', icon: 'moon', description: 'Desconectar e descansar' },
-      { title: 'Hora de dormir (fim de semana)', days: WEEKEND_NIGHTS, startTime: '21:00', endTime: '08:00', icon: 'moon', description: 'Desconectar e descansar' },
+      { title: 'Hora de dormir', days: SCHOOL_NIGHTS, startTime: '20:00', endTime: '07:00', icon: 'moon', description: 'Desconectar e descansar', lockScreen: true },
+      { title: 'Hora de dormir (fim de semana)', days: WEEKEND_NIGHTS, startTime: '21:00', endTime: '08:00', icon: 'moon', description: 'Desconectar e descansar', lockScreen: true },
       { title: 'Escola', days: WEEKDAYS, startTime: '07:30', endTime: '12:00', icon: 'book', description: 'Foco nas aulas' },
     ],
     apps: [
@@ -39,8 +39,8 @@ export const AGE_PRESETS: Record<ChildProfileAgeBand, AgePreset> = {
     label: '10 a 12 anos',
     summary: 'Vídeo e jogos com limite, mensagens com limite, sem redes sociais, sono às 21h.',
     routines: [
-      { title: 'Hora de dormir', days: SCHOOL_NIGHTS, startTime: '21:00', endTime: '07:00', icon: 'moon', description: 'Desconectar e descansar' },
-      { title: 'Hora de dormir (fim de semana)', days: WEEKEND_NIGHTS, startTime: '22:00', endTime: '08:00', icon: 'moon', description: 'Desconectar e descansar' },
+      { title: 'Hora de dormir', days: SCHOOL_NIGHTS, startTime: '21:00', endTime: '07:00', icon: 'moon', description: 'Desconectar e descansar', lockScreen: true },
+      { title: 'Hora de dormir (fim de semana)', days: WEEKEND_NIGHTS, startTime: '22:00', endTime: '08:00', icon: 'moon', description: 'Desconectar e descansar', lockScreen: true },
       { title: 'Escola', days: WEEKDAYS, startTime: '07:00', endTime: '12:30', icon: 'book', description: 'Foco nas aulas' },
     ],
     apps: [
@@ -57,7 +57,7 @@ export const AGE_PRESETS: Record<ChildProfileAgeBand, AgePreset> = {
     label: '13 a 15 anos',
     summary: 'Redes sociais com limite, jogos e vídeo com mais tempo, sono às 22h.',
     routines: [
-      { title: 'Hora de dormir', days: SCHOOL_NIGHTS, startTime: '22:00', endTime: '06:30', icon: 'moon', description: 'Desconectar e descansar' },
+      { title: 'Hora de dormir', days: SCHOOL_NIGHTS, startTime: '22:00', endTime: '06:30', icon: 'moon', description: 'Desconectar e descansar', lockScreen: true },
       { title: 'Escola', days: WEEKDAYS, startTime: '07:00', endTime: '12:30', icon: 'book', description: 'Foco nas aulas' },
     ],
     apps: [

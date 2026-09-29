@@ -41,7 +41,7 @@ export default function RoutineScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: colors.foreground }]}>{routine.title}</Text>
-                <Text style={[styles.meta, { color: colors.mutedForeground }]}>{routine.start} às {routine.end} · {formatDays(routine.days)}</Text>
+                <Text style={[styles.meta, { color: colors.mutedForeground }]}>{routine.start} às {routine.end} · {formatDays(routine.days)}{routine.lockScreen ? ' · trava a tela' : ''}</Text>
               </View>
               <Switch
                 testID={`routine-toggle-${routine.id}`}

@@ -1,0 +1,1 @@
+ALTER TABLE "routines" ADD COLUMN "lock_screen" boolean DEFAULT false NOT NULL;

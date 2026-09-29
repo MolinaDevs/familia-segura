@@ -84,7 +84,7 @@ export function ruleView(rule: AppRule, usage: Totals, grants: Totals, audience:
 
 export const routineView = (r: typeof routinesTable.$inferSelect) => ({
   id: r.id, childId: r.childId, title: r.title, description: r.description, days: r.days,
-  startTime: r.startTime, endTime: r.endTime, enabled: r.enabled, icon: r.icon,
+  startTime: r.startTime, endTime: r.endTime, enabled: r.enabled, icon: r.icon, lockScreen: r.lockScreen,
 });
 
 export async function familyLimits(familyId: string) {

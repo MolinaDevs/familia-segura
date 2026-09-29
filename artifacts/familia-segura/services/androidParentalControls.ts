@@ -72,7 +72,7 @@ export const openAndroidAccessibilitySettings = () => AndroidControls?.openAcces
 export const openAndroidBatterySettings = () => AndroidControls?.openBatteryOptimizationSettings();
 export const openAndroidNetworkSettings = () => AndroidControls?.openNetworkSettings();
 export const requestAndroidDeviceAdmin = () => AndroidControls?.requestDeviceAdmin(
-  'Impede que o Família Segura seja desinstalado sem o PIN do responsável. Desativar esta proteção avisa a família.',
+  'Impede que o Família Segura seja desinstalado sem o PIN do responsável e permite travar a tela na hora de dormir. Desativar esta proteção avisa a família.',
 );
 export const removeAndroidDeviceAdmin = () => AndroidControls?.removeDeviceAdmin();
 export const setAndroidGuardianUnlock = (minutes: number) => AndroidControls?.setGuardianUnlock(minutes);
@@ -106,6 +106,7 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
       startTime: routine.startTime,
       endTime: routine.endTime,
       enabled: routine.enabled,
+      lockScreen: routine.lockScreen,
     })),
   });
   return {

@@ -166,7 +166,7 @@ export default function AndroidControlsScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.stepTitle, { color: colors.foreground }]}>3. Proteção contra desinstalação</Text>
-                <Text style={[styles.stepDetail, { color: colors.mutedForeground }]}>Ativa o Família Segura como administrador do aparelho: ele não pode ser desinstalado sem o PIN do responsável.</Text>
+                <Text style={[styles.stepDetail, { color: colors.mutedForeground }]}>Ativa o Família Segura como administrador do aparelho: ele não pode ser desinstalado sem o PIN do responsável e pode travar a tela na hora de dormir.</Text>
               </View>
             </View>
             <Pressable testID="android-device-admin" disabled={status?.deviceAdminActive} onPress={requestAndroidDeviceAdmin} style={({ pressed }) => [styles.primaryButton, { backgroundColor: status?.deviceAdminActive ? colors.muted : colors.primary }, pressed && styles.pressed]}>

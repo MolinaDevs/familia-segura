@@ -110,6 +110,8 @@ export const routinesTable = pgTable("routines", {
   childId: uuid("child_id").notNull().references(() => childrenTable.id, { onDelete: "cascade" }),
   title: text("title").notNull(), description: text("description").notNull(), days: text("days").notNull(),
   startTime: text("start_time").notNull(), endTime: text("end_time").notNull(), enabled: boolean("enabled").notNull().default(true), icon: text("icon").notNull(),
+  /** Android: trava a tela sempre que a criança acender o aparelho durante a rotina (hora de dormir). */
+  lockScreen: boolean("lock_screen").notNull().default(false),
 });
 
 export const timeRequestsTable = pgTable("time_requests", {

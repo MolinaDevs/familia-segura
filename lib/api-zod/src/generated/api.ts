@@ -86,7 +86,8 @@ export const GetFamilyOverviewResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -234,7 +235,8 @@ export const CreateFamilyResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -484,7 +486,8 @@ export const CreateRoutineBody = zod.object({
   "startTime": zod.string().regex(createRoutineBodyStartTimeRegExp),
   "endTime": zod.string().regex(createRoutineBodyEndTimeRegExp),
   "icon": zod.string().max(createRoutineBodyIconMax).optional(),
-  "enabled": zod.boolean().optional()
+  "enabled": zod.boolean().optional(),
+  "lockScreen": zod.boolean().optional().describe('Android: trava a tela durante a rotina (hora de dormir)')
 })
 
 export const CreateRoutineResponse = zod.object({
@@ -496,7 +499,8 @@ export const CreateRoutineResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })
 
 
@@ -759,7 +763,8 @@ export const UpdateRoutineBody = zod.object({
   "startTime": zod.string().regex(updateRoutineBodyStartTimeRegExp).optional(),
   "endTime": zod.string().regex(updateRoutineBodyEndTimeRegExp).optional(),
   "icon": zod.string().max(updateRoutineBodyIconMax).optional(),
-  "enabled": zod.boolean().optional()
+  "enabled": zod.boolean().optional(),
+  "lockScreen": zod.boolean().optional().describe('Android: trava a tela durante a rotina (hora de dormir)')
 })
 
 export const UpdateRoutineResponse = zod.object({
@@ -771,7 +776,8 @@ export const UpdateRoutineResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })
 
 
@@ -932,7 +938,8 @@ export const AcceptInviteResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1177,7 +1184,8 @@ export const ExportFamilyDataResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })),
   "timeRequests": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1280,7 +1288,8 @@ export const GetChildOverviewResponse = zod.object({
   "startTime": zod.string(),
   "endTime": zod.string(),
   "enabled": zod.boolean(),
-  "icon": zod.string()
+  "icon": zod.string(),
+  "lockScreen": zod.boolean()
 })),
   "collectedData": zod.array(zod.string()),
   "policy": zod.object({

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { Alert } from '@/lib/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCreateRoutine, useDeleteRoutine, useUpdateRoutine } from '@workspace/api-client-react';
@@ -15,10 +15,10 @@ const DAYS = [
 ];
 const DAY_NAMES: Record<string, string> = { dom: 'domingo', seg: 'segunda', ter: 'terça', qua: 'quarta', qui: 'quinta', sex: 'sexta', sab: 'sábado' };
 const TEMPLATES = [
-  { title: 'Hora de dormir', icon: 'moon', startTime: '21:00', endTime: '07:00', days: ['dom', 'seg', 'ter', 'qua', 'qui'] },
-  { title: 'Escola', icon: 'book', startTime: '07:00', endTime: '12:00', days: ['seg', 'ter', 'qua', 'qui', 'sex'] },
-  { title: 'Refeição em família', icon: 'coffee', startTime: '19:00', endTime: '20:00', days: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'] },
-  { title: 'Lição de casa', icon: 'edit-3', startTime: '14:00', endTime: '16:00', days: ['seg', 'ter', 'qua', 'qui', 'sex'] },
+  { title: 'Hora de dormir', icon: 'moon', startTime: '21:00', endTime: '07:00', days: ['dom', 'seg', 'ter', 'qua', 'qui'], lockScreen: true },
+  { title: 'Escola', icon: 'book', startTime: '07:00', endTime: '12:00', days: ['seg', 'ter', 'qua', 'qui', 'sex'], lockScreen: false },
+  { title: 'Refeição em família', icon: 'coffee', startTime: '19:00', endTime: '20:00', days: ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'], lockScreen: false },
+  { title: 'Lição de casa', icon: 'edit-3', startTime: '14:00', endTime: '16:00', days: ['seg', 'ter', 'qua', 'qui', 'sex'], lockScreen: false },
 ];
 const TIME_RE = /^([01][0-9]|2[0-3]):[0-5][0-9]$/;
 
@@ -37,11 +37,12 @@ export default function RoutineEditScreen() {
   const [start, setStart] = useState(existing?.start ?? '21:00');
   const [end, setEnd] = useState(existing?.end ?? '07:00');
   const [days, setDays] = useState<string[]>(existing ? existing.days.split(',') : ['seg', 'ter', 'qua', 'qui', 'sex']);
+  const [lockScreen, setLockScreen] = useState(existing?.lockScreen ?? false);
   // Aberto por link direto, a rotina chega depois do primeiro render.
   useEffect(() => {
     if (!existing) return;
     setTitle(existing.title); setIcon(existing.icon || 'clock'); setStart(existing.start); setEnd(existing.end);
-    setDays(existing.days.split(','));
+    setDays(existing.days.split(',')); setLockScreen(existing.lockScreen);
   }, [existing?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const createRoutine = useCreateRoutine();
   const updateRoutine = useUpdateRoutine();
@@ -56,7 +57,7 @@ export default function RoutineEditScreen() {
 
   const save = () => {
     if (!valid || !data.childId) return;
-    const payload = { title: title.trim(), icon, startTime: start, endTime: end, days: ordered.join(',') };
+    const payload = { title: title.trim(), icon, startTime: start, endTime: end, days: ordered.join(','), lockScreen };
     if (existing) updateRoutine.mutate({ routineId: existing.id, data: payload }, done);
     else createRoutine.mutate({ childId: data.childId, data: { ...payload, description: '', enabled: true } }, done);
   };
@@ -77,7 +78,7 @@ export default function RoutineEditScreen() {
           <View style={styles.wrap}>
             {TEMPLATES.map((t) => (
               <Chip key={t.title} label={t.title} selected={title === t.title}
-                onPress={() => { setTitle(t.title); setIcon(t.icon); setStart(t.startTime); setEnd(t.endTime); setDays(t.days); }} />
+                onPress={() => { setTitle(t.title); setIcon(t.icon); setStart(t.startTime); setEnd(t.endTime); setDays(t.days); setLockScreen(t.lockScreen); }} />
             ))}
           </View>
         </>
@@ -111,6 +112,18 @@ export default function RoutineEditScreen() {
       </View>
       {crossesMidnight && <Text style={[styles.hint, { color: colors.mutedForeground }]}>Atravessa a meia-noite: termina no dia seguinte.</Text>}
 
+      <SectionTitle>Tela</SectionTitle>
+      <View style={[styles.toggle, { borderColor: colors.border, backgroundColor: colors.card }]}>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.toggleTitle, { color: colors.foreground }]}>Travar a tela</Text>
+          <Text style={[styles.hint, { color: colors.mutedForeground, marginTop: 2 }]}>
+            Android: o aparelho trava sempre que for desbloqueado durante a rotina. Ligações, emergência e despertador continuam funcionando. No iPhone e iPad os apps ficam pausados.
+          </Text>
+        </View>
+        <Switch value={lockScreen} onValueChange={setLockScreen} testID="routine-lock-screen" accessibilityLabel="Travar a tela durante a rotina"
+          trackColor={{ true: colors.primary, false: colors.muted }} />
+      </View>
+
       <View style={{ height: 20 }} />
       {data.devices.length === 0 && <View style={{ marginBottom: 12 }}><Notice icon="smartphone" tone="warning">Pareie um aparelho para a rotina ter efeito.</Notice></View>}
       <Button label="Salvar rotina" onPress={save} disabled={!valid} loading={createRoutine.isPending || updateRoutine.isPending} testID="routine-save" />
@@ -127,4 +140,6 @@ const styles = StyleSheet.create({
   time: { textAlign: 'center', fontFamily: 'Inter_700Bold', fontSize: 20 },
   label: { fontFamily: 'Inter_500Medium', fontSize: 12, marginBottom: 6 },
   hint: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 8 },
+  toggle: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 14 },
+  toggleTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
 });

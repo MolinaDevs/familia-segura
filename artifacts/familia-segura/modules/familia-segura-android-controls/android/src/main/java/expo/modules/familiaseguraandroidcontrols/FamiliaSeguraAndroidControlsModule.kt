@@ -41,7 +41,7 @@ class FamiliaSeguraAndroidControlsModule : Module() {
         "batteryOptimizationExempt" to (Build.VERSION.SDK_INT < 23 || power.isIgnoringBatteryOptimizations(context.packageName)),
         "serviceRunning" to FamiliaSeguraAccessibilityService.running,
         "policyLeaseActive" to PolicyStore.leaseActive(context),
-        "deviceAdminActive" to isAdminActive(),
+        "deviceAdminActive" to isAdminFullyActive(),
         "guardianUnlockedUntil" to PolicyStore.guardianUnlockUntil(context).toDouble(),
         "model" to "${Build.MANUFACTURER} ${Build.MODEL}".trim(),
         "osVersion" to Build.VERSION.RELEASE,
@@ -147,6 +147,11 @@ class FamiliaSeguraAndroidControlsModule : Module() {
 
   private fun isAdminActive(): Boolean =
     context.getSystemService(DevicePolicyManager::class.java).isAdminActive(adminComponent)
+
+  /** Administrador ativo E com a política de travar a tela (admins de versões antigas precisam reativar). */
+  private fun isAdminFullyActive(): Boolean = isAdminActive() && try {
+    context.getSystemService(DevicePolicyManager::class.java).hasGrantedPolicy(adminComponent, DevicePolicyManager.USES_POLICY_FORCE_LOCK)
+  } catch (_: SecurityException) { false }
 
   private fun batteryLevel(): Int {
     val manager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager

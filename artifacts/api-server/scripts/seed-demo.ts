@@ -67,10 +67,10 @@ async function main() {
     }));
   }
   await db.insert(routinesTable).values([
-    { familyId: family.id, childId: leo.id, title: "Hora de dormir", description: "", days: "dom,seg,ter,qua,qui", startTime: "21:00", endTime: "07:00", icon: "moon" },
+    { familyId: family.id, childId: leo.id, title: "Hora de dormir", description: "", days: "dom,seg,ter,qua,qui", startTime: "21:00", endTime: "07:00", icon: "moon", lockScreen: true },
     { familyId: family.id, childId: leo.id, title: "Escola", description: "", days: "seg,ter,qua,qui,sex", startTime: "07:00", endTime: "12:30", icon: "book" },
     { familyId: family.id, childId: bia.id, title: "Hora de dormir", description: "", days: "dom,seg,ter,qua,qui", startTime: "22:00", endTime: "06:30", icon: "moon" },
-    { familyId: family.id, childId: nina.id, title: "Hora de dormir", description: "", days: "dom,seg,ter,qua,qui,sex,sab", startTime: "20:00", endTime: "07:00", icon: "moon" },
+    { familyId: family.id, childId: nina.id, title: "Hora de dormir", description: "", days: "dom,seg,ter,qua,qui,sex,sab", startTime: "20:00", endTime: "07:00", icon: "moon", lockScreen: true },
   ]);
 
   const now = Date.now();

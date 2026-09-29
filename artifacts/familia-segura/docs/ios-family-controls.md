@@ -10,6 +10,7 @@ O app usa apenas APIs públicas da Apple: `FamilyControls`, `ManagedSettings`, `
 | Bloqueio por app / categoria | `blockSelection` no store padrão | `services/iosParentalControls.ts` (biblioteca react-native-device-activity) |
 | Limite diário | `DeviceActivity` com eventos de limite (até 12 regras monitoradas + rotinas, teto de 20 atividades da Apple) | idem |
 | Rotinas | "block all" em janelas semanais mescladas, isoladas dos bloqueios por app | idem |
+| Hora de dormir | A Apple não deixa apps travarem nem desligarem a tela: a opção "Travar a tela" vale só no Android; no iPhone a rotina pausa todos os apps | — |
 | **Não apagar apps** (inclusive o Família Segura) | `application.denyAppRemoval` num store próprio `familiaSeguraProtecao` | `modules/familia-segura-ios-controls` |
 | **Não instalar apps** | `application.denyAppInstallation` no mesmo store; liberável por 15 min com o PIN | idem + `services/iosDeviceProtection.ts` |
 | **Liberar instalação à distância** | O responsável libera 15/30/60 min pelo app dele (Família → aparelho). A Apple não deixa ver/aprovar app por app, então a aprovação é uma janela de tempo | `installUnlockUntil` na política + `services/iosDeviceProtection.ts` |
