@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Platform, Pressable, Text, View } from 'react-native';
+import { Platform, Pressable, Text } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
-  Inter_400Regular,
-  Inter_500Medium,
-  Inter_600SemiBold,
-  Inter_700Bold,
+  Nunito_400Regular,
+  Nunito_500Medium,
+  Nunito_600SemiBold,
+  Nunito_700Bold,
+  Nunito_800ExtraBold,
   useFonts,
-} from '@expo-google-fonts/inter';
+} from '@expo-google-fonts/nunito';
+import { Fredoka_500Medium, Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppProvider } from '@/context/AppContext';
@@ -25,6 +27,7 @@ import { SubscriptionProvider } from '@/context/SubscriptionContext';
 import { reloadAppAsync } from 'expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '@/hooks/useColors';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -43,29 +46,29 @@ function StartupScreen({ missingConfiguration = false }: { missingConfiguration?
     return () => clearTimeout(timeout);
   }, []);
 
+  if (missingConfiguration) {
+    return (
+      <BrandLoading
+        showProgress={false}
+        title="Acesso ainda não configurado"
+        detail="A autenticação precisa ser habilitada neste ambiente antes de continuar."
+      />
+    );
+  }
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24, backgroundColor: colors.background }}>
-      <ActivityIndicator color={colors.primary} />
-      <Text style={{ color: colors.foreground, fontWeight: '600', fontSize: 16, textAlign: 'center' }}>
-        {missingConfiguration ? 'Acesso ainda não configurado' : isDelayed ? 'A conexão está demorando mais que o esperado' : 'Preparando o Família Segura...'}
-      </Text>
-      <Text style={{ color: colors.mutedForeground, fontSize: 13, lineHeight: 19, textAlign: 'center', maxWidth: 320 }}>
-        {missingConfiguration
-          ? 'A autenticação precisa ser habilitada neste ambiente antes de continuar.'
-          : isDelayed
-            ? 'Verifique sua conexão. Você pode tentar carregar o aplicativo novamente.'
-            : 'Suas informações e preferências estão sendo carregadas com segurança.'}
-      </Text>
-      {isDelayed && !missingConfiguration ? (
+    <BrandLoading
+      title={isDelayed ? 'A conexão está demorando mais que o esperado' : undefined}
+      detail={isDelayed ? 'Verifique sua internet. Você pode tentar carregar de novo.' : undefined}
+      action={isDelayed ? (
         <Pressable
           accessibilityRole="button"
           onPress={() => void reloadAppAsync()}
           style={({ pressed }) => ({ paddingHorizontal: 18, paddingVertical: 12, opacity: pressed ? 0.65 : 1 })}
         >
-          <Text style={{ color: colors.primary, fontWeight: '600', fontSize: 14 }}>Tentar novamente</Text>
+          <Text style={{ color: colors.primary, fontFamily: 'Nunito_800ExtraBold', fontSize: 15 }}>Tentar novamente</Text>
         </Pressable>
-      ) : null}
-    </View>
+      ) : undefined}
+    />
   );
 }
 
@@ -95,11 +98,15 @@ export default function RootLayout() {
   useEffect(() => {
     AsyncStorage.getItem('childMode').then((v) => setChildMode(v === 'true')).catch(() => setChildMode(false));
   }, []);
+  // Tipografia da marca: Nunito no texto, Fredoka nos títulos e na marca (docs/DESIGN.md).
   const [fontsLoaded, fontError] = useFonts({
-    Inter_400Regular,
-    Inter_500Medium,
-    Inter_600SemiBold,
-    Inter_700Bold,
+    Nunito_400Regular,
+    Nunito_500Medium,
+    Nunito_600SemiBold,
+    Nunito_700Bold,
+    Nunito_800ExtraBold,
+    Fredoka_500Medium,
+    Fredoka_600SemiBold,
   });
 
   useEffect(() => {

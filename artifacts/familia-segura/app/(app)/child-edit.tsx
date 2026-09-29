@@ -133,11 +133,11 @@ export default function ChildEditScreen() {
 }
 
 const styles = StyleSheet.create({
-  input: { height: 52, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Inter_500Medium', fontSize: 16 },
+  input: { height: 52, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Nunito_500Medium', fontSize: 16 },
   colors: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   swatchWrap: { borderWidth: 2, borderRadius: 22, padding: 3 },
   swatch: { width: 34, height: 34, borderRadius: 17 },
   presetHead: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  presetText: { flex: 1, fontFamily: 'Inter_500Medium', fontSize: 14, lineHeight: 20 },
-  presetDetail: { fontFamily: 'Inter_400Regular', fontSize: 12 },
+  presetText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20 },
+  presetDetail: { fontFamily: 'Nunito_400Regular', fontSize: 12 },
 });

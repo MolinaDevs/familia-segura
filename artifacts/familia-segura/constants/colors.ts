@@ -1,96 +1,129 @@
 /**
  * Tokens de cor do app (claro e escuro). `useColors()` escolhe a paleta pelo tema do aparelho.
  * Não use cores fixas nas telas: acrescente um token aqui.
+ *
+ * Sistema "Algodão & Mochi" (docs/DESIGN.md): verde de bebê é a casa, lilás é ação, rosa é assinatura.
+ * Regra: pastel é superfície, nunca texto. Todo par de texto abaixo foi medido (WCAG AA ≥ 4,5:1).
  */
 
 const light = {
-  text: '#2D3748',
-  tint: '#2A5A4A',
+  text: '#2E2545',
+  tint: '#6D3FD1',
 
-  background: '#F9F9F7',
-  foreground: '#1F2A37',
+  background: '#EFF8F2',
+  foreground: '#2E2545',
 
-  card: '#FFFFFF',
-  cardForeground: '#1F2A37',
+  card: '#FAFDFB',
+  cardForeground: '#2E2545',
 
-  primary: '#2A5A4A',
+  // Lavanda: ação (botão, link, foco, item ativo).
+  primary: '#6D3FD1',
   primaryForeground: '#FFFFFF',
 
-  secondary: '#E6EDE9',
-  secondaryForeground: '#204538',
+  secondary: '#F2ECFB',
+  secondaryForeground: '#5A2FC0',
 
-  muted: '#F0EFEA',
-  mutedForeground: '#66736C',
+  muted: '#E7F0EA',
+  mutedForeground: '#675C80',
 
-  accent: '#D97736',
+  // Rosa: assinatura da marca (selo, destaque, linha de limite nos gráficos).
+  accent: '#C2185B',
   accentForeground: '#FFFFFF',
 
-  destructive: '#C8443F',
+  destructive: '#C32B41',
   destructiveForeground: '#FFFFFF',
 
-  border: '#E6E4DF',
-  input: '#DAD7D0',
+  border: '#D8E7DD',
+  input: '#C9DACF',
 
-  success: '#2F8A5B',
-  successSoft: '#E3F3EA',
-  warning: '#A86E12',
-  warningSoft: '#FFF3D4',
-  dangerSoft: '#FCE7E4',
+  success: '#0F7A66',
+  successSoft: '#DDF3EC',
+  warning: '#87610A',
+  warningSoft: '#FFF4D6',
+  dangerSoft: '#FBE4E8',
 
-  chartGrid: '#E6E4DF',
-  chartBar: '#2A5A4A',
-  chartBarMuted: '#BFD3C9',
-  chartLimit: '#D97736',
-  chartHeatLow: '#EEF3F0',
-  chartHeatHigh: '#1F4A3C',
+  chartGrid: '#D8E7DD',
+  chartBar: '#6D3FD1',
+  chartBarMuted: '#CDBDFB',
+  chartLimit: '#C2185B',
+  chartHeatLow: '#EAF4EE',
+  chartHeatHigh: '#4B2A99',
+
+  // Superfícies da marca (nunca texto).
+  mochi: '#FF8FA9',
+  mint: '#7FD8C3',
+  butter: '#FFD97D',
+  grapeLite: '#CDBDFB',
+  skyTop: '#EFF8F2',
+  skyMid: '#E6F4EB',
+  skyBottom: '#F0ECFA',
+  shadow: '#4B7A5E',
+
+  // Marca (mascote): contorno, corpo e brilho mudam com o tema para o contorno não sumir no escuro.
+  markInk: '#2E2545',
+  markBody: '#DCCEFD',
+  markShine: '#FAFDFB',
 };
 
 const dark: typeof light = {
-  text: '#E6ECE8',
-  tint: '#8CC7AE',
+  text: '#EDE8F7',
+  tint: '#B9A2FB',
 
-  background: '#0F1512',
-  foreground: '#E9EEEB',
+  background: '#16121F',
+  foreground: '#EDE8F7',
 
-  card: '#18201C',
-  cardForeground: '#E9EEEB',
+  card: '#201A2C',
+  cardForeground: '#EDE8F7',
 
-  primary: '#6FB596',
-  primaryForeground: '#0B1410',
+  primary: '#B9A2FB',
+  primaryForeground: '#1B1030',
 
-  secondary: '#1F2E27',
-  secondaryForeground: '#BFE0D1',
+  secondary: '#2A2140',
+  secondaryForeground: '#D9CCFD',
 
-  muted: '#1C2420',
-  mutedForeground: '#9AA8A1',
+  muted: '#241E32',
+  mutedForeground: '#A99FBF',
 
-  accent: '#E8914F',
-  accentForeground: '#1A0F06',
+  accent: '#FF8FA9',
+  accentForeground: '#2A0A14',
 
-  destructive: '#F07A72',
-  destructiveForeground: '#1B0706',
+  destructive: '#F58A9C',
+  destructiveForeground: '#2A0A10',
 
-  border: '#26322C',
-  input: '#33413A',
+  border: '#30283F',
+  input: '#3B3150',
 
-  success: '#6FCF9B',
-  successSoft: '#17301F',
-  warning: '#F1B550',
-  warningSoft: '#33280F',
-  dangerSoft: '#3A1815',
+  success: '#7FD8C3',
+  successSoft: '#15302A',
+  warning: '#FFD97D',
+  warningSoft: '#33290F',
+  dangerSoft: '#3A1620',
 
-  chartGrid: '#26322C',
-  chartBar: '#6FB596',
-  chartBarMuted: '#2E4A3E',
-  chartLimit: '#E8914F',
-  chartHeatLow: '#1A2420',
-  chartHeatHigh: '#8CE0B9',
+  chartGrid: '#30283F',
+  chartBar: '#B9A2FB',
+  chartBarMuted: '#3E3160',
+  chartLimit: '#FF8FA9',
+  chartHeatLow: '#221C2F',
+  chartHeatHigh: '#CDBDFB',
+
+  mochi: '#FF8FA9',
+  mint: '#7FD8C3',
+  butter: '#FFD97D',
+  grapeLite: '#CDBDFB',
+  skyTop: '#16121F',
+  skyMid: '#171722',
+  skyBottom: '#1D1630',
+  shadow: '#000000',
+
+  markInk: '#EDE8F7',
+  markBody: '#4A3A78',
+  markShine: '#CDBDFB',
 };
 
 const colors = {
   light,
   dark,
-  radius: 22,
+  radius: 24,
 };
 
 export type Palette = typeof light;

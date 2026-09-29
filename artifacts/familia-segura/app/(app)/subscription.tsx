@@ -183,7 +183,7 @@ export default function SubscriptionScreen() {
             ].map((item) => (
               <View key={item} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
                 <Feather name="check" size={16} color={colors.primary} style={{ marginTop: 2 }} />
-                <Text style={{ flex: 1, fontFamily: 'Inter_500Medium', fontSize: 14, lineHeight: 20, color: colors.foreground }}>{item}</Text>
+                <Text style={{ flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20, color: colors.foreground }}>{item}</Text>
               </View>
             ))}
           </View>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Nunito_500Medium',
     fontSize: 15,
     marginTop: 16,
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   errorText: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Nunito_500Medium',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   successText: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Nunito_500Medium',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -417,13 +417,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   activeTitle: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 24,
     textAlign: 'center',
     marginBottom: 12,
   },
   activeDesc: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   actionButtonText: {
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Nunito_600SemiBold',
     fontSize: 16,
   },
   infoBox: {
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   infoBoxText: {
     flex: 1,
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 13,
     lineHeight: 20,
   },
@@ -470,14 +470,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 28,
     textAlign: 'center',
     letterSpacing: -0.5,
     marginBottom: 12,
   },
   subtitle: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
@@ -500,23 +500,23 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   packageName: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 17,
     marginBottom: 4,
   },
   packageDesc: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Nunito_500Medium',
     fontSize: 13,
   },
   packagePriceBox: {
     alignItems: 'flex-end',
   },
   packagePrice: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 18,
   },
   packagePeriod: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 11,
     marginTop: 3,
   },
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subscribeButtonText: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 16,
   },
   restoreButton: {
@@ -551,11 +551,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   restoreButtonText: {
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,
   },
   renewalText: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 11,
     lineHeight: 17,
     textAlign: 'center',
@@ -569,12 +569,12 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   legalText: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Nunito_500Medium',
     fontSize: 12,
     textDecorationLine: 'underline',
   },
   legalDot: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Nunito_500Medium',
     fontSize: 12,
   },
   modalOverlay: {
@@ -597,11 +597,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontFamily: 'Inter_700Bold',
+    fontFamily: 'Nunito_700Bold',
     fontSize: 18,
   },
   modalText: {
-    fontFamily: 'Inter_400Regular',
+    fontFamily: 'Nunito_400Regular',
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 32,
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   modalCancelText: {
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,
   },
   modalConfirm: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   modalConfirmText: {
-    fontFamily: 'Inter_600SemiBold',
+    fontFamily: 'Nunito_600SemiBold',
     fontSize: 15,
   },
   pressed: {

@@ -14,7 +14,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
-    "@expo-google-fonts/inter": "^0.4.0",
     "@expo/vector-icons": "^15.0.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@stardazed/streams-text-encoding": "^1.0.2",
@@ -58,6 +57,8 @@
   "dependencies": {
     "@clerk/expo": "^4.6.8",
     "@clerk/types": "^4.101.20",
+    "@expo-google-fonts/fredoka": "^0.4.1",
+    "@expo-google-fonts/nunito": "^0.4.2",
     "@noble/hashes": "^1.8.0",
     "expo-auth-session": "~57.0.12",
     "expo-background-task": "57.0.19",

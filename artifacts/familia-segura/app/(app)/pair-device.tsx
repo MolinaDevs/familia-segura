@@ -96,12 +96,12 @@ export default function PairDeviceScreen() {
 }
 
 const styles = StyleSheet.create({
-  limit: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  limit: { fontFamily: 'Nunito_500Medium', fontSize: 13 },
   row: { flexDirection: 'row', gap: 8 },
   step: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   stepNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  stepNumText: { fontFamily: 'Inter_700Bold', fontSize: 13 },
-  stepText: { flex: 1, fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 20 },
-  code: { fontFamily: 'Inter_700Bold', fontSize: 38, letterSpacing: 4 },
-  expiry: { fontFamily: 'Inter_500Medium', fontSize: 13 },
+  stepNumText: { fontFamily: 'Nunito_700Bold', fontSize: 13 },
+  stepText: { flex: 1, fontFamily: 'Nunito_400Regular', fontSize: 14, lineHeight: 20 },
+  code: { fontFamily: 'Fredoka_600SemiBold', fontSize: 38, letterSpacing: 4 },
+  expiry: { fontFamily: 'Nunito_500Medium', fontSize: 13 },
 });

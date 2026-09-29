@@ -1,13 +1,14 @@
 import { useSignUp, useAuth } from '@clerk/expo';
-import { Link, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View, ActivityIndicator, Platform } from 'react-native';
-import { useColors } from '@/hooks/useColors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { SocialButtons } from '@/components/auth/SocialButtons';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
+import { useColors } from '@/hooks/useColors';
+import { SocialButtons } from '@/components/auth/SocialButtons';
+import {
+  AuthButton, AuthCard, AuthField, AuthHeader, AuthShell, AuthSwitch, DividerLabel, FormMessage, TrustNote,
+} from '@/components/auth/AuthKit';
+import { goBack } from '@/lib/navigation';
 
 export const useWarmUpBrowser = () => {
   useEffect(() => {
@@ -19,10 +20,36 @@ export const useWarmUpBrowser = () => {
   }, []);
 };
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Força da senha em 3 níveis, só para orientar (a regra de verdade é a do Clerk). */
+function passwordStrength(value: string): 0 | 1 | 2 | 3 {
+  if (!value) return 0;
+  let score = 0;
+  if (value.length >= 8) score++;
+  if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score++;
+  if (/\d/.test(value) || /[^A-Za-z0-9]/.test(value)) score++;
+  return Math.max(1, score) as 1 | 2 | 3;
+}
+const STRENGTH_LABEL = ['', 'Fraca', 'Boa', 'Forte'];
+
+function StrengthMeter({ value }: { value: string }) {
+  const colors = useColors();
+  const level = passwordStrength(value);
+  if (!level) return null;
+  const tint = level === 1 ? colors.destructive : level === 2 ? colors.warning : colors.success;
+  return (
+    <View style={styles.strength} accessibilityLabel={`Força da senha: ${STRENGTH_LABEL[level]}`}>
+      {[1, 2, 3].map((step) => (
+        <View key={step} style={[styles.strengthBar, { backgroundColor: step <= level ? tint : colors.border }]} />
+      ))}
+      <Text style={[styles.strengthText, { color: tint }]}>{STRENGTH_LABEL[level]}</Text>
+    </View>
+  );
+}
+
 export default function SignUpPage() {
   useWarmUpBrowser();
-  const colors = useColors();
-  const insets = useSafeAreaInsets();
   const { signUp, errors, fetchStatus } = useSignUp();
   const { isLoaded: isAuthLoaded } = useAuth();
   const router = useRouter();
@@ -33,19 +60,25 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [emailTouched, setEmailTouched] = useState(false);
+
+  const busy = loading || fetchStatus === 'fetching';
+  const emailOk = EMAIL_RE.test(emailAddress.trim());
+  const emailInvalid = emailTouched && emailAddress.trim().length > 0 && !emailOk;
 
   const handleSubmit = async () => {
-    if (!isAuthLoaded) return;
+    if (!isAuthLoaded || !emailOk || !password || busy) return;
     setLoading(true);
     setLocalError(null);
     try {
       const { error } = await signUp.password({
-        emailAddress,
+        emailAddress: emailAddress.trim(),
         password,
       });
 
       if (error) {
-        setLocalError(error.longMessage || error.message || 'Erro ao criar conta.');
+        setLocalError(error.longMessage || error.message || 'Não foi possível criar a conta.');
         setLoading(false);
         return;
       }
@@ -55,9 +88,9 @@ export default function SignUpPage() {
     } catch (err: unknown) {
       const clerkErrors = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors;
       if (clerkErrors?.length) {
-        setLocalError(clerkErrors[0].longMessage || clerkErrors[0].message || 'Ocorreu um erro ao criar a conta.');
+        setLocalError(clerkErrors[0].longMessage || clerkErrors[0].message || 'Não foi possível criar a conta.');
       } else {
-        setLocalError('Ocorreu um erro ao criar a conta.');
+        setLocalError('Não foi possível criar a conta. Verifique sua conexão.');
       }
     } finally {
       setLoading(false);
@@ -65,9 +98,10 @@ export default function SignUpPage() {
   };
 
   const handleVerify = async () => {
-    if (!isAuthLoaded) return;
+    if (!isAuthLoaded || !code || busy) return;
     setLoading(true);
     setLocalError(null);
+    setNotice(null);
     try {
       await signUp.verifications.verifyEmailCode({ code });
 
@@ -76,7 +110,7 @@ export default function SignUpPage() {
           navigate: () => router.replace('/(app)'),
         });
       } else {
-        setLocalError('Falha ao verificar. Verifique o código e tente novamente.');
+        setLocalError('Não deu para confirmar. Confira o código e tente de novo.');
       }
     } catch (err: unknown) {
       const clerkErrors = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors;
@@ -90,261 +124,110 @@ export default function SignUpPage() {
     }
   };
 
-  const paddingTop = Platform.OS === 'web' ? Math.max(insets.top, 67) : insets.top;
-  const paddingBottom = Platform.OS === 'web' ? Math.max(insets.bottom, 34) : insets.bottom;
+  const resend = async () => {
+    setLoading(true);
+    setLocalError(null);
+    setNotice(null);
+    try {
+      await signUp.verifications.sendEmailCode();
+      setNotice('Enviamos um novo código.');
+    } catch {
+      setLocalError('Não foi possível reenviar o código.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (pendingVerification) {
     return (
-      <KeyboardAwareScrollViewCompat
-        style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={[styles.content, { paddingTop: paddingTop + 40, paddingBottom: paddingBottom + 40, paddingHorizontal: 24, flexGrow: 1 }]}
-        bottomOffset={20}
-      >
-        <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-            <Feather name="mail" size={32} color={colors.primaryForeground} />
-          </View>
-          <Text style={[styles.title, { color: colors.foreground }]}>Verifique seu e-mail</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            Enviamos um código de verificação para {emailAddress}.
-          </Text>
-        </View>
-
-        <View style={styles.form}>
-          <TextInput
-            style={[styles.input, styles.codeInput, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+      <AuthShell onBack={() => { setPendingVerification(false); setCode(''); setLocalError(null); }} backLabel="Corrigir e-mail">
+        <AuthHeader icon="mail" title="Confira seu e-mail" subtitle={`Enviamos um código de 6 dígitos para ${emailAddress.trim()}.`} />
+        <AuthCard>
+          <AuthField
+            label="Código de confirmação"
+            icon="hash"
             value={code}
             placeholder="000000"
-            placeholderTextColor={colors.mutedForeground}
-            keyboardType="numeric"
-            onChangeText={(text) => { setCode(text); setLocalError(null); }}
+            keyboardType="number-pad"
+            autoComplete="one-time-code"
+            textContentType="oneTimeCode"
             maxLength={6}
+            onChangeText={(text) => { setCode(text.replace(/\D/g, '')); setLocalError(null); }}
+            onSubmitEditing={() => void handleVerify()}
+            style={styles.code}
             testID="signup-code-input"
           />
-
-          {localError && (
-            <View style={[styles.errorContainer, { backgroundColor: `${colors.destructive}15`, borderColor: colors.destructive }]}>
-              <Feather name="alert-circle" size={16} color={colors.destructive} />
-              <Text style={[styles.errorText, { color: colors.destructive }]}>{localError}</Text>
-            </View>
-          )}
-
-          <Pressable
-            testID="signup-verify-button"
-            style={({ pressed }) => [
-              styles.button,
-              { backgroundColor: colors.primary },
-              pressed && styles.pressed,
-              (!code || loading) && { opacity: 0.5 }
-            ]}
-            onPress={handleVerify}
-            disabled={!code || loading}
-          >
-            {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Confirmar conta</Text>}
-          </Pressable>
-
-          <Pressable
-            style={({ pressed }) => [styles.secondaryButton, pressed && styles.pressed]}
-            onPress={async () => {
-              setLoading(true);
-              setLocalError(null);
-              try {
-                await signUp.verifications.sendEmailCode();
-              } catch {
-                setLocalError('Erro ao reenviar o código.');
-              } finally {
-                setLoading(false);
-              }
-            }}
-            disabled={loading}
-          >
-            <Text style={[styles.secondaryButtonText, { color: colors.foreground }]}>Reenviar código</Text>
-          </Pressable>
-        </View>
-      </KeyboardAwareScrollViewCompat>
+          {notice ? <FormMessage tone="info">{notice}</FormMessage> : null}
+          {localError ? <FormMessage tone="error">{localError}</FormMessage> : null}
+          <AuthButton label="Confirmar conta" onPress={() => void handleVerify()} loading={busy} disabled={code.length < 6} testID="signup-verify-button" />
+          <AuthButton label="Reenviar código" variant="quiet" onPress={() => void resend()} disabled={busy} testID="signup-resend" />
+        </AuthCard>
+        <TrustNote />
+      </AuthShell>
     );
   }
 
   return (
-    <KeyboardAwareScrollViewCompat
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: paddingTop + 40, paddingBottom: paddingBottom + 40, paddingHorizontal: 24, flexGrow: 1 }]}
-      bottomOffset={20}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Feather name="user-plus" size={32} color={colors.primaryForeground} />
-        </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Crie sua conta</Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Inicie o acompanhamento do bem-estar digital da sua família.
-        </Text>
-      </View>
+    <AuthShell onBack={() => goBack('/')}>
+      <AuthHeader
+        title="Crie a conta da família"
+        subtitle="Leva um minuto. Depois você cadastra as crianças e pareia os aparelhos delas."
+      />
 
-      <View style={styles.form}>
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.foreground }]}>E-mail</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-            autoCapitalize="none"
-            autoComplete="email"
-            value={emailAddress}
-            placeholder="seu@email.com"
-            placeholderTextColor={colors.mutedForeground}
-            onChangeText={(text) => { setEmailAddress(text); setLocalError(null); }}
-            keyboardType="email-address"
-            testID="signup-email"
-          />
-          {errors.fields.emailAddress ? (
-            <Text style={[styles.fieldError, { color: colors.destructive }]}>{errors.fields.emailAddress.message}</Text>
-          ) : null}
-        </View>
+      <AuthCard>
+        <AuthField
+          label="E-mail do responsável"
+          icon="mail"
+          value={emailAddress}
+          placeholder="voce@email.com"
+          autoCapitalize="none"
+          autoComplete="email"
+          keyboardType="email-address"
+          textContentType="emailAddress"
+          returnKeyType="next"
+          onChangeText={(text) => { setEmailAddress(text); setLocalError(null); }}
+          onBlur={() => setEmailTouched(true)}
+          error={emailInvalid ? 'Confira o e-mail: parece faltar algo.' : errors.fields.emailAddress?.message}
+          testID="signup-email"
+        />
 
-        <View style={styles.inputGroup}>
-          <Text style={[styles.label, { color: colors.foreground }]}>Senha</Text>
-          <TextInput
-            style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+        <View>
+          <AuthField
+            label="Senha"
+            icon="lock"
+            secure
             value={password}
-            placeholder="Escolha uma senha forte"
-            placeholderTextColor={colors.mutedForeground}
-            secureTextEntry
+            placeholder="Pelo menos 8 caracteres"
             autoComplete="new-password"
+            textContentType="newPassword"
+            returnKeyType="go"
             onChangeText={(text) => { setPassword(text); setLocalError(null); }}
             onSubmitEditing={() => void handleSubmit()}
-            returnKeyType="go"
+            error={errors.fields.password?.message}
+            helper="Misture letras, números e símbolos."
             testID="signup-password"
           />
-          {errors.fields.password ? (
-            <Text style={[styles.fieldError, { color: colors.destructive }]}>{errors.fields.password.message}</Text>
-          ) : null}
+          <StrengthMeter value={password} />
         </View>
 
-        {localError && (
-          <View style={[styles.errorContainer, { backgroundColor: `${colors.destructive}15`, borderColor: colors.destructive }]}>
-            <Feather name="alert-circle" size={16} color={colors.destructive} />
-            <Text style={[styles.errorText, { color: colors.destructive }]}>{localError}</Text>
-          </View>
-        )}
+        {localError ? <FormMessage tone="error">{localError}</FormMessage> : null}
 
-        <Pressable
-          testID="signup-button"
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: colors.primary },
-            pressed && styles.pressed,
-            (!emailAddress || !password || loading || fetchStatus === 'fetching') && { opacity: 0.5 }
-          ]}
-          onPress={handleSubmit}
-          disabled={!emailAddress || !password || loading || fetchStatus === 'fetching'}
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.primaryForeground} />
-          ) : (
-            <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Criar conta</Text>
-          )}
-        </Pressable>
+        <AuthButton label="Criar conta" onPress={() => void handleSubmit()} loading={busy} disabled={!emailOk || !password} testID="signup-button" />
 
-        <View style={styles.divider}>
-          <View style={[styles.line, { backgroundColor: colors.border }]} />
-          <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>ou</Text>
-          <View style={[styles.line, { backgroundColor: colors.border }]} />
-        </View>
-
+        <DividerLabel>ou continue com</DividerLabel>
         <SocialButtons />
         <View nativeID="clerk-captcha" />
-      </View>
+      </AuthCard>
 
-      <View style={styles.footer}>
-        <Text style={{ color: colors.mutedForeground, fontFamily: 'Inter_500Medium' }}>Já tem conta?</Text>
-        <Link href="/sign-in" asChild>
-          <Pressable hitSlop={12}>
-            <Text style={[styles.link, { color: colors.primary }]}>Faça login</Text>
-          </Pressable>
-        </Link>
-      </View>
-    </KeyboardAwareScrollViewCompat>
+      <AuthSwitch question="Já tem conta?" action="Entrar" onPress={() => router.replace('/sign-in')} testID="signup-to-signin" />
+      <TrustNote />
+    </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { width: '100%', maxWidth: 520, alignSelf: 'center' },
-  
-  header: { alignItems: 'center', marginBottom: 40 },
-  iconContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-  },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 28, marginBottom: 8, letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'Inter_500Medium', fontSize: 16, textAlign: 'center', maxWidth: 280, lineHeight: 24 },
-  
-  form: { gap: 20 },
-  inputGroup: { gap: 8 },
-  label: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
-  input: {
-    height: 56,
-    borderWidth: 1,
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    fontFamily: 'Inter_500Medium',
-    fontSize: 15,
-  },
-  fieldError: { fontFamily: 'Inter_500Medium', fontSize: 12, lineHeight: 17 },
-  
-  codeInput: {
-    fontSize: 32,
-    textAlign: 'center',
-    letterSpacing: 14,
-    height: 80,
-    fontFamily: 'Inter_700Bold',
-  },
-  
-  button: {
-    height: 56,
-    borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  buttonText: { fontFamily: 'Inter_700Bold', fontSize: 16 },
-  
-  secondaryButton: {
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 16,
-  },
-  
-  divider: { flexDirection: 'row', alignItems: 'center', gap: 16, marginVertical: 16 },
-  line: { flex: 1, height: 1 },
-  dividerText: { fontFamily: 'Inter_500Medium', fontSize: 14 },
-  
-  footer: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginTop: 'auto', paddingTop: 40 },
-  link: { fontFamily: 'Inter_700Bold' },
-  
-  pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
-  
-  errorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  errorText: {
-    fontFamily: 'Inter_600SemiBold',
-    fontSize: 13,
-    flex: 1,
-    lineHeight: 18,
-  },
+  code: { fontFamily: 'Fredoka_600SemiBold', fontSize: 26, letterSpacing: 10 },
+  strength: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
+  strengthBar: { flex: 1, height: 5, borderRadius: 3 },
+  strengthText: { fontFamily: 'Nunito_700Bold', fontSize: 12, minWidth: 44, textAlign: 'right' },
 });

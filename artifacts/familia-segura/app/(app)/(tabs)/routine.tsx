@@ -2,9 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
-import { StyleSheet, Switch, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { ChildSwitcher } from '@/components/ChildSwitcher';
-import { Button, Card, EmptyState, Notice, Screen, SectionTitle } from '@/components/ui';
+import { Button, Card, EmptyState, Notice, Screen, SectionTitle, Toggle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 
@@ -43,14 +43,12 @@ export default function RoutineScreen() {
                 <Text style={[styles.title, { color: colors.foreground }]}>{routine.title}</Text>
                 <Text style={[styles.meta, { color: colors.mutedForeground }]}>{routine.start} às {routine.end} · {formatDays(routine.days)}{routine.lockScreen ? ' · trava a tela' : ''}</Text>
               </View>
-              <Switch
+              <Toggle
                 testID={`routine-toggle-${routine.id}`}
                 accessibilityLabel={`${routine.enabled ? 'Pausar' : 'Ativar'} ${routine.title}`}
                 disabled={!canEdit}
                 value={routine.enabled}
                 onValueChange={() => { void Haptics.selectionAsync(); toggleRoutine(routine.id); }}
-                trackColor={{ false: colors.border, true: colors.primary }}
-                thumbColor={colors.card}
               />
             </View>
           </Card>
@@ -66,6 +64,6 @@ export default function RoutineScreen() {
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   icon: { width: 44, height: 44, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 16 },
-  meta: { fontFamily: 'Inter_500Medium', fontSize: 13, marginTop: 3 },
+  title: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
+  meta: { fontFamily: 'Nunito_500Medium', fontSize: 13, marginTop: 3 },
 });

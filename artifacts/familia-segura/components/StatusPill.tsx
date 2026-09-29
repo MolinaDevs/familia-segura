@@ -20,5 +20,5 @@ export function StatusPill({ status }: { status: AppStatus }) {
 
 const styles = StyleSheet.create({
   pill: { flexDirection: 'row', alignItems: 'center', gap: 5, borderRadius: 99, paddingHorizontal: 9, paddingVertical: 5 },
-  label: { fontFamily: 'Inter_600SemiBold', fontSize: 11 },
+  label: { fontFamily: 'Nunito_600SemiBold', fontSize: 11 },
 });

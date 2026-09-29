@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Alert } from '@/lib/alert';
 import { router } from 'expo-router';
 import { useSetGuardianPin, useUpdateFamilySettings, type FamilySettingsUpdate } from '@workspace/api-client-react';
-import { Button, Card, Chip, Divider, Notice, Row, Screen, SectionTitle } from '@/components/ui';
+import { Button, Card, Chip, Divider, Notice, Row, Screen, SectionTitle, Toggle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useColors } from '@/hooks/useColors';
@@ -43,8 +43,7 @@ export default function SettingsScreen() {
   };
 
   const toggle = (label: string, value: boolean, onChange: (v: boolean) => void) => (
-    <Switch accessibilityLabel={label} value={value} disabled={!canEdit || updateSettings.isPending} onValueChange={onChange}
-      trackColor={{ false: colors.border, true: colors.primary }} thumbColor={colors.card} />
+    <Toggle accessibilityLabel={label} value={value} disabled={!canEdit || updateSettings.isPending} onValueChange={onChange} />
   );
 
   return (
@@ -118,8 +117,8 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { fontFamily: 'Inter_500Medium', fontSize: 14, lineHeight: 20 },
-  hint: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 18 },
-  input: { height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Inter_600SemiBold', fontSize: 18, letterSpacing: 4 },
+  body: { fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20 },
+  hint: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18 },
+  input: { height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Nunito_600SemiBold', fontSize: 18, letterSpacing: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

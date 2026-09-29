@@ -145,6 +145,6 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', gap: 10 },
   protRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   dot: { width: 10, height: 10, borderRadius: 5 },
-  protName: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
-  protDetail: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 17, marginTop: 2 },
+  protName: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
+  protDetail: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 17, marginTop: 2 },
 });

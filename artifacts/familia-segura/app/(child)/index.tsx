@@ -146,9 +146,9 @@ export default function ChildDashboard() {
           Seu aparelho está vinculado à conta da sua família. Eles veem quanto tempo você usa os apps e definem combinados sobre tempo de tela. Ninguém lê suas mensagens.
         </Text>
         <View style={{ marginTop: 12 }}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13, color: colors.secondaryForeground, marginBottom: 4 }}>O que é compartilhado:</Text>
+          <Text style={{ fontFamily: 'Nunito_600SemiBold', fontSize: 13, color: colors.secondaryForeground, marginBottom: 4 }}>O que é compartilhado:</Text>
           {overview.collectedData.map((item) => (
-            <Text key={item} style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.secondaryForeground }}>• {item}</Text>
+            <Text key={item} style={{ fontFamily: 'Nunito_400Regular', fontSize: 12, color: colors.secondaryForeground }}>• {item}</Text>
           ))}
         </View>
       </View>
@@ -159,8 +159,8 @@ export default function ChildDashboard() {
           <View style={{ gap: 8, marginBottom: 24 }}>
             {overview.apps.map((app) => (
               <View key={app.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card }]}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{app.appName}</Text>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
+                <Text style={{ fontFamily: 'Nunito_600SemiBold', color: colors.foreground }}>{app.appName}</Text>
+                <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 12, color: colors.mutedForeground }}>
                   {app.status === 'blocked' ? 'Bloqueado pela família' : `${app.usageTodayMinutes} de ${app.dailyLimitMinutes} min hoje`}
                   {app.extraTodayMinutes > 0 && app.status !== 'blocked' ? ` · +${app.extraTodayMinutes} min liberados hoje` : ''}
                 </Text>
@@ -172,8 +172,8 @@ export default function ChildDashboard() {
 
       {overview.policy.pendingPackages.length > 0 && (
         <View style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card, marginBottom: 24 }]}>
-          <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>Apps aguardando aprovação</Text>
-          <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
+          <Text style={{ fontFamily: 'Nunito_600SemiBold', color: colors.foreground }}>Apps aguardando aprovação</Text>
+          <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 12, color: colors.mutedForeground }}>
             {overview.policy.pendingPackages.length} app(s) instalado(s) recentemente ficam bloqueados até sua família aprovar.
           </Text>
         </View>
@@ -185,8 +185,8 @@ export default function ChildDashboard() {
           <View style={{ gap: 8, marginBottom: 24 }}>
             {overview.routines.map((routine) => (
               <View key={routine.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card, opacity: routine.enabled ? 1 : 0.5 }]}>
-                <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>{routine.title}</Text>
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.mutedForeground }}>
+                <Text style={{ fontFamily: 'Nunito_600SemiBold', color: colors.foreground }}>{routine.title}</Text>
+                <Text style={{ fontFamily: 'Nunito_400Regular', fontSize: 12, color: colors.mutedForeground }}>
                   {routine.startTime} às {routine.endTime} · {formatDays(routine.days)}
                 </Text>
               </View>
@@ -200,7 +200,7 @@ export default function ChildDashboard() {
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Aguardando resposta</Text>
           {overview.pendingRequests.map((request) => (
             <View key={request.id} style={[styles.row, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.foreground }}>
+              <Text style={{ fontFamily: 'Nunito_600SemiBold', color: colors.foreground }}>
                 {request.kind === 'install' ? `Instalar ${request.appName}` : `+${request.requestedMinutes} min de ${request.appName}`}
               </Text>
             </View>
@@ -272,7 +272,7 @@ export default function ChildDashboard() {
           <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 24 }]}>Quero instalar um app</Text>
           {installUnlockedUntil && installUnlockedUntil.getTime() > Date.now() ? (
             <View style={[styles.row, { borderColor: colors.border, backgroundColor: colors.secondary }]}>
-              <Text style={{ fontFamily: 'Inter_600SemiBold', color: colors.secondaryForeground }}>
+              <Text style={{ fontFamily: 'Nunito_600SemiBold', color: colors.secondaryForeground }}>
                 Instalação liberada até {installUnlockedUntil.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
               </Text>
             </View>
@@ -324,26 +324,26 @@ function formatDays(days: string) {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20 },
   header: { marginBottom: 30 },
-  greeting: { fontFamily: 'Inter_700Bold', fontSize: 32, letterSpacing: -1, marginBottom: 8 },
-  subtitle: { fontFamily: 'Inter_400Regular', fontSize: 15, lineHeight: 22 },
-  offlineText: { fontFamily: 'Inter_500Medium', fontSize: 12, marginTop: 8 },
+  greeting: { fontFamily: 'Fredoka_600SemiBold', fontSize: 32, letterSpacing: -1, marginBottom: 8 },
+  subtitle: { fontFamily: 'Nunito_400Regular', fontSize: 15, lineHeight: 22 },
+  offlineText: { fontFamily: 'Nunito_500Medium', fontSize: 12, marginTop: 8 },
   card: { borderRadius: 20, padding: 20, marginBottom: 32 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  cardTitle: { fontFamily: 'Inter_700Bold', fontSize: 18 },
-  cardBody: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 21 },
+  cardTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18 },
+  cardBody: { fontFamily: 'Nunito_400Regular', fontSize: 14, lineHeight: 21 },
   row: { padding: 12, borderRadius: 12, borderWidth: 1, gap: 2 },
-  sectionTitle: { fontFamily: 'Inter_700Bold', fontSize: 18, marginBottom: 16 },
+  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18, marginBottom: 16 },
   form: { borderRadius: 20, padding: 16, borderWidth: 1, gap: 16 },
   inputGroup: { gap: 8 },
-  label: { fontFamily: 'Inter_500Medium', fontSize: 14 },
-  input: { height: 48, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, fontFamily: 'Inter_400Regular', fontSize: 15 },
+  label: { fontFamily: 'Nunito_500Medium', fontSize: 14 },
+  input: { height: 48, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, fontFamily: 'Nunito_400Regular', fontSize: 15 },
   button: { height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  buttonText: { color: '#fff', fontFamily: 'Inter_600SemiBold', fontSize: 16 },
+  buttonText: { color: '#fff', fontFamily: 'Nunito_600SemiBold', fontSize: 16 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },
-  chipText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  chipText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
   guardianLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 32, paddingVertical: 14, borderTopWidth: 1 },
-  guardianText: { fontFamily: 'Inter_500Medium', fontSize: 13 },
-  footnote: { fontFamily: 'Inter_400Regular', fontSize: 11, textAlign: 'center', marginTop: 4 },
+  guardianText: { fontFamily: 'Nunito_500Medium', fontSize: 13 },
+  footnote: { fontFamily: 'Nunito_400Regular', fontSize: 11, textAlign: 'center', marginTop: 4 },
 });

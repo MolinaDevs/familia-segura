@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Alert } from '@/lib/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   getListDeviceAppsQueryKey, useListDeviceApps, useRevokeDevice, useUnlockDeviceInstalls, useUpdateDevice, useUpdateDeviceApp,
 } from '@workspace/api-client-react';
-import { Button, Card, Chip, Divider, EmptyState, Notice, Row, Screen, SectionTitle } from '@/components/ui';
+import { Button, Card, Chip, Divider, EmptyState, Notice, Row, Screen, SectionTitle, Toggle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
@@ -134,11 +134,10 @@ export default function DeviceScreen() {
                 {index > 0 && <Divider />}
                 <Row title={app.label} detail={app.status === 'pending' ? 'Novo · aguardando você' : app.status === 'blocked' ? 'Bloqueado' : 'Liberado'}
                   right={canEdit ? (
-                    <Switch accessibilityLabel={`${app.label} liberado`} value={app.status === 'approved'}
+                    <Toggle accessibilityLabel={`${app.label} liberado`} value={app.status === 'approved'}
                       onValueChange={(on) => updateApp.mutate({ deviceId: device.id, packageName: app.packageName, data: { status: on ? 'approved' : 'blocked' } }, {
                         onSuccess: () => { void apps.refetch(); refetch(); }, onError: (e) => showApiError(e),
-                      })}
-                      trackColor={{ false: colors.border, true: colors.primary }} thumbColor={colors.card} />
+                      })} />
                   ) : undefined} />
               </View>
             ))}
@@ -153,9 +152,9 @@ export default function DeviceScreen() {
 }
 
 const styles = StyleSheet.create({
-  issue: { fontFamily: 'Inter_500Medium', fontSize: 14 },
-  hint: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 6 },
+  issue: { fontFamily: 'Nunito_500Medium', fontSize: 14 },
+  hint: { fontFamily: 'Nunito_400Regular', fontSize: 12, marginTop: 6 },
   inline: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  input: { flex: 1, height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, fontFamily: 'Inter_500Medium', fontSize: 15 },
+  input: { flex: 1, height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, fontFamily: 'Nunito_500Medium', fontSize: 15 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

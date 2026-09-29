@@ -67,7 +67,7 @@ export function DailyUsageChart({ days, height = 170 }: { days: Array<{ date: st
                 )}
                 {over && <Rect x={x + barW / 2 - 3} y={top + plotH - h - 9} width={6} height={6} rx={3} fill={colors.chartLimit} />}
                 {i % labelEvery === 0 && (
-                  <SvgText x={i * slot + slot / 2} y={height - 6} fontSize={10} fontFamily="Inter_500Medium, Inter, system-ui, sans-serif" fill={colors.mutedForeground} textAnchor="middle">
+                  <SvgText x={i * slot + slot / 2} y={height - 6} fontSize={10} fontFamily="Nunito_500Medium, Nunito, system-ui, sans-serif" fill={colors.mutedForeground} textAnchor="middle">
                     {days.length > 10 ? String(new Date(`${d.date}T12:00:00`).getDate()) : WEEKDAYS[new Date(`${d.date}T12:00:00`).getDay()]}
                   </SvgText>
                 )}
@@ -174,25 +174,25 @@ function hex(h: string) {
 }
 
 const styles = StyleSheet.create({
-  tooltip: { fontFamily: 'Inter_500Medium', fontSize: 12, marginBottom: 6, minHeight: 16 },
+  tooltip: { fontFamily: 'Nunito_500Medium', fontSize: 12, marginBottom: 6, minHeight: 16 },
   hitRow: { flexDirection: 'row', bottom: 40 },
   legendRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 },
   legendDash: { width: 16, borderTopWidth: 2, borderStyle: 'dashed' },
-  legendText: { fontFamily: 'Inter_400Regular', fontSize: 11 },
-  empty: { fontFamily: 'Inter_400Regular', fontSize: 13, textAlign: 'center', paddingVertical: 12 },
+  legendText: { fontFamily: 'Nunito_400Regular', fontSize: 11 },
+  empty: { fontFamily: 'Nunito_400Regular', fontSize: 13, textAlign: 'center', paddingVertical: 12 },
   rankHead: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5, gap: 8 },
-  rankLabel: { fontFamily: 'Inter_600SemiBold', fontSize: 13, flex: 1 },
-  rankValue: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  rankLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, flex: 1 },
+  rankValue: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   fill: { height: '100%', borderRadius: 4 },
-  note: { fontFamily: 'Inter_400Regular', fontSize: 11, marginTop: 3 },
+  note: { fontFamily: 'Nunito_400Regular', fontSize: 11, marginTop: 3 },
   heatRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 2 },
-  heatDay: { width: 30, fontFamily: 'Inter_500Medium', fontSize: 10 },
+  heatDay: { width: 30, fontFamily: 'Nunito_500Medium', fontSize: 10 },
   heatCell: { flex: 1, aspectRatio: 1, marginHorizontal: 0.5, borderRadius: 2, borderWidth: 1, maxHeight: 16 },
   heatAxis: { flexDirection: 'row', justifyContent: 'space-between', marginLeft: 30, marginTop: 4 },
-  heatAxisText: { fontFamily: 'Inter_400Regular', fontSize: 10 },
+  heatAxisText: { fontFamily: 'Nunito_400Regular', fontSize: 10 },
   stat: { flex: 1, borderWidth: 1, borderRadius: 18, padding: 14, gap: 4 },
-  statLabel: { fontFamily: 'Inter_500Medium', fontSize: 12 },
-  statValue: { fontFamily: 'Inter_700Bold', fontSize: 22, letterSpacing: -0.5 },
-  statDelta: { fontFamily: 'Inter_600SemiBold', fontSize: 12 },
+  statLabel: { fontFamily: 'Nunito_500Medium', fontSize: 12 },
+  statValue: { fontFamily: 'Fredoka_600SemiBold', fontSize: 22, letterSpacing: -0.5 },
+  statDelta: { fontFamily: 'Nunito_600SemiBold', fontSize: 12 },
 });

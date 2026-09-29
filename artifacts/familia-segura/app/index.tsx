@@ -1,11 +1,63 @@
 import { Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/lib/auth';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { View, ActivityIndicator, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';
-import { useColors } from '@/hooks/useColors';
+import { AccessibilityInfo, Animated, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
+import { useColors } from '@/hooks/useColors';
+import { BrandLoading } from '@/components/brand/BrandLoading';
+import { Logo, SquishyMark } from '@/components/brand/Logo';
+import { SkyBackground } from '@/components/brand/SkyBackground';
+import { AuthButton } from '@/components/auth/AuthKit';
+
+type IconName = React.ComponentProps<typeof Feather>['name'];
+
+/** Entrada em cascata: move, não revela (sem opacity 0 — animação que não roda não esconde conteúdo). */
+function useRise(count: number) {
+  const values = useRef(Array.from({ length: count }, () => new Animated.Value(1))).current;
+  useEffect(() => {
+    let cancelled = false;
+    void AccessibilityInfo.isReduceMotionEnabled().then((reduce) => {
+      if (reduce || cancelled) return;
+      values.forEach((v) => v.setValue(0));
+      Animated.stagger(90, values.map((v) => Animated.spring(v, { toValue: 1, stiffness: 120, damping: 16, useNativeDriver: true }))).start();
+    }).catch(() => undefined);
+    return () => { cancelled = true; };
+  }, [values]);
+  return values.map((v) => ({ transform: [{ translateY: v.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }] }));
+}
+
+/** Um "combinado" como o app mostra de verdade: ícone, regra e onde vale. */
+function RulePill({ icon, dot, title, detail, offset }: { icon: IconName; dot: string; title: string; detail: string; offset: number }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.pill, { backgroundColor: colors.card, borderColor: colors.border, marginLeft: offset, shadowColor: colors.shadow }]}>
+      <View style={[styles.pillIcon, { backgroundColor: dot }]}>
+        <Feather name={icon} size={14} color="#2E2545" />
+      </View>
+      <View style={{ flexShrink: 1 }}>
+        <Text numberOfLines={1} style={[styles.pillTitle, { color: colors.foreground }]}>{title}</Text>
+        <Text numberOfLines={1} style={[styles.pillDetail, { color: colors.mutedForeground }]}>{detail}</Text>
+      </View>
+    </View>
+  );
+}
+
+function ValueRow({ icon, tint, title, detail, last }: { icon: IconName; tint: string; title: string; detail: string; last?: boolean }) {
+  const colors = useColors();
+  return (
+    <View style={[styles.valueRow, !last && { borderBottomWidth: 1, borderBottomColor: colors.border }]}>
+      <View style={[styles.valueIcon, { backgroundColor: tint }]}>
+        <Feather name={icon} size={18} color="#2E2545" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.valueTitle, { color: colors.foreground }]}>{title}</Text>
+        <Text style={[styles.valueDetail, { color: colors.mutedForeground }]}>{detail}</Text>
+      </View>
+    </View>
+  );
+}
 
 export default function Index() {
   const { isSignedIn, isLoaded } = useAuth();
@@ -13,6 +65,7 @@ export default function Index() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const rise = useRise(5);
 
   useEffect(() => {
     AsyncStorage.getItem('childMode')
@@ -22,124 +75,104 @@ export default function Index() {
 
   // Modo criança não espera o login carregar (pode estar sem internet).
   if (isChild) return <Redirect href="/(child)" />;
-
-  if (!isLoaded || isChild === null) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background }}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
-  }
-
+  if (!isLoaded || isChild === null) return <BrandLoading />;
   if (isSignedIn) return <Redirect href="/(app)" />;
 
-  const paddingTop = Platform.OS === 'web' ? Math.max(insets.top, 67) : Math.max(insets.top, 40);
-  const paddingBottom = Platform.OS === 'web' ? Math.max(insets.bottom, 34) : Math.max(insets.bottom, 24);
+  const paddingTop = Platform.OS === 'web' ? Math.max(insets.top, 24) : insets.top + 12;
+  const paddingBottom = Platform.OS === 'web' ? Math.max(insets.bottom, 24) : insets.bottom + 16;
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop, paddingBottom, paddingHorizontal: 24 }]}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.hero}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.secondary }]}>
-          <Feather name="shield" size={42} color={colors.primary} />
-        </View>
+    <SkyBackground>
+      <ScrollView
+        contentContainerStyle={[styles.content, { paddingTop, paddingBottom }]}
+        showsVerticalScrollIndicator={false}
+      >
+        <Animated.View style={rise[0]}>
+          <Logo size={34} />
+        </Animated.View>
 
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          Confiança se constrói com transparência.
-        </Text>
-
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Acompanhe o bem-estar digital da sua família de forma clara e visível. Defina rotinas, combine limites e mostre às crianças exatamente o que está sendo protegido.
-        </Text>
-      </View>
-
-      <View style={styles.features}>
-        <View style={[styles.featureCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.featureIcon, { backgroundColor: colors.secondary }]}>
-            <Feather name="eye" size={24} color={colors.primary} />
+        <Animated.View style={[styles.stage, { backgroundColor: colors.secondary }, rise[1]]}>
+          <SquishyMark size={104} style={styles.stageMark} />
+          <View style={styles.pills}>
+            <RulePill icon="moon" dot={colors.grapeLite} title="Hora de dormir" detail="21h às 7h · tela travada" offset={0} />
+            <RulePill icon="play" dot={colors.butter} title="YouTube Kids" detail="45 min por dia" offset={18} />
+            <RulePill icon="download" dot={colors.mint} title="App novo" detail="só com a sua aprovação" offset={6} />
           </View>
-          <Text style={[styles.featureTitle, { color: colors.foreground }]}>Visibilidade Mútua</Text>
-          <Text style={[styles.featureDesc, { color: colors.mutedForeground }]}>Sem monitoramento oculto. As crianças sabem quais regras estão ativas e o porquê de cada uma delas.</Text>
-        </View>
+        </Animated.View>
 
-        <View style={[styles.featureCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.featureIcon, { backgroundColor: colors.secondary }]}>
-            <Feather name="clock" size={24} color={colors.primary} />
+        <Animated.View style={rise[2]}>
+          <View style={[styles.seal, { backgroundColor: colors.dangerSoft }]}>
+            <Text style={[styles.sealText, { color: colors.accent }]}>ECA DIGITAL · LGPD</Text>
           </View>
-          <Text style={[styles.featureTitle, { color: colors.foreground }]}>Rotinas Saudáveis</Text>
-          <Text style={[styles.featureDesc, { color: colors.mutedForeground }]}>Crie horários previsíveis para estudo, sono e lazer sem interrupções indesejadas.</Text>
-        </View>
-      </View>
+          <Text accessibilityRole="header" style={[styles.title, { color: colors.foreground }]}>
+            Combinados claros para a vida digital da família
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            Tempo de tela, hora de dormir e aprovação de apps no iPhone e no Android. E a criança sempre vê o que está valendo, sem espionagem.
+          </Text>
+        </Animated.View>
 
-      <View style={styles.actions}>
-        <Pressable
-          testID="home-create-account"
-          accessibilityRole="button"
-          onPress={() => router.push('/(auth)/sign-up')}
-          style={({ pressed }) => [styles.primaryButton, { backgroundColor: colors.primary }, pressed && styles.pressed]}
-        >
-          <Text style={[styles.primaryButtonText, { color: colors.primaryForeground }]}>Criar uma conta</Text>
-        </Pressable>
+        <Animated.View style={[styles.values, rise[3]]}>
+          <ValueRow icon="users" tint={colors.mint} title="Uma conta para a família toda"
+            detail="Até 10 crianças e 10 aparelhos, com iPhone e Android misturados." />
+          <ValueRow icon="eye" tint={colors.butter} title="Nada escondido" last
+            detail="A criança vê as regras e pede mais tempo pelo próprio aparelho." />
+        </Animated.View>
 
-        <Pressable
-          testID="home-sign-in"
-          accessibilityRole="button"
-          onPress={() => router.push('/(auth)/sign-in')}
-          style={({ pressed }) => [styles.secondaryButton, { backgroundColor: 'transparent', borderColor: colors.border }, pressed && styles.pressed]}
-        >
-          <Text style={[styles.secondaryButtonText, { color: colors.foreground }]}>Já tenho conta</Text>
-        </Pressable>
-      </View>
+        <Animated.View style={[styles.actions, rise[4]]}>
+          <AuthButton label="Criar conta grátis" onPress={() => router.push('/(auth)/sign-up')} testID="home-create-account" />
+          <AuthButton label="Já tenho conta" variant="outline" onPress={() => router.push('/(auth)/sign-in')} testID="home-sign-in" />
+        </Animated.View>
 
-      <View style={styles.footer}>
-        <View style={[styles.divider, { backgroundColor: colors.border }]} />
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push('/(child)/pair')}
-          style={({ pressed }) => [styles.childLink, pressed && styles.pressed]}
+          style={({ pressed }) => [styles.childLink, { borderTopColor: colors.border }, pressed && { opacity: 0.7 }]}
+          testID="home-child-device"
         >
-          <View style={[styles.childLinkIcon, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.childIcon, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Feather name="smartphone" size={16} color={colors.primary} />
           </View>
-          <Text style={[styles.childLinkText, { color: colors.foreground }]}>
-            Configurar este aparelho para a criança
-          </Text>
-          <Feather name="chevron-right" size={18} color={colors.mutedForeground} style={{ marginLeft: 'auto' }} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.childTitle, { color: colors.foreground }]}>Este aparelho é da criança?</Text>
+            <Text style={[styles.childDetail, { color: colors.mutedForeground }]}>Parear com o código do responsável</Text>
+          </View>
+          <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
         </Pressable>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SkyBackground>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { width: '100%', maxWidth: 760, alignSelf: 'center', flexGrow: 1 },
-  
-  hero: { marginTop: 40, marginBottom: 48, alignItems: 'center' },
-  iconContainer: { width: 88, height: 88, borderRadius: 28, alignItems: 'center', justifyContent: 'center', marginBottom: 28 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 36, lineHeight: 42, letterSpacing: -1.2, marginBottom: 16, textAlign: 'center', maxWidth: 480 },
-  subtitle: { fontFamily: 'Inter_500Medium', fontSize: 16, lineHeight: 24, textAlign: 'center', maxWidth: 500 },
-  
-  features: { gap: 16, marginBottom: 48 },
-  featureCard: { borderWidth: 1, borderRadius: 24, padding: 24 },
-  featureIcon: { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginBottom: 18 },
-  featureTitle: { fontFamily: 'Inter_700Bold', fontSize: 18, marginBottom: 8 },
-  featureDesc: { fontFamily: 'Inter_500Medium', fontSize: 15, lineHeight: 22 },
-  
-  actions: { gap: 14, marginBottom: 48, maxWidth: 400, width: '100%', alignSelf: 'center' },
-  primaryButton: { width: '100%', height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  primaryButtonText: { fontFamily: 'Inter_700Bold', fontSize: 16 },
-  secondaryButton: { width: '100%', height: 56, borderRadius: 16, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  secondaryButtonText: { fontFamily: 'Inter_600SemiBold', fontSize: 16 },
-  
-  footer: { marginTop: 'auto' },
-  divider: { width: '100%', height: 1, marginBottom: 16 },
-  childLink: { flexDirection: 'row', alignItems: 'center', gap: 16, paddingVertical: 16, paddingHorizontal: 12 },
-  childLinkIcon: { width: 40, height: 40, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  childLinkText: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
-  
-  pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+  content: { flexGrow: 1, width: '100%', maxWidth: 560, alignSelf: 'center', paddingHorizontal: 20 },
+
+  stage: { borderRadius: 36, marginTop: 22, padding: 18, paddingVertical: 22, flexDirection: 'row', alignItems: 'center', gap: 6, overflow: 'hidden' },
+  stageMark: { marginLeft: -2 },
+  pills: { flex: 1, gap: 8 },
+  pill: {
+    flexDirection: 'row', alignItems: 'center', gap: 9, borderWidth: 1, borderRadius: 16, paddingVertical: 8, paddingHorizontal: 10,
+    shadowOpacity: 0.08, shadowRadius: 12, shadowOffset: { width: 0, height: 6 }, elevation: 1,
+  },
+  pillIcon: { width: 26, height: 26, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
+  pillTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 13 },
+  pillDetail: { fontFamily: 'Nunito_600SemiBold', fontSize: 11.5 },
+
+  seal: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 5, marginTop: 28 },
+  sealText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 11, letterSpacing: 1.6 },
+  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 32, lineHeight: 38, letterSpacing: -0.7, marginTop: 12 },
+  subtitle: { fontFamily: 'Nunito_500Medium', fontSize: 16, lineHeight: 24, marginTop: 10, maxWidth: 520 },
+
+  values: { marginTop: 22 },
+  valueRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, paddingVertical: 14 },
+  valueIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  valueTitle: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15.5 },
+  valueDetail: { fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20, marginTop: 2 },
+
+  actions: { gap: 10, marginTop: 20 },
+
+  childLink: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 'auto', paddingTop: 18, marginBottom: 4, borderTopWidth: 1, minHeight: 64 },
+  childIcon: { width: 40, height: 40, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  childTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15 },
+  childDetail: { fontFamily: 'Nunito_500Medium', fontSize: 13, marginTop: 1 },
 });

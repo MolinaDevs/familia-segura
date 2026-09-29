@@ -2,6 +2,7 @@ import { Redirect } from 'expo-router';
 import { View, ActivityIndicator, Pressable, StyleSheet, Text } from 'react-native';
 import { getGetFamilyOverviewQueryKey, useGetFamilyOverview } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
+import { BrandLoading } from '@/components/brand/BrandLoading';
 
 export default function AppGateway() {
   const colors = useColors();
@@ -10,12 +11,7 @@ export default function AppGateway() {
   });
 
   if (isLoading) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.primary} />
-        <Text style={[styles.message, { color: colors.mutedForeground }]}>Carregando sua família...</Text>
-      </View>
-    );
+    return <BrandLoading detail="Carregando sua família..." />;
   }
 
   const errorStatus = (error as { status?: number } | null)?.status;
@@ -54,9 +50,9 @@ export default function AppGateway() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 21, textAlign: 'center' },
-  message: { fontFamily: 'Inter_400Regular', fontSize: 14, lineHeight: 21, textAlign: 'center', maxWidth: 320 },
+  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 21, textAlign: 'center' },
+  message: { fontFamily: 'Nunito_400Regular', fontSize: 14, lineHeight: 21, textAlign: 'center', maxWidth: 320 },
   retry: { height: 48, minWidth: 180, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  retryText: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  retryText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
   pressed: { opacity: 0.72 },
 });

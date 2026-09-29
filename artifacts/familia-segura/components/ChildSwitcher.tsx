@@ -57,6 +57,6 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 99, paddingLeft: 5, paddingRight: 14, paddingVertical: 5, minHeight: 40 },
   add: { paddingHorizontal: 12, borderStyle: 'dashed' },
   avatar: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  initial: { color: '#FFFFFF', fontFamily: 'Inter_700Bold', fontSize: 13 },
-  label: { fontFamily: 'Inter_600SemiBold', fontSize: 14 },
+  initial: { color: '#FFFFFF', fontFamily: 'Nunito_700Bold', fontSize: 13 },
+  label: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
 });

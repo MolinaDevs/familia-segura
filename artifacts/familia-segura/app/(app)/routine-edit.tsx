@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { StyleSheet, Text, TextInput, View } from 'react-native';
 import { Alert } from '@/lib/alert';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCreateRoutine, useDeleteRoutine, useUpdateRoutine } from '@workspace/api-client-react';
-import { Button, Chip, Notice, Screen, SectionTitle } from '@/components/ui';
+import { Button, Chip, Notice, Screen, SectionTitle, Toggle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
@@ -120,8 +120,7 @@ export default function RoutineEditScreen() {
             Android: o aparelho trava sempre que for desbloqueado durante a rotina. Ligações, emergência e despertador continuam funcionando. No iPhone e iPad os apps ficam pausados.
           </Text>
         </View>
-        <Switch value={lockScreen} onValueChange={setLockScreen} testID="routine-lock-screen" accessibilityLabel="Travar a tela durante a rotina"
-          trackColor={{ true: colors.primary, false: colors.muted }} />
+        <Toggle value={lockScreen} onValueChange={setLockScreen} testID="routine-lock-screen" accessibilityLabel="Travar a tela durante a rotina" />
       </View>
 
       <View style={{ height: 20 }} />
@@ -136,10 +135,10 @@ const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   days: { flexDirection: 'row', gap: 6 },
   times: { flexDirection: 'row', gap: 12 },
-  input: { height: 52, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Inter_500Medium', fontSize: 16 },
-  time: { textAlign: 'center', fontFamily: 'Inter_700Bold', fontSize: 20 },
-  label: { fontFamily: 'Inter_500Medium', fontSize: 12, marginBottom: 6 },
-  hint: { fontFamily: 'Inter_400Regular', fontSize: 12, marginTop: 8 },
+  input: { height: 52, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Nunito_500Medium', fontSize: 16 },
+  time: { textAlign: 'center', fontFamily: 'Fredoka_600SemiBold', fontSize: 20 },
+  label: { fontFamily: 'Nunito_500Medium', fontSize: 12, marginBottom: 6 },
+  hint: { fontFamily: 'Nunito_400Regular', fontSize: 12, marginTop: 8 },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 14 },
-  toggleTitle: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
+  toggleTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
 });

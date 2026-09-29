@@ -21,8 +21,8 @@ export function SectionHeader({ title, action, onPress }: { title: string; actio
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  title: { fontFamily: 'Inter_700Bold', fontSize: 18, letterSpacing: -0.3 },
+  title: { fontFamily: 'Nunito_700Bold', fontSize: 18, letterSpacing: -0.3 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  actionText: { fontFamily: 'Inter_600SemiBold', fontSize: 13 },
+  actionText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
   pressed: { opacity: 0.65 },
 });

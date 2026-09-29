@@ -151,8 +151,8 @@ export default function AddAppScreen() {
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  search: { height: 48, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Inter_500Medium', fontSize: 15 },
+  search: { height: 48, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Nunito_500Medium', fontSize: 15 },
   item: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  name: { fontFamily: 'Inter_600SemiBold', fontSize: 15 },
-  cat: { fontFamily: 'Inter_500Medium', fontSize: 12 },
+  name: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  cat: { fontFamily: 'Nunito_500Medium', fontSize: 12 },
 });
