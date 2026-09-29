@@ -13,7 +13,6 @@ import android.os.PowerManager
 import android.provider.Settings
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
-import expo.modules.kotlin.objects.ReadableArguments
 import org.json.JSONObject
 
 class FamiliaSeguraAndroidControlsModule : Module() {
@@ -79,8 +78,9 @@ class FamiliaSeguraAndroidControlsModule : Module() {
       if (isAdminActive()) dpm.removeActiveAdmin(adminComponent)
     }
 
-    Function("savePolicies") { policy: ReadableArguments ->
-      PolicyStore.save(context, JSONObject(policy.toMap()))
+    // O Expo converte o objeto JS em Map (listas viram List); JSONObject(Map) converte o aninhamento em JSONArray.
+    Function("savePolicies") { policy: Map<String, Any?> ->
+      PolicyStore.save(context, JSONObject(policy))
     }
 
     Function("setGuardianUnlock") { minutes: Int ->

@@ -70,7 +70,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Prebuild iOS
         working-directory: artifacts/familia-segura
-        run: npx expo prebuild --platform ios --clean
+        # --no-install: sem perguntas interativas no CI; os pods são instalados na etapa seguinte.
+        run: npx expo prebuild --platform ios --clean --no-install
+      - name: Instalar pods
+        working-directory: artifacts/familia-segura/ios
+        run: pod install
       - name: Compilar para simulador
         working-directory: artifacts/familia-segura/ios
         run: |
