@@ -146,3 +146,11 @@ Como repetir: `docs/TESTE_LOCAL.md`.
 - **Pedido para instalar app** pela criança (migration 0004, `kind: "install"`): aprovar libera 15 min no aparelho que pediu.
 - `Alert` compatível com a web (modo demonstração); critério único de "sem contato" (3 h) em todas as telas.
 - 54 testes de API; fluxo de pedido de instalação testado no navegador.
+
+### Revisão (2026-09-29, 3) ✅
+- Auditoria de acesso entre famílias (IDOR) nas rotas: sem achados.
+- **Despertador liberado durante rotinas** no Android (alarme da manhã tocava dentro da rotina de sono e não podia ser desligado).
+- **Desvincular no próprio aparelho** (`POST /child/unpair`): revoga a credencial na hora e avisa os responsáveis
+  (alerta mais forte quando não há PIN). iPhone também revoga a autorização do Tempo de Uso ao desvincular.
+- Serviço de acessibilidade mais leve: leitura de tela em Configurações limitada (~1,4x/s) e tela inicial/teclado em cache.
+- 55 testes de API. Resultado do CI do GitHub ainda não conferido (repositório privado, sem sessão no navegador).

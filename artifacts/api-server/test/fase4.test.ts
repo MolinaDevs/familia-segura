@@ -166,3 +166,21 @@ describe("pedido para instalar app", () => {
     expect(byGuardian.status).toBe(400);
   });
 });
+
+describe("desvincular no próprio aparelho", () => {
+  it("revoga a credencial e avisa os responsáveis (alerta mais forte sem PIN)", async () => {
+    const { setPushTransport } = await import("../src/lib/push");
+    const family = await createFamily();
+    const { deviceToken } = await pairDevice("user_owner", family.children[0].id);
+    await api().post("/api/family/push-tokens").set(asGuardian("user_owner")).send({ token: "ExponentPushToken[ana]", platform: "ios" }).expect(204);
+    const sent: Array<{ title?: string; body?: string }> = [];
+    setPushTransport(async (m) => { sent.push(...m); });
+    await api().post("/api/child/unpair").set(asDevice(deviceToken)).expect(204);
+    setPushTransport(null);
+    expect(sent[0].title).toContain("desvinculado");
+    expect(sent[0].body).toContain("sem PIN");
+    expect((await api().get("/api/child/overview").set(asDevice(deviceToken))).status).toBe(401);
+    const overview = (await api().get("/api/family").set(asGuardian("user_owner"))).body;
+    expect(overview.devices).toHaveLength(0);
+  });
+});

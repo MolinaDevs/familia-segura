@@ -63,6 +63,8 @@ export async function clearChildDevice() {
     try {
       native?.stopMonitoring();
       native?.clearAllManagedSettingsStoreSettings();
+      // Sem a autorização "child", o app volta a poder ser apagado normalmente (fim do vínculo com a família).
+      await native?.revokeAuthorization().catch(() => undefined);
     } catch {
       // sem autorização: nada aplicado
     }

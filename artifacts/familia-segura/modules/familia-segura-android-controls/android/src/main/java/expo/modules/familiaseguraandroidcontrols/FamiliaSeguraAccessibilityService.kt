@@ -42,7 +42,13 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
       "com.android.dialer", "com.google.android.dialer", "com.samsung.android.dialer", "com.android.phone",
       "com.android.server.telecom", "com.android.emergency", "com.google.android.apps.safetyhub",
       "com.samsung.android.emergency", "com.android.incallui", "com.samsung.android.incallui",
+      // Relógio/despertador: o alarme da manhã toca dentro da rotina de sono e precisa ser desligado.
+      "com.google.android.deskclock", "com.android.deskclock", "com.sec.android.app.clockpackage",
+      "com.android.alarmclock", "com.miui.clock", "com.coloros.alarmclock", "com.oneplus.deskclock",
+      "com.motorola.timeweatherwidget", "com.huawei.deskclock",
     )
+    private const val CONTENT_CHECK_MS = 700L
+    private const val SYSTEM_PACKAGES_TTL_MS = 60_000L
     private val TAMPER_WORDS = listOf(
       "desinstalar", "uninstall", "forçar parada", "forcar parada", "force stop", "desativar", "deactivate", "disable",
       "limpar dados", "limpar armazenamento", "clear data", "clear storage", "remover", "turn off", "usar ",
@@ -55,6 +61,10 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
   private var lastBlockAt = 0L
   private var lastBlockedPackage: String? = null
   private var appLabelLower = "família segura"
+  private var lastContentCheck = 0L
+  private var systemPackagesAt = 0L
+  private var homePackage: String? = null
+  private var keyboardPackage: String? = null
 
   private val ticker = object : Runnable {
     override fun run() {
@@ -124,8 +134,15 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
         evaluate(pkg)
       }
       AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED -> {
-        // Conteúdo muda sem trocar de janela (ex.: rolar até o app em Configurações).
-        if (pkg in SETTINGS_PACKAGES || pkg in INSTALLER_PACKAGES || pkg == PLAY_STORE) isTamperScreen(pkg)
+        // Conteúdo muda sem trocar de janela (ex.: rolar até o app em Configurações). Limitado a ~1,4x/s:
+        // ler a árvore da tela a cada evento de rolagem gasta bateria à toa.
+        if (pkg in SETTINGS_PACKAGES || pkg in INSTALLER_PACKAGES || pkg == PLAY_STORE) {
+          val now = System.currentTimeMillis()
+          if (now - lastContentCheck >= CONTENT_CHECK_MS) {
+            lastContentCheck = now
+            isTamperScreen(pkg)
+          }
+        }
       }
     }
   }
@@ -247,9 +264,18 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
   private fun shouldIgnore(pkg: String): Boolean {
     if (pkg == packageName || pkg == "android" || pkg == "com.android.systemui" || pkg in ALWAYS_ALLOWED) return true
     if (pkg in SETTINGS_PACKAGES || pkg in INSTALLER_PACKAGES) return true
-    val home = packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName
-    val keyboard = android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.DEFAULT_INPUT_METHOD)
-    return pkg == home || (keyboard != null && keyboard.startsWith("$pkg/"))
+    refreshSystemPackages()
+    return pkg == homePackage || pkg == keyboardPackage
+  }
+
+  /** Tela inicial e teclado mudam raramente: consulta no máximo 1x por minuto (evita IPC a cada troca de app). */
+  private fun refreshSystemPackages() {
+    val now = System.currentTimeMillis()
+    if (now - systemPackagesAt < SYSTEM_PACKAGES_TTL_MS) return
+    systemPackagesAt = now
+    homePackage = packageManager.resolveActivity(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME), 0)?.activityInfo?.packageName
+    keyboardPackage = android.provider.Settings.Secure.getString(contentResolver, android.provider.Settings.Secure.DEFAULT_INPUT_METHOD)
+      ?.substringBefore("/")
   }
 
   private fun routineActive(policy: JSONObject): Boolean {

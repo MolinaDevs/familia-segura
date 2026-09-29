@@ -229,6 +229,24 @@ router.post("/child/verify-pin", requireDevice, async (req: AuthedRequest, res):
   res.json(VerifyGuardianPinResponse.parse({ valid }));
 });
 
+/** Desvinculado no próprio aparelho: revoga na hora e avisa (sem PIN definido, pode ter sido a criança). */
+router.post("/child/unpair", requireDevice, async (req: AuthedRequest, res): Promise<void> => {
+  const device = req.device!;
+  const [family] = await db.select({ pin: familiesTable.guardianPinHash }).from(familiesTable).where(eq(familiesTable.id, device.familyId));
+  await db.update(devicesTable).set({ status: "revoked", pushToken: null }).where(eq(devicesTable.id, device.id));
+  await db.insert(deviceEventsTable).values({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "protection_disabled", detail: "Aparelho desvinculado no próprio aparelho" });
+  await db.insert(auditEventsTable).values({ familyId: device.familyId, action: "device.unpaired_on_device", summary: `Aparelho "${device.name}" desvinculado no próprio aparelho` });
+  const ctx = await deviceContext(device.id);
+  await notifyGuardians(device.familyId, {
+    title: `Aparelho de ${ctx?.childName ?? "sua criança"} foi desvinculado`,
+    body: family?.pin
+      ? `"${device.name}" foi desvinculado na Área do responsável (com o PIN).`
+      : `"${device.name}" foi desvinculado sem PIN. Defina um PIN para impedir isso e pareie o aparelho de novo.`,
+    data: { type: "tamper", deviceId: device.id },
+  });
+  res.sendStatus(204);
+});
+
 router.post("/child/push-token", requireDevice, async (req: AuthedRequest, res): Promise<void> => {
   const input = RegisterDevicePushTokenBody.safeParse(req.body);
   if (!input.success) { fail(res, 400, input.error.message); return; }

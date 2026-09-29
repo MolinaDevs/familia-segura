@@ -1428,6 +1428,12 @@ export const VerifyGuardianPinResponse = zod.object({
 })
 
 
+/**
+ * Desvinculação feita no próprio aparelho (Área do responsável). Revoga a credencial e avisa os responsáveis.
+ */
+export const UnpairOwnDeviceResponse = zod.void()
+
+
 export const registerDevicePushTokenBodyTokenMin = 10;
 export const registerDevicePushTokenBodyTokenMax = 300;
 

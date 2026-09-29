@@ -3308,6 +3308,77 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       return useMutation(getVerifyGuardianPinMutationOptions(options));
     }
 
+export const getUnpairOwnDeviceUrl = () => {
+
+
+
+
+  return `/api/child/unpair`
+}
+
+/**
+ * Desvinculação feita no próprio aparelho (Área do responsável). Revoga a credencial e avisa os responsáveis.
+ */
+export const unpairOwnDevice = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getUnpairOwnDeviceUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnpairOwnDeviceMutationKey = () => ['unpairOwnDevice'] as const;
+
+export const getUnpairOwnDeviceMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpairOwnDevice>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unpairOwnDevice>>, TError,void, TContext> => {
+
+const mutationKey = getUnpairOwnDeviceMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unpairOwnDevice>>, void> = () => {
+
+
+          return  unpairOwnDevice(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnpairOwnDeviceMutationResult = NonNullable<Awaited<ReturnType<typeof unpairOwnDevice>>>
+
+    export type UnpairOwnDeviceMutationError = ErrorType<UnauthorizedResponse>
+
+
+    export const useUnpairOwnDevice = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unpairOwnDevice>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unpairOwnDevice>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getUnpairOwnDeviceMutationOptions(options));
+    }
+
 export const getRegisterDevicePushTokenUrl = () => {
 
 

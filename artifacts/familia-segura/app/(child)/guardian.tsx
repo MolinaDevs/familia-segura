@@ -8,7 +8,8 @@ import { goBack } from '@/lib/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { checkGuardianPin } from '@/services/guardianPin';
-import { clearChildDevice, loadCachedOverview, runChildSync } from '@/services/childSync';
+import { clearChildDevice, deviceAuthHeaders, loadCachedOverview, runChildSync } from '@/services/childSync';
+import { unpairOwnDevice } from '@workspace/api-client-react';
 import { unregisterChildBackgroundSync } from '@/services/backgroundSync';
 import { removeAndroidDeviceAdmin, setAndroidGuardianUnlock } from '@/services/androidParentalControls';
 import { unlockIosInstallations } from '@/services/iosDeviceProtection';
@@ -74,13 +75,16 @@ export default function GuardianAreaScreen() {
   const unpair = () => {
     Alert.alert(
       'Desvincular este aparelho',
-      'A proteção será desligada e o aparelho deixará de seguir as regras da família. Para voltar, será preciso um novo código de pareamento.',
+      'A proteção será desligada, o aparelho deixará de seguir as regras da família e os responsáveis serão avisados. Para voltar, será preciso um novo código de pareamento.',
       [
         { text: 'Cancelar', style: 'cancel' },
         {
           text: 'Desvincular',
           style: 'destructive',
           onPress: async () => {
+            // Avisa o servidor primeiro: revoga a credencial e notifica os responsáveis.
+            const headers = await deviceAuthHeaders();
+            if (headers) await unpairOwnDevice({ headers }).catch(() => undefined);
             if (Platform.OS === 'android') removeAndroidDeviceAdmin();
             await unregisterChildBackgroundSync();
             await clearChildDevice();
@@ -132,7 +136,7 @@ export default function GuardianAreaScreen() {
             <View style={[styles.warning, { backgroundColor: colors.muted }]}>
               <Feather name="alert-triangle" size={18} color={colors.accent} />
               <Text style={[styles.detail, { color: colors.foreground, flex: 1 }]}>
-                Sua família ainda não definiu um PIN. Defina no app do responsável (Configurações) para ativar a proteção contra desinstalação.
+                Sua família ainda não definiu um PIN. Defina no app do responsável (Configurações) para proteger esta área e impedir a desinstalação. Qualquer ação aqui é avisada aos responsáveis.
               </Text>
             </View>
           )}

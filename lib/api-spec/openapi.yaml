@@ -677,6 +677,15 @@ paths:
               schema: { $ref: "#/components/schemas/PinVerifyResult" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "429": { $ref: "#/components/responses/TooManyRequests" }
+  /child/unpair:
+    post:
+      operationId: unpairOwnDevice
+      tags: [child]
+      description: Desvinculação feita no próprio aparelho (Área do responsável). Revoga a credencial e avisa os responsáveis.
+      responses:
+        "204":
+          description: Aparelho desvinculado
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /child/push-token:
     post:
       operationId: registerDevicePushToken
