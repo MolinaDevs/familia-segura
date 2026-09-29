@@ -88,4 +88,16 @@ jobs:
             grep -n -B2 -A12 "The following build commands failed" build.log | head -40
           fi
           xcodebuild -version
+          echo "===== grafo de dependências ====="
+          grep -n -A40 "Target dependency graph" build.log | head -60
           exit $STATUS
+      - name: Guardar log do build iOS
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: |
+            artifacts/familia-segura/ios/build.log
+            artifacts/familia-segura/ios/Podfile
+            artifacts/familia-segura/ios/Podfile.properties.json
+          if-no-files-found: ignore
