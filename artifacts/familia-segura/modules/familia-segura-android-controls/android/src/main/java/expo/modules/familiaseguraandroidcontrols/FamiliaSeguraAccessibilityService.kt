@@ -346,7 +346,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val dpm = getSystemService(DevicePolicyManager::class.java)
     val admin = ComponentName(this, FamiliaSeguraDeviceAdminReceiver::class.java)
     return dpm.isAdminActive(admin) && try {
-      dpm.hasGrantedPolicy(admin, DevicePolicyManager.USES_POLICY_FORCE_LOCK)
+      dpm.hasGrantedPolicy(admin, PolicyStore.USES_POLICY_FORCE_LOCK)
     } catch (_: SecurityException) { false }
   }
 

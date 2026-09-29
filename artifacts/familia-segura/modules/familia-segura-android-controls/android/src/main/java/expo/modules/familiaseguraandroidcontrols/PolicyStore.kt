@@ -12,6 +12,8 @@ import org.json.JSONObject
  * - events: fila de eventos (adulteração, instalação...) enviada pelo JS ao servidor
  */
 internal object PolicyStore {
+  /** DeviceAdminInfo.USES_POLICY_FORCE_LOCK (valor estável, mas a constante é oculta no SDK público). */
+  const val USES_POLICY_FORCE_LOCK = 3
   private const val PREFS = "familia_segura_policies"
   private const val KEY = "policies"
   private const val KEY_UNLOCK = "guardian_unlock_until"

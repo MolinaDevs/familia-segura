@@ -150,7 +150,7 @@ class FamiliaSeguraAndroidControlsModule : Module() {
 
   /** Administrador ativo E com a política de travar a tela (admins de versões antigas precisam reativar). */
   private fun isAdminFullyActive(): Boolean = isAdminActive() && try {
-    context.getSystemService(DevicePolicyManager::class.java).hasGrantedPolicy(adminComponent, DevicePolicyManager.USES_POLICY_FORCE_LOCK)
+    context.getSystemService(DevicePolicyManager::class.java).hasGrantedPolicy(adminComponent, PolicyStore.USES_POLICY_FORCE_LOCK)
   } catch (_: SecurityException) { false }
 
   private fun batteryLevel(): Int {
