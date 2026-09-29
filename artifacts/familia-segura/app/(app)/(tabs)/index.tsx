@@ -33,8 +33,21 @@ export default function HomeScreen() {
     const device = data.allDevices.find((d) => d.id === deviceId);
     return data.children.find((c) => c.id === device?.childId)?.displayName ?? '';
   };
-  const unhealthy = data.allDevices.filter((d) => d.protectionState === 'disabled' || d.protectionState === 'partial' || !d.online);
-  const alerts = data.recentEvents.filter((e) => EVENT_LABEL[e.type] && Date.now() - new Date(e.occurredAt).getTime() < 48 * 3600_000).slice(0, 3);
+  // Um alerta por aparelho, com o problema mais grave. "Sem contato" só após 3 h (a sincronização em
+  // segundo plano do sistema pode levar ~15 min, e o celular desligado à noite é normal).
+  const STALE_MS = 3 * 3600_000;
+  const shortDate = (iso: string | Date) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  type DeviceAlert = { d: (typeof data.allDevices)[number]; tone: 'danger' | 'warning'; icon: 'shield-off' | 'wifi-off' | 'alert-triangle'; text: string };
+  const deviceAlerts = data.allDevices.flatMap((d): DeviceAlert[] => {
+    const childLabel = data.children.find((c) => c.id === d.childId)?.displayName ?? '';
+    const tamper = data.recentEvents.find((e) => e.deviceId === d.id && EVENT_LABEL[e.type] && Date.now() - new Date(e.occurredAt).getTime() < 48 * 3600_000);
+    const stale = Date.now() - new Date(d.lastSeenAt).getTime() > STALE_MS;
+    if (d.protectionState === 'disabled') return [{ d, tone: 'danger', icon: 'shield-off', text: `${d.name} (${childLabel}): proteção desligada${stale ? ` · sem contato desde ${shortDate(d.lastSeenAt)}` : ''}` }];
+    if (tamper) return [{ d, tone: 'danger', icon: 'shield-off', text: `${d.name} (${childLabel}): ${EVENT_LABEL[tamper.type].toLowerCase()} · ${shortDate(tamper.occurredAt)}` }];
+    if (stale) return [{ d, tone: 'warning', icon: 'wifi-off', text: `${d.name} (${childLabel}): sem contato desde ${shortDate(d.lastSeenAt)}` }];
+    if (d.protectionState === 'partial') return [{ d, tone: 'warning', icon: 'alert-triangle', text: `${d.name} (${childLabel}): proteção incompleta${d.protectionIssues[0] ? ` — ${d.protectionIssues[0]}` : ''}` }];
+    return [];
+  });
 
   const steps = [
     { done: Boolean(overview?.settings.hasGuardianPin), title: 'Definir o PIN do responsável', detail: 'Necessário para impedir desinstalação.', go: () => router.push('/(app)/settings') },
@@ -69,20 +82,12 @@ export default function HomeScreen() {
         </Card>
       )}
 
-      {(unhealthy.length > 0 || alerts.length > 0) && (
+      {deviceAlerts.length > 0 && (
         <View style={{ gap: 8, marginBottom: 20 }}>
-          {unhealthy.slice(0, 3).map((d) => (
-            <Pressable key={d.id} onPress={() => router.push({ pathname: '/(app)/device/[id]', params: { id: d.id } })}>
-              <Notice icon="alert-triangle" tone={d.protectionState === 'disabled' ? 'danger' : 'warning'}>
-                {`${d.name} (${data.children.find((c) => c.id === d.childId)?.displayName ?? ''}): `}
-                {!d.online ? 'sem contato há algum tempo' : d.protectionState === 'disabled' ? 'proteção desligada' : `proteção incompleta${d.protectionIssues[0] ? ` — ${d.protectionIssues[0]}` : ''}`}
-              </Notice>
+          {deviceAlerts.slice(0, 4).map(({ d, tone, icon, text }) => (
+            <Pressable key={d.id} accessibilityRole="button" onPress={() => router.push({ pathname: '/(app)/device/[id]', params: { id: d.id } })}>
+              <Notice icon={icon} tone={tone}>{text}</Notice>
             </Pressable>
-          ))}
-          {alerts.map((e) => (
-            <Notice key={e.id} icon="shield-off" tone="danger">
-              {`${EVENT_LABEL[e.type]} · ${childName(e.deviceId)} (${deviceName(e.deviceId)}) · ${new Date(e.occurredAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })}`}
-            </Notice>
           ))}
         </View>
       )}

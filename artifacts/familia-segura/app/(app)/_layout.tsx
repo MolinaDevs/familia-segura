@@ -1,5 +1,5 @@
 import { Redirect, Stack } from 'expo-router';
-import { useAuth } from '@clerk/expo';
+import { DEV_AUTH, useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import { setAuthTokenGetter } from '@workspace/api-client-react';
 import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
@@ -11,7 +11,7 @@ export default function AppLayout() {
   const colors = useColors();
   
   useEffect(() => {
-    setAuthTokenGetter(Platform.OS === 'web' ? null : () => getToken());
+    setAuthTokenGetter(Platform.OS === 'web' && !DEV_AUTH ? null : () => getToken());
   }, [getToken]);
 
   // Alertas do responsável (pedidos de tempo, apps novos, adulteração). Só pede permissão uma vez.

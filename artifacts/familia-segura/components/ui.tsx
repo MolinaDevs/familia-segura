@@ -8,6 +8,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 
+import { goBack } from '@/lib/navigation';
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
 /** Tela padrão: rolagem, margens seguras, título e (opcional) botão de voltar. */
@@ -33,7 +34,7 @@ export function Screen({
       {(back || right) && (
         <View style={styles.nav}>
           {back ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => router.back()} hitSlop={10}
+            <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => goBack()} hitSlop={10}
               style={[styles.backBtn, { borderColor: colors.border, backgroundColor: colors.card }]}>
               <Feather name="arrow-left" size={20} color={colors.foreground} />
             </Pressable>

@@ -43,7 +43,9 @@ router.get("/family/reports/usage", requireMember(), async (req: AuthedRequest, 
       where family_id = ${familyId} and ${inScope("child_id")} and day between ${from} and ${to} group by day`),
     rows<{ minutes: number }>(sql`select coalesce(sum(minutes), 0)::int as minutes from usage_daily
       where family_id = ${familyId} and ${inScope("child_id")} and day between ${prevFrom} and ${prevTo}`),
-    rows<{ app_id: string; minutes: number; estimated: boolean }>(sql`select app_id, sum(minutes)::int as minutes, bool_or(precision = 'estimated') as estimated
+    // "Aproximado" só quando a maior parte do tempo do app veio de iPhone/iPad (faixas da Apple).
+    rows<{ app_id: string; minutes: number; estimated: boolean }>(sql`select app_id, sum(minutes)::int as minutes,
+      (coalesce(sum(minutes) filter (where precision = 'estimated'), 0) * 2 > sum(minutes)) as estimated
       from usage_daily where family_id = ${familyId} and ${inScope("child_id")} and day between ${from} and ${to}
       group by app_id order by 2 desc limit 20`),
     rows<{ weekday: number; hour: number; minutes: number }>(sql`select extract(dow from day)::int as weekday, hour, sum(minutes)::int as minutes

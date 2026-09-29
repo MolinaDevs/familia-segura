@@ -16,7 +16,7 @@ import {
   type FamilyLimits,
   type TimeRequest,
 } from '@workspace/api-client-react';
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '@/lib/auth';
 import { showApiError } from '@/lib/apiErrors';
 
 export type AppStatus = 'permitido' | 'atenção' | 'bloqueado';
@@ -131,7 +131,10 @@ function mapOverview(overview: FamilyOverview | undefined, selectedChildId: stri
       dailyLimit: app.dailyLimitMinutes,
       extraToday: app.extraTodayMinutes,
       effectiveLimit: app.effectiveLimitMinutes,
-      status: statusLabel(app.status),
+      // "Atenção" quando já usou 80% do limite de hoje (o status salvo continua "permitido").
+      status: app.status === AppRuleStatus.allowed && app.effectiveLimitMinutes > 0 && app.usageTodayMinutes >= app.effectiveLimitMinutes * 0.8
+        ? 'atenção'
+        : statusLabel(app.status),
     })),
     routines: overview.routines.filter((r) => r.childId === childId).map((r) => ({
       id: r.id, title: r.title, description: r.description, days: r.days, start: r.startTime, end: r.endTime, enabled: r.enabled, icon: r.icon,

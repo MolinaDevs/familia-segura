@@ -10,6 +10,7 @@ import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
+import { goBack } from '@/lib/navigation';
 const LIMITS = [15, 30, 45, 60, 90, 120, 180];
 
 export default function AppDetailScreen() {
@@ -33,7 +34,7 @@ export default function AppDetailScreen() {
     { text: 'Cancelar', style: 'cancel' },
     {
       text: 'Remover', style: 'destructive', onPress: () => data.childId && deleteRule.mutate({ childId: data.childId, appId: app.id }, {
-        onSuccess: () => { refetch(); router.back(); },
+        onSuccess: () => { refetch(); goBack('/(app)/(tabs)/apps'); },
         onError: (error) => showApiError(error),
       }),
     },

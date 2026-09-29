@@ -1,5 +1,5 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '@/lib/auth';
 import { useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator, Text, StyleSheet, Pressable, ScrollView, Platform } from 'react-native';

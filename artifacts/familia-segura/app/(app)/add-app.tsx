@@ -10,6 +10,7 @@ import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
+import { goBack } from '@/lib/navigation';
 const LIMITS = [0, 15, 30, 45, 60, 90, 120];
 
 export default function AddAppScreen() {
@@ -41,7 +42,7 @@ export default function AddAppScreen() {
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         refetch();
         setSelected(null);
-        router.back();
+        goBack('/(app)/(tabs)/apps');
       },
       onError: (error) => showApiError(error),
     });
@@ -49,7 +50,7 @@ export default function AddAppScreen() {
 
   if (selected) {
     return (
-      <Screen back title={selected.name} subtitle={`Regra para ${data.childName}. Vale em todos os aparelhos dela.`}>
+      <Screen back title={selected.name} subtitle={`Regra para ${data.childName}. Vale em todos os aparelhos de ${data.childName}.`}>
         <View style={{ alignItems: 'center', marginVertical: 20 }}><AppIcon name={selected.icon} color={selected.iconColor} size={64} /></View>
         <SectionTitle>Limite diário</SectionTitle>
         <View style={styles.chips}>

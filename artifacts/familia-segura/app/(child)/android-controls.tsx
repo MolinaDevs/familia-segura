@@ -16,6 +16,7 @@ import {
 } from '@/services/androidParentalControls';
 import { runChildSync } from '@/services/childSync';
 
+import { goBack } from '@/lib/navigation';
 const DISCLOSURE_KEY = '@familia-segura/android-accessibility-disclosure';
 
 const stateCopy = {
@@ -81,7 +82,7 @@ export default function AndroidControlsScreen() {
       }]}
     >
       <View style={styles.nav}>
-        <Pressable testID="android-controls-back" onPress={() => router.back()} hitSlop={10}>
+        <Pressable testID="android-controls-back" onPress={() => goBack('/(child)/guardian')} hitSlop={10}>
           <Feather name="arrow-left" size={23} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Controle no Android</Text>

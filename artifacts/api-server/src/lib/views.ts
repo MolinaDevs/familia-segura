@@ -8,7 +8,8 @@ import { ageBand, localDate } from "./time";
 import { familyPlan, PLAN_LIMITS } from "./limits";
 import { PIN_ALGORITHM } from "./codes";
 
-const ONLINE_WINDOW_MS = 15 * 60 * 1000;
+// 3 ciclos da sincronização em segundo plano (~15 min cada): evita alarme falso de "sem contato".
+const ONLINE_WINDOW_MS = 45 * 60 * 1000;
 
 export const childView = (c: Child) => ({
   id: c.id, displayName: c.displayName, birthYear: c.birthYear, color: c.color, ageBand: ageBand(c.birthYear),

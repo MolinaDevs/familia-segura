@@ -119,3 +119,14 @@ Corrigido:
 - **Alertas de adulteração não se perdem**: buffer persistente, enviados antes do inventário.
 - Telemetria do Clerk desligada (app e API); build sem `EXPO_PUBLIC_API_URL` mostra "configuração ausente".
 - Verificado: API compilada sobe e responde em modo produção; 50 testes; pacotes Android/iOS.
+
+### Teste local no navegador (2026-09-29) ✅
+Modo demonstração (DEV_AUTH, só desenvolvimento) + `seed:demo`; app do responsável aberto no navegador em tela de
+celular, claro e escuro. Encontrado e corrigido:
+- alertas falsos de "sem contato" (janela 15→45 min; aviso só após 3 h) e alertas duplicados → um por aparelho;
+- "voltar" quebrava ao abrir tela por link/notificação (`GO_BACK not handled`) → `goBack` com destino seguro;
+- formulários de edição vazios ao abrir direto (aparelho, criança, rotina);
+- **testes apagavam o banco de desenvolvimento** → banco próprio `familia_segura_test`;
+- relatório marcava quase tudo como "aproximado" → só quando a maior parte vem de iPhone;
+- status "Atenção" a partir de 80% do limite; fonte dos gráficos; ícone de celular; textos neutros de gênero.
+Como repetir: `docs/TESTE_LOCAL.md`.

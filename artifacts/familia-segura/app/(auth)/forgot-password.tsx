@@ -15,6 +15,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 import { useColors } from '@/hooks/useColors';
 
+import { goBack as navigateBack } from '@/lib/navigation';
 type Step = 'email' | 'code' | 'password';
 
 function errorMessage(error: unknown, fallback: string) {
@@ -182,7 +183,7 @@ export default function ForgotPasswordPage() {
 
   const goBack = () => {
     if (step === 'email') {
-      router.back();
+      navigateBack('/(auth)/sign-in');
       return;
     }
     void signIn.reset();

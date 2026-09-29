@@ -94,3 +94,16 @@ describe("erros viram JSON", () => {
     expect(res.body).toEqual({ error: "Requisição inválida" });
   });
 });
+
+describe("modo demonstração (somente desenvolvimento)", () => {
+  it("aceita dev:<usuario> só com DEV_AUTH=true e fora de produção", async () => {
+    const bearer = { Authorization: "Bearer dev:ana" };
+    expect((await api().get("/api/family").set(bearer)).status).toBe(401);
+    process.env.DEV_AUTH = "true";
+    expect((await api().get("/api/family").set(bearer)).status).toBe(404);
+    process.env.NODE_ENV = "production";
+    expect((await api().get("/api/family").set(bearer)).status).toBe(401);
+    process.env.NODE_ENV = "test";
+    delete process.env.DEV_AUTH;
+  });
+});

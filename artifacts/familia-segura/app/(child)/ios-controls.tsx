@@ -16,6 +16,7 @@ import {
 } from '@/services/iosParentalControls';
 import { runChildSync } from '@/services/childSync';
 
+import { goBack } from '@/lib/navigation';
 type PickerProps = {
   familyActivitySelectionId: string;
   includeEntireCategory?: boolean;
@@ -71,7 +72,7 @@ export default function IOSControlsScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 12, paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 32 }]}>
       <View style={styles.nav}>
-        <Pressable testID="ios-controls-back" onPress={() => router.back()} hitSlop={10}><Feather name="arrow-left" size={23} color={colors.foreground} /></Pressable>
+        <Pressable testID="ios-controls-back" onPress={() => goBack('/(child)/guardian')} hitSlop={10}><Feather name="arrow-left" size={23} color={colors.foreground} /></Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Controle no iPhone</Text>
         <View style={{ width: 23 }} />
       </View>

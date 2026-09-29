@@ -1,4 +1,4 @@
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '@/lib/auth';
 import { Redirect, Stack } from 'expo-router';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';

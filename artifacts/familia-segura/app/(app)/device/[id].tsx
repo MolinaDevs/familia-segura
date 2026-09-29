@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
@@ -9,6 +9,7 @@ import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
+import { goBack } from '@/lib/navigation';
 const STATE: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
   active: { label: 'Proteção ativa', tone: 'success' },
   partial: { label: 'Proteção incompleta', tone: 'warning' },
@@ -23,6 +24,8 @@ export default function DeviceScreen() {
   const { data, canEdit, refetch } = useFamily();
   const device = data.allDevices.find((d) => d.id === id);
   const [name, setName] = useState(device?.name ?? '');
+  // Aberto por link direto, os dados chegam depois do primeiro render.
+  useEffect(() => { if (device && !name) setName(device.name); }, [device?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [filter, setFilter] = useState<'all' | 'pending' | 'blocked'>('all');
   const updateDevice = useUpdateDevice();
   const revokeDevice = useRevokeDevice();
@@ -38,7 +41,7 @@ export default function DeviceScreen() {
 
   const revoke = () => Alert.alert('Revogar aparelho?', 'As regras param de valer neste aparelho e ele sai da família. Para voltar, gere um novo código.', [
     { text: 'Cancelar', style: 'cancel' },
-    { text: 'Revogar', style: 'destructive', onPress: () => revokeDevice.mutate({ deviceId: device.id }, { onSuccess: () => { refetch(); router.back(); }, onError: (e) => showApiError(e) }) },
+    { text: 'Revogar', style: 'destructive', onPress: () => revokeDevice.mutate({ deviceId: device.id }, { onSuccess: () => { refetch(); goBack('/(app)/(tabs)/profile'); }, onError: (e) => showApiError(e) }) },
   ]);
 
   const list = (apps.data ?? []).filter((a) => filter === 'all' || a.status === filter);

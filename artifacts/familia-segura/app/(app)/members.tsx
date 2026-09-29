@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
 import { Alert, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '@/lib/auth';
 import { useCreateInvite, useRemoveMember, useUpdateMember, type FamilyMember } from '@workspace/api-client-react';
 import { Button, Card, Chip, Divider, Notice, Row, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
+import { goBack } from '@/lib/navigation';
 const ROLE_LABEL = { owner: 'Titular', guardian: 'Co-responsável', viewer: 'Observador' } as const;
 const ROLE_DETAIL = {
   guardian: 'Pode mudar regras, aprovar pedidos e gerenciar aparelhos.',
@@ -87,7 +88,7 @@ export default function MembersScreen() {
         </>
       )}
       {!isOwner && <View style={{ marginTop: 20 }}><Notice icon="lock">Só o titular convida ou remove responsáveis.</Notice></View>}
-      <Button label="Voltar" variant="ghost" onPress={() => router.back()} style={{ marginTop: 16 }} />
+      <Button label="Voltar" variant="ghost" onPress={() => goBack('/(app)/(tabs)/profile')} style={{ marginTop: 16 }} />
     </Screen>
   );
 }

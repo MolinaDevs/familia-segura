@@ -67,7 +67,7 @@ export function DailyUsageChart({ days, height = 170 }: { days: Array<{ date: st
                 )}
                 {over && <Rect x={x + barW / 2 - 3} y={top + plotH - h - 9} width={6} height={6} rx={3} fill={colors.chartLimit} />}
                 {i % labelEvery === 0 && (
-                  <SvgText x={i * slot + slot / 2} y={height - 6} fontSize={10} fill={colors.mutedForeground} textAnchor="middle">
+                  <SvgText x={i * slot + slot / 2} y={height - 6} fontSize={10} fontFamily="Inter_500Medium, Inter, system-ui, sans-serif" fill={colors.mutedForeground} textAnchor="middle">
                     {days.length > 10 ? String(new Date(`${d.date}T12:00:00`).getDate()) : WEEKDAYS[new Date(`${d.date}T12:00:00`).getDay()]}
                   </SvgText>
                 )}

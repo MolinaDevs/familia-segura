@@ -10,6 +10,7 @@ import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
 
+import { goBack } from '@/lib/navigation';
 export default function PairDeviceScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -60,7 +61,7 @@ export default function PairDeviceScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => goBack('/')} style={styles.backButton}>
         <Feather name="x" size={24} color={colors.foreground} />
       </Pressable>
 
@@ -70,7 +71,7 @@ export default function PairDeviceScreen() {
         </View>
         <Text style={[styles.title, { color: colors.foreground }]}>Vincular Dispositivo</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Peça ao seu responsável para gerar um código no app dele e insira-o aqui.
+          Peça ao seu responsável para gerar um código no app do responsável e digite-o aqui.
         </Text>
       </View>
       

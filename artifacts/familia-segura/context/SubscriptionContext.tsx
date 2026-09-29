@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '@/lib/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import React, { createContext, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';

@@ -59,3 +59,6 @@ Thumbs.db
 artifacts/familia-segura/targets/
 artifacts/familia-segura/ios/
 artifacts/familia-segura/android/
+
+# Configuração local de pré-visualização
+.claude/

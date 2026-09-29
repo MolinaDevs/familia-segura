@@ -11,6 +11,7 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useFamily } from '@/context/AppContext';
 import type { PurchasesPackage } from 'react-native-purchases';
 
+import { goBack } from '@/lib/navigation';
 export default function SubscriptionScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -284,7 +285,7 @@ export default function SubscriptionScreen() {
         ]}
       >
         <View style={styles.nav}>
-          <Pressable testID="sub-back" onPress={() => router.back()} hitSlop={10}>
+          <Pressable testID="sub-back" onPress={() => goBack('/(app)/(tabs)/profile')} hitSlop={10}>
             <Feather name="x" size={24} color={colors.foreground} />
           </Pressable>
         </View>

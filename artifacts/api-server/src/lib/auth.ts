@@ -9,7 +9,17 @@ export type MemberContext = { membershipId: string; familyId: string; userId: st
 
 export type AuthedRequest = Request & { userId?: string; member?: MemberContext; device?: Device };
 
+/**
+ * Modo demonstração para testes locais sem conta no Clerk: "Authorization: Bearer dev:<usuario>".
+ * Duas travas: nunca em produção e só com DEV_AUTH=true.
+ */
+export const devAuthEnabled = () => process.env.DEV_AUTH === "true" && process.env.NODE_ENV !== "production";
+
 export function clerkUserId(req: Request): string | undefined {
+  if (devAuthEnabled()) {
+    const header = req.header("authorization");
+    if (header?.startsWith("Bearer dev:")) return `dev_${header.slice("Bearer dev:".length).replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 40)}`;
+  }
   const auth = getAuth(req);
   const claims = auth.sessionClaims as { userId?: string } | null | undefined;
   return auth.userId ?? claims?.userId ?? undefined;

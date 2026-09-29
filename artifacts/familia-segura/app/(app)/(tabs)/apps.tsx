@@ -59,7 +59,7 @@ export default function AppsScreen() {
                   </Text>
                 </View>
                 <View style={[styles.track, { backgroundColor: colors.muted }]}>
-                  <View style={[styles.progress, { width: `${percent}%`, backgroundColor: percent >= 100 ? colors.destructive : colors.primary }]} />
+                  <View style={[styles.progress, { width: `${percent}%`, backgroundColor: percent >= 100 ? colors.destructive : percent >= 80 ? colors.warning : colors.primary }]} />
                 </View>
               </Card>
             );

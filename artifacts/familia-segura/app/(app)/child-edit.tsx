@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useArchiveChild, useCreateChild, useUpdateChild, type ChildProfileAgeBand } from '@workspace/api-client-react';
@@ -9,6 +9,7 @@ import { useColors } from '@/hooks/useColors';
 import { AGE_PRESETS, applyAgePreset } from '@/lib/agePresets';
 import { showApiError } from '@/lib/apiErrors';
 
+import { goBack } from '@/lib/navigation';
 const COLORS = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#4a3aa7', '#e34948'];
 
 function bandFor(birthYear: number): ChildProfileAgeBand {
@@ -30,6 +31,14 @@ export default function ChildEditScreen() {
   const [age, setAge] = useState(existing ? String(new Date().getFullYear() - existing.birthYear) : '');
   const [color, setColor] = useState(existing?.color ?? COLORS[data.children.length % COLORS.length]);
   const [usePreset, setUsePreset] = useState(!existing);
+  // Aberto por link direto, a criança chega depois do primeiro render.
+  useEffect(() => {
+    if (!existing) return;
+    setName((v) => v || existing.displayName);
+    setAge((v) => v || String(new Date().getFullYear() - existing.birthYear));
+    setColor(existing.color);
+    setUsePreset(false);
+  }, [existing?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const [saving, setSaving] = useState(false);
   const createChild = useCreateChild();
   const updateChild = useUpdateChild();
@@ -54,7 +63,7 @@ export default function ChildEditScreen() {
         selectChild(child.id);
       }
       refetch();
-      router.back();
+      goBack('/(app)/(tabs)/profile');
     } catch (error) {
       showApiError(error);
     } finally {
@@ -68,7 +77,7 @@ export default function ChildEditScreen() {
       { text: 'Cancelar', style: 'cancel' },
       {
         text: 'Remover', style: 'destructive', onPress: () => archiveChild.mutate({ childId: existing.id }, {
-          onSuccess: () => { refetch(); router.back(); },
+          onSuccess: () => { refetch(); goBack('/(app)/(tabs)/profile'); },
           onError: (error) => showApiError(error),
         }),
       },

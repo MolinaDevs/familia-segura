@@ -1,7 +1,7 @@
 import React from 'react';
 import { Alert, Platform, Share, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '@/lib/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getExportFamilyDataQueryKey, useDeleteAccount, useExportFamilyData } from '@workspace/api-client-react';
 import { useChildColor } from '@/components/charts';
@@ -89,7 +89,7 @@ export default function FamilyScreen() {
           return (
             <View key={device.id}>
               {index > 0 && <Divider />}
-              <Row icon={device.platform === 'ios' ? 'smartphone' : 'tablet'}
+              <Row icon="smartphone"
                 iconColor={device.protectionState === 'active' && device.online ? colors.success : device.protectionState === 'disabled' ? colors.destructive : colors.warning}
                 title={`${device.name} · ${child?.displayName ?? ''}`}
                 detail={`${device.platform === 'ios' ? 'iPhone/iPad' : 'Android'} · ${STATE_TEXT[device.protectionState] ?? device.protectionState}${device.online ? '' : ' · sem contato'}`}

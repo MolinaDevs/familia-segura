@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, StyleSheet, 
 import { Feather } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { reloadAppAsync } from 'expo';
+import { goBack } from '@/lib/navigation';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
 import { checkGuardianPin } from '@/services/guardianPin';
@@ -93,7 +94,7 @@ export default function GuardianAreaScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}>
       <View style={styles.nav}>
-        <Pressable testID="guardian-back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(child)'))} hitSlop={10}>
+        <Pressable testID="guardian-back" onPress={() => goBack('/(child)')} hitSlop={10}>
           <Feather name="arrow-left" size={23} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Área do responsável</Text>

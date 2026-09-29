@@ -15,7 +15,8 @@ import {
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppProvider } from '@/context/AppContext';
-import { ClerkProvider, ClerkLoaded, ClerkLoading, useAuth } from "@clerk/expo";
+import { ClerkProvider, ClerkLoaded, ClerkLoading } from "@clerk/expo";
+import { DEV_AUTH, useAuth } from "@/lib/auth";
 import { tokenCache } from "@/utils/cache";
 import { setAuthTokenGetter } from "@workspace/api-client-react";
 import { apiConfigured } from "@/lib/apiConfig";
@@ -79,7 +80,7 @@ function AuthInterceptor({ children }: React.PropsWithChildren) {
   const [readyIdentity, setReadyIdentity] = useState<string | null>(null);
 
   useEffect(() => {
-    setAuthTokenGetter(Platform.OS === 'web' ? null : () => getToken());
+    setAuthTokenGetter(Platform.OS === 'web' && !DEV_AUTH ? null : () => getToken());
     setReadyIdentity(identity);
   }, [getToken, identity]);
 
@@ -133,7 +134,10 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        {!publishableKey || !apiConfigured ? (
+        {DEV_AUTH ? (
+          // Modo demonstração (só desenvolvimento): sem Clerk.
+          <AuthInterceptor>{appTree}</AuthInterceptor>
+        ) : !publishableKey || !apiConfigured ? (
           <StartupScreen missingConfiguration />
         ) : (
           <ClerkProvider

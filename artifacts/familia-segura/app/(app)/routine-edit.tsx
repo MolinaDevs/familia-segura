@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, StyleSheet, Text, TextInput, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCreateRoutine, useDeleteRoutine, useUpdateRoutine } from '@workspace/api-client-react';
@@ -7,6 +7,7 @@ import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
+import { goBack } from '@/lib/navigation';
 const DAYS = [
   { key: 'dom', label: 'D' }, { key: 'seg', label: 'S' }, { key: 'ter', label: 'T' }, { key: 'qua', label: 'Q' },
   { key: 'qui', label: 'Q' }, { key: 'sex', label: 'S' }, { key: 'sab', label: 'S' },
@@ -35,6 +36,12 @@ export default function RoutineEditScreen() {
   const [start, setStart] = useState(existing?.start ?? '21:00');
   const [end, setEnd] = useState(existing?.end ?? '07:00');
   const [days, setDays] = useState<string[]>(existing ? existing.days.split(',') : ['seg', 'ter', 'qua', 'qui', 'sex']);
+  // Aberto por link direto, a rotina chega depois do primeiro render.
+  useEffect(() => {
+    if (!existing) return;
+    setTitle(existing.title); setIcon(existing.icon || 'clock'); setStart(existing.start); setEnd(existing.end);
+    setDays(existing.days.split(','));
+  }, [existing?.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const createRoutine = useCreateRoutine();
   const updateRoutine = useUpdateRoutine();
   const deleteRoutine = useDeleteRoutine();
@@ -44,7 +51,7 @@ export default function RoutineEditScreen() {
   const crossesMidnight = TIME_RE.test(start) && TIME_RE.test(end) && end < start;
 
   const toggleDay = (key: string) => setDays((current) => current.includes(key) ? current.filter((d) => d !== key) : [...current, key]);
-  const done = { onSuccess: () => { refetch(); router.back(); }, onError: (error: unknown) => showApiError(error) };
+  const done = { onSuccess: () => { refetch(); goBack('/(app)/(tabs)/routine'); }, onError: (error: unknown) => showApiError(error) };
 
   const save = () => {
     if (!valid || !data.childId) return;
