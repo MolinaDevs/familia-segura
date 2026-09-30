@@ -1,19 +1,59 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { getGetFamilyOverviewQueryKey, useAcceptInvite, useCreateFamily } from '@workspace/api-client-react';
 import { applyAgePreset } from '@/lib/agePresets';
 import { openLegal } from '@/lib/legal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/Icon';
 import * as Haptics from 'expo-haptics';
-import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
+import { AuthButton, AuthCard, AuthField, AuthHeader, AuthShell, FormMessage } from '@/components/auth/AuthKit';
+
+// Mesma faixa da edição de criança (child-edit): 1 a 19 anos — a API aceita nascidos a partir de 2006.
+const MIN_CHILD_AGE = 1;
+const MAX_CHILD_AGE = 19;
+
+/** Idade da criança em anos: número inteiro na faixa aceita. */
+function ageError(value: string) {
+  if (!value) return null;
+  const age = Number(value);
+  if (!/^\d{1,2}$/.test(value) || age < MIN_CHILD_AGE || age > MAX_CHILD_AGE) return `Use a idade em anos, de ${MIN_CHILD_AGE} a ${MAX_CHILD_AGE}.`;
+  return null;
+}
+
+function StepDots({ step, total }: { step: number; total: number }) {
+  const colors = useColors();
+  return (
+    <View style={styles.dots} accessibilityLabel={`Passo ${step} de ${total}`}>
+      {Array.from({ length: total }, (_, i) => (
+        <View key={i} style={[styles.dot, { backgroundColor: i < step ? colors.primary : colors.border, width: i === step - 1 ? 28 : 10 }]} />
+      ))}
+      <Text style={[styles.dotsText, { color: colors.mutedForeground }]}>Passo {step} de {total}</Text>
+    </View>
+  );
+}
+
+function Consent({ checked, onToggle, children, testID }: { checked: boolean; onToggle: () => void; children: React.ReactNode; testID?: string }) {
+  const colors = useColors();
+  return (
+    <Pressable
+      testID={testID}
+      onPress={onToggle}
+      accessibilityRole="checkbox"
+      accessibilityState={{ checked }}
+      style={[styles.consentRow, { borderColor: checked ? colors.primary : colors.input, backgroundColor: checked ? colors.secondary : colors.background }]}
+    >
+      <View style={[styles.checkbox, { borderColor: checked ? colors.primary : colors.mutedForeground, backgroundColor: checked ? colors.primary : 'transparent' }]}>
+        {checked ? <Icon name="check" size={14} color={colors.primaryForeground} /> : null}
+      </View>
+      <Text style={[styles.consentText, { color: colors.foreground }]}>{children}</Text>
+    </Pressable>
+  );
+}
 
 export default function Onboarding() {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const queryClient = useQueryClient();
   
@@ -36,15 +76,15 @@ export default function Onboarding() {
       if (!familyName || !guardianName) return;
       setStep(2);
     } else {
-      if (!childName || !childAge || !consentAccepted) return;
+      if (!childName.trim() || !childAge || ageError(childAge) || !consentAccepted) return;
       setLoading(true);
       setSubmitError(null);
       try {
         const family = await createFamily.mutateAsync({
           data: {
-            name: familyName,
-            guardianName: guardianName,
-            childName: childName,
+            name: familyName.trim(),
+            guardianName: guardianName.trim(),
+            childName: childName.trim(),
             childBirthYear: new Date().getFullYear() - parseInt(childAge, 10),
             consentAccepted,
             timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -60,7 +100,7 @@ export default function Onboarding() {
         router.replace('/(app)');
       } catch (err: unknown) {
         console.error(err);
-        setSubmitError('Não foi possível criar sua família. Verifique sua conexão e tente novamente.');
+        setSubmitError('Não deu para criar a família agora. Confira a internet e tente de novo — nada foi salvo pela metade.');
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setLoading(false);
       }
@@ -72,232 +112,165 @@ export default function Onboarding() {
     setLoading(true);
     setSubmitError(null);
     try {
-      const family = await acceptInvite.mutateAsync({ data: { code: inviteCode, displayName: guardianName, consentAccepted } });
+      const family = await acceptInvite.mutateAsync({ data: { code: inviteCode.trim(), displayName: guardianName.trim(), consentAccepted } });
       queryClient.setQueryData(getGetFamilyOverviewQueryKey(), family);
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.replace('/(app)');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
-      setSubmitError(status === 409 ? 'A família já atingiu o limite de responsáveis ou você já participa de outra família.' : 'Convite inválido ou expirado. Peça um novo ao titular da família.');
+      setSubmitError(status === 409 ? 'Não deu para entrar: a família já está no limite de responsáveis, ou você já participa de outra família.' : 'Esse convite não funcionou. Ele pode ter expirado: peça um novo a quem criou a família.');
       setLoading(false);
     }
   };
 
+  const ageProblem = ageError(childAge);
+  const canContinue = step === 1
+    ? Boolean(familyName.trim() && guardianName.trim())
+    : Boolean(childName.trim() && childAge && !ageProblem && consentAccepted);
+
   if (inviteMode) {
     return (
-      <KeyboardAwareScrollViewCompat
-        style={[styles.container, { backgroundColor: colors.background }]}
-        contentContainerStyle={{ paddingTop: insets.top + 40, paddingBottom: Math.max(insets.bottom + 20, 40), paddingHorizontal: 24, flexGrow: 1 }}
-        bottomOffset={20}
-        keyboardShouldPersistTaps="handled"
-      >
-        <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-            <Icon name="user-plus" size={32} color={colors.primaryForeground} />
-          </View>
-          <Text style={[styles.title, { color: colors.foreground }]}>Entrar com convite</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Use o código que o titular da família gerou em Família → Responsáveis.</Text>
-        </View>
-        <View style={styles.form}>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.foreground }]}>Código do convite</Text>
-            <TextInput style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground, letterSpacing: 3 }]}
-              value={inviteCode} onChangeText={(t) => setInviteCode(t.toUpperCase())} autoCapitalize="characters" autoCorrect={false}
-              placeholder="ABCDE23456" placeholderTextColor={colors.mutedForeground} testID="onboarding-invite-code" />
-          </View>
-          <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.foreground }]}>Seu nome</Text>
-            <TextInput style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-              value={guardianName} onChangeText={setGuardianName} placeholder="Seu nome" placeholderTextColor={colors.mutedForeground} />
-          </View>
-          <Pressable onPress={() => setConsentAccepted((a) => !a)} accessibilityRole="checkbox" accessibilityState={{ checked: consentAccepted }}
-            style={[styles.consentRow, { borderColor: consentAccepted ? colors.primary : colors.border, backgroundColor: colors.card }]}>
-            <View style={[styles.checkbox, { borderColor: consentAccepted ? colors.primary : colors.mutedForeground, backgroundColor: consentAccepted ? colors.primary : 'transparent' }]}>
-              {consentAccepted && <Icon name="check" size={14} color={colors.primaryForeground} />}
-            </View>
-            <Text style={[styles.consentText, { color: colors.foreground }]}>
-              Declaro ser responsável pelas crianças desta família e li a Política de Privacidade.
-            </Text>
-          </Pressable>
-          {submitError && (
-            <View style={[styles.errorContainer, { backgroundColor: colors.dangerSoft, borderColor: colors.destructive }]}>
-              <Icon name="alert-circle" size={16} color={colors.destructive} />
-              <Text style={[styles.errorText, { color: colors.destructive }]}>{submitError}</Text>
-            </View>
-          )}
-        </View>
-        <View style={styles.footer}>
-          <Pressable onPress={() => { setInviteMode(false); setSubmitError(null); }} style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}>
-            <Text style={[styles.backButtonText, { color: colors.mutedForeground }]}>Voltar</Text>
-          </Pressable>
-          <Pressable testID="onboarding-join" onPress={joinWithInvite} disabled={!inviteCode || !guardianName || !consentAccepted || loading}
-            style={({ pressed }) => [styles.button, { backgroundColor: colors.primary, flex: 1 }, pressed && styles.pressed, (!inviteCode || !guardianName || !consentAccepted || loading) && { opacity: 0.5 }]}>
-            {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Entrar na família</Text>}
-          </Pressable>
-        </View>
-      </KeyboardAwareScrollViewCompat>
+      <AuthShell onBack={() => { setInviteMode(false); setSubmitError(null); }} backLabel="Voltar para criar uma família">
+        <AuthHeader
+          icon="user-plus"
+          title="Entrar numa família"
+          subtitle="Quem criou a família gera o convite em Família → Responsáveis. Digite o código aqui."
+        />
+        <AuthCard>
+          <AuthField
+            label="Código do convite"
+            icon="key"
+            value={inviteCode}
+            onChangeText={(t) => { setInviteCode(t.toUpperCase()); setSubmitError(null); }}
+            autoCapitalize="characters"
+            autoCorrect={false}
+            placeholder="ABCDE23456"
+            style={styles.code}
+            testID="onboarding-invite-code"
+          />
+          <AuthField
+            label="Como você quer ser chamado"
+            icon="user"
+            value={guardianName}
+            onChangeText={setGuardianName}
+            placeholder="Ex.: Marina"
+            autoCapitalize="words"
+          />
+          <Consent checked={consentAccepted} onToggle={() => setConsentAccepted((a) => !a)}>
+            Sou responsável pelas crianças desta família e li a Política de Privacidade.
+          </Consent>
+          {submitError ? <FormMessage tone="error">{submitError}</FormMessage> : null}
+          <AuthButton label="Entrar na família" onPress={() => void joinWithInvite()} loading={loading}
+            disabled={!inviteCode.trim() || !guardianName.trim() || !consentAccepted} testID="onboarding-join" />
+        </AuthCard>
+      </AuthShell>
     );
   }
 
   return (
-    <KeyboardAwareScrollViewCompat 
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{ paddingTop: insets.top + 40, paddingBottom: Math.max(insets.bottom + 20, 40), paddingHorizontal: 24, flexGrow: 1 }}
-      bottomOffset={20}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Icon name={step === 1 ? 'users' : 'smile'} size={32} color={colors.primaryForeground} />
-        </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>
-          {step === 1 ? 'Bem-vindo ao Família Segura' : 'Quem vamos proteger?'}
-        </Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          {step === 1 ? 'Configure o ambiente digital da sua família.' : 'Adicione o perfil da criança que será acompanhada.'}
-        </Text>
-      </View>
-      
-      <View style={styles.form}>
+    <AuthShell onBack={step === 2 ? () => { setStep(1); setSubmitError(null); } : undefined} backLabel="Voltar ao passo 1">
+      <StepDots step={step} total={2} />
+      {step === 1 ? (
+        <AuthHeader title="Vamos montar a sua família" subtitle="Dois passos rápidos. Tudo pode ser mudado depois." />
+      ) : (
+        <AuthHeader icon="smile" title="Quem vamos acompanhar?"
+          subtitle="Com a idade, sugerimos limites e rotinas adequados — você ajusta como quiser depois." />
+      )}
+
+      <AuthCard>
         {step === 1 ? (
           <>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.foreground }]}>Nome da família</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                value={familyName}
-                onChangeText={setFamilyName}
-                placeholder="Ex.: Família Andrade"
-                placeholderTextColor={colors.mutedForeground}
-                testID="onboarding-family-name"
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.foreground }]}>Como você quer ser chamado</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                value={guardianName}
-                onChangeText={setGuardianName}
-                placeholder="Seu nome"
-                placeholderTextColor={colors.mutedForeground}
-                testID="onboarding-guardian-name"
-              />
-            </View>
-            <Pressable onPress={() => setInviteMode(true)} style={({ pressed }) => [styles.inviteLink, pressed && styles.pressed]} testID="onboarding-have-invite">
-              <Icon name="user-plus" size={16} color={colors.primary} />
-              <Text style={[styles.inviteText, { color: colors.primary }]}>Tenho um convite de outro responsável</Text>
-            </Pressable>
+            <AuthField
+              label="Nome da família"
+              icon="house"
+              value={familyName}
+              onChangeText={setFamilyName}
+              placeholder="Ex.: Família Andrade"
+              autoCapitalize="words"
+              returnKeyType="next"
+              testID="onboarding-family-name"
+            />
+            <AuthField
+              label="Como você quer ser chamado"
+              icon="user"
+              value={guardianName}
+              onChangeText={setGuardianName}
+              placeholder="Ex.: Marina"
+              autoCapitalize="words"
+              returnKeyType="next"
+              onSubmitEditing={() => void handleNext()}
+              helper="É assim que a criança e os outros responsáveis vão ver você."
+              testID="onboarding-guardian-name"
+            />
           </>
         ) : (
           <>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.foreground }]}>Nome da criança</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                value={childName}
-                onChangeText={(text) => { setChildName(text); setSubmitError(null); }}
-                placeholder="Nome"
-                placeholderTextColor={colors.mutedForeground}
-                testID="onboarding-child-name"
-              />
-            </View>
-            <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.foreground }]}>Idade</Text>
-              <TextInput
-                style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
-                value={childAge}
-                onChangeText={(text) => { setChildAge(text); setSubmitError(null); }}
-                placeholder="Idade (anos)"
-                keyboardType="numeric"
-                placeholderTextColor={colors.mutedForeground}
-                testID="onboarding-child-age"
-              />
-            </View>
-            <Pressable
-              testID="onboarding-consent"
-              onPress={() => { setConsentAccepted((accepted) => !accepted); setSubmitError(null); }}
-              style={[styles.consentRow, { borderColor: consentAccepted ? colors.primary : colors.border, backgroundColor: colors.card }]}
-              accessibilityRole="checkbox"
-              accessibilityState={{ checked: consentAccepted }}
-            >
-              <View style={[styles.checkbox, { borderColor: consentAccepted ? colors.primary : colors.mutedForeground, backgroundColor: consentAccepted ? colors.primary : 'transparent' }]}>
-                {consentAccepted && <Icon name="check" size={14} color={colors.primaryForeground} />}
-              </View>
-              <Text style={[styles.consentText, { color: colors.foreground }]}>
-                Declaro ser pai, mãe ou responsável legal por esta criança e autorizo, em nome dela, o tratamento dos dados necessários ao controle parental (tempo de uso por app, apps instalados, estado da proteção dos aparelhos), conforme o art. 14 da LGPD e a Política de Privacidade, e aceito os Termos de Uso. Posso exportar ou apagar tudo quando quiser.
-              </Text>
-            </Pressable>
-            <View style={{ flexDirection: 'row', gap: 18 }}>
-              <Pressable onPress={() => void openLegal('privacy')} hitSlop={8}>
-                <Text style={[styles.inviteText, { color: colors.primary }]}>Política de Privacidade</Text>
+            <AuthField
+              label="Nome da criança"
+              icon="smile"
+              value={childName}
+              onChangeText={(text) => { setChildName(text); setSubmitError(null); }}
+              placeholder="Ex.: Leo"
+              autoCapitalize="words"
+              testID="onboarding-child-name"
+            />
+            <AuthField
+              label="Idade"
+              icon="hash"
+              value={childAge}
+              onChangeText={(text) => { setChildAge(text.replace(/\D/g, '').slice(0, 2)); setSubmitError(null); }}
+              placeholder="Em anos"
+              keyboardType="number-pad"
+              error={ageProblem}
+              testID="onboarding-child-age"
+            />
+            <Consent testID="onboarding-consent" checked={consentAccepted} onToggle={() => { setConsentAccepted((a) => !a); setSubmitError(null); }}>
+              Declaro ser pai, mãe ou responsável legal por esta criança e autorizo, em nome dela, o tratamento dos dados
+              necessários ao controle parental (tempo de uso por app, apps instalados, estado da proteção dos aparelhos),
+              conforme o art. 14 da LGPD e a Política de Privacidade, e aceito os Termos de Uso. Posso exportar ou apagar
+              tudo quando quiser.
+            </Consent>
+            <View style={styles.legalLinks}>
+              <Pressable onPress={() => void openLegal('privacy')} hitSlop={8} accessibilityRole="link">
+                <Text style={[styles.link, { color: colors.primary }]}>Política de Privacidade</Text>
               </Pressable>
-              <Pressable onPress={() => void openLegal('terms')} hitSlop={8}>
-                <Text style={[styles.inviteText, { color: colors.primary }]}>Termos de Uso</Text>
+              <Pressable onPress={() => void openLegal('terms')} hitSlop={8} accessibilityRole="link">
+                <Text style={[styles.link, { color: colors.primary }]}>Termos de Uso</Text>
               </Pressable>
             </View>
           </>
         )}
 
-        {submitError && (
-          <View style={[styles.errorContainer, { backgroundColor: colors.dangerSoft, borderColor: colors.destructive }]}>
-            <Icon name="alert-circle" size={16} color={colors.destructive} />
-            <Text style={[styles.errorText, { color: colors.destructive }]}>{submitError}</Text>
-          </View>
-        )}
-      </View>
-      
-      <View style={styles.footer}>
-        {step === 2 && (
-          <Pressable 
-            onPress={() => { setStep(1); setSubmitError(null); }} 
-            style={({ pressed }) => [styles.backButton, pressed && styles.pressed]}
-            disabled={loading}
-          >
-            <Text style={[styles.backButtonText, { color: colors.mutedForeground }]}>Voltar</Text>
-          </Pressable>
-        )}
-        <Pressable
+        {submitError ? <FormMessage tone="error">{submitError}</FormMessage> : null}
+
+        <AuthButton
+          label={step === 1 ? 'Continuar' : 'Criar a família'}
+          onPress={() => void handleNext()}
+          loading={loading}
+          disabled={!canContinue}
           testID="onboarding-next"
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: colors.primary, flex: 1 },
-            pressed && styles.pressed,
-            ((step === 1 && (!familyName || !guardianName)) || (step === 2 && (!childName || !childAge || !consentAccepted)) || loading) && { opacity: 0.5 }
-          ]}
-          onPress={handleNext}
-          disabled={((step === 1 && (!familyName || !guardianName)) || (step === 2 && (!childName || !childAge || !consentAccepted)) || loading)}
-        >
-          {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>{step === 1 ? 'Continuar' : 'Concluir'}</Text>}
+        />
+      </AuthCard>
+
+      {step === 1 ? (
+        <Pressable onPress={() => setInviteMode(true)} style={({ pressed }) => [styles.inviteLink, pressed && { opacity: 0.7 }]} testID="onboarding-have-invite" accessibilityRole="button">
+          <Icon name="user-plus" size={18} color={colors.primary} />
+          <Text style={[styles.link, { color: colors.primary }]}>Recebi um convite de outro responsável</Text>
         </Pressable>
-      </View>
-    </KeyboardAwareScrollViewCompat>
+      ) : null}
+    </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  header: { alignItems: 'center', marginBottom: 40 },
-  iconContainer: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  title: { fontFamily: 'Montserrat_700Bold', fontSize: 26, marginBottom: 8, textAlign: 'center', letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'NunitoSans_500Medium', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 300 },
-  form: { flex: 1, gap: 20, maxWidth: 520, width: '100%', alignSelf: 'center' },
-  inputGroup: { gap: 8 },
-  label: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
-  input: { height: 56, borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, fontFamily: 'NunitoSans_500Medium', fontSize: 15 },
-  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, borderWidth: 1, borderRadius: 16, padding: 18, marginTop: 4 },
-  checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
-  consentText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 13, lineHeight: 20 },
-  
-  errorContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16, borderRadius: 16, borderWidth: 1 },
-  errorText: { flex: 1, fontFamily: 'NunitoSans_600SemiBold', fontSize: 13, lineHeight: 18 },
-  
-  footer: { flexDirection: 'row', gap: 12, marginTop: 40, maxWidth: 520, width: '100%', alignSelf: 'center' },
-  button: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
-  backButton: { height: 56, paddingHorizontal: 24, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  backButtonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 16 },
-  
-  pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
-  inviteLink: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
-  inviteText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
+  dots: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 18 },
+  dot: { height: 6, borderRadius: 3 },
+  dotsText: { fontFamily: 'NunitoSans_700Bold', fontSize: 12, marginLeft: 6 },
+  code: { fontFamily: 'Montserrat_700Bold', fontSize: 18, letterSpacing: 3 },
+  consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 12, borderWidth: 1, borderRadius: 16, padding: 14 },
+  checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 },
+  consentText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 13, lineHeight: 19 },
+  legalLinks: { flexDirection: 'row', flexWrap: 'wrap', gap: 18 },
+  link: { fontFamily: 'NunitoSans_700Bold', fontSize: 14 },
+  inviteLink: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, marginTop: 8, minHeight: 48 },
 });
