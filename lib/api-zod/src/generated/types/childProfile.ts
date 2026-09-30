@@ -13,4 +13,9 @@ export interface ChildProfile {
   birthYear: number;
   color: string;
   ageBand: ChildProfileAgeBand;
+  /**
+     * Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.
+     * @nullable
+     */
+  pausedUntil?: Date | null;
 }

@@ -628,6 +628,20 @@ export interface ChildProfile {
   birthYear: number;
   color: string;
   ageBand: ChildProfileAgeBand;
+  /**
+     * Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.
+     * @nullable
+     */
+  pausedUntil?: string | null;
+}
+
+export interface PauseInput {
+  /**
+     * Duração da pausa em minutos; 0 = até o responsável liberar.
+     * @minimum 0
+     * @maximum 720
+     */
+  minutes: number;
 }
 
 export type DevicePlatform = typeof DevicePlatform[keyof typeof DevicePlatform];
@@ -880,6 +894,11 @@ export interface ChildPolicy {
      * @nullable
      */
   installUnlockUntil?: string | null;
+  /**
+     * Pausa de todos os apps pedida pelo responsável ("Pausar agora").
+     * @nullable
+     */
+  pausedUntil?: string | null;
   timezone: string;
   serverTime: string;
   blockedPackages: string[];

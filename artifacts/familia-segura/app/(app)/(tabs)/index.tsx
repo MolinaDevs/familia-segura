@@ -1,5 +1,6 @@
 import { Icon, iconName } from '@/components/Icon';
 import { routineMoment } from '@/lib/routineTime';
+import { PauseCard } from '@/components/PauseCard';
 import { isStale, shortDate } from '@/lib/deviceContact';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -88,6 +89,16 @@ export default function HomeScreen() {
           ))}
         </Card>
       )}
+
+      {data.childId ? (
+        <PauseCard
+          childId={data.childId}
+          childName={data.childName}
+          pausedUntil={data.children.find((c) => c.id === data.childId)?.pausedUntil}
+          canEdit={canEdit}
+          onChanged={refetch}
+        />
+      ) : null}
 
       {deviceAlerts.length > 0 && (
         <View style={{ gap: 8, marginBottom: 20 }}>

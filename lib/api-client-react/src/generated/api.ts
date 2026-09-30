@@ -60,6 +60,7 @@ import type {
   NotFoundResponse,
   PairingCode,
   PairingCodeInput,
+  PauseInput,
   PaymentRequiredResponse,
   PinVerifyInput,
   PinVerifyResult,
@@ -1169,6 +1170,169 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getCreateRoutineMutationOptions(options));
+    }
+
+export const getPauseChildUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}/pause`
+}
+
+/**
+ * @summary Pausa todos os apps da criança agora (ligações, emergência e despertador continuam)
+ */
+export const pauseChild = async (childId: string,
+    pauseInput: PauseInput, options?: Parameters<typeof customFetch>[1]): Promise<ChildProfile> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<ChildProfile>(getPauseChildUrl(childId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pauseInput)
+  }
+);}
+
+
+
+
+
+export const getPauseChildMutationKey = () => ['pauseChild'] as const;
+
+export const getPauseChildMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pauseChild>>, TError,PauseChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof pauseChild>>, TError,PauseChildMutationVariables, TContext> => {
+
+const mutationKey = getPauseChildMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof pauseChild>>, PauseChildMutationVariables> = (props) => {
+          const {childId,data} = props ?? {};
+
+          return  pauseChild(childId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PauseChildMutationResult = NonNullable<Awaited<ReturnType<typeof pauseChild>>>
+    export type PauseChildMutationBody = BodyType<PauseInput>
+    export type PauseChildMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type PauseChildMutationVariables = {childId: string;data: BodyType<PauseInput>}
+
+    /**
+ * @summary Pausa todos os apps da criança agora (ligações, emergência e despertador continuam)
+ */
+export const usePauseChild = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof pauseChild>>, TError,PauseChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof pauseChild>>,
+        TError,
+        PauseChildMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPauseChildMutationOptions(options));
+    }
+
+export const getResumeChildUrl = (childId: string,) => {
+
+
+
+
+  return `/api/family/children/${childId}/pause`
+}
+
+/**
+ * @summary Encerra a pausa
+ */
+export const resumeChild = async (childId: string, options?: Parameters<typeof customFetch>[1]): Promise<ChildProfile> => {
+
+  return customFetch<ChildProfile>(getResumeChildUrl(childId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getResumeChildMutationKey = () => ['resumeChild'] as const;
+
+export const getResumeChildMutationOptions = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeChild>>, TError,ResumeChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resumeChild>>, TError,ResumeChildMutationVariables, TContext> => {
+
+const mutationKey = getResumeChildMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resumeChild>>, ResumeChildMutationVariables> = (props) => {
+          const {childId} = props ?? {};
+
+          return  resumeChild(childId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResumeChildMutationResult = NonNullable<Awaited<ReturnType<typeof resumeChild>>>
+
+    export type ResumeChildMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+    export type ResumeChildMutationVariables = {childId: string}
+
+    /**
+ * @summary Encerra a pausa
+ */
+export const useResumeChild = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resumeChild>>, TError,ResumeChildMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof resumeChild>>,
+        TError,
+        ResumeChildMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResumeChildMutationOptions(options));
     }
 
 export const getCreateTimeGrantUrl = (childId: string,) => {

@@ -13,6 +13,7 @@ import { BrandBackground } from '@/components/brand/BrandBackground';
 import { BrandLoading } from '@/components/brand/BrandLoading';
 import { Emblem } from '@/components/brand/Logo';
 import { routineMoment } from '@/lib/routineTime';
+import { pauseLabel } from '@/components/PauseCard';
 import { loadCachedOverview, runChildSync, type SyncStatus } from '@/services/childSync';
 import { registerChildBackgroundSync } from '@/services/backgroundSync';
 import { registerChildPush } from '@/services/push';
@@ -182,6 +183,8 @@ export default function ChildDashboard() {
   const installUnlockedUntil = overview.policy.installUnlockUntil ? new Date(overview.policy.installUnlockUntil) : null;
   const installOpen = Boolean(installUnlockedUntil && installUnlockedUntil.getTime() > Date.now());
   const moment = routineMoment(overview.routines);
+  const familyPause = overview.policy.pausedUntil && new Date(overview.policy.pausedUntil).getTime() > Date.now()
+    ? overview.policy.pausedUntil : null;
   const apps = [...overview.apps].sort((a, b) => Number(a.status === 'blocked') - Number(b.status === 'blocked'));
   const usedToday = overview.apps.filter((a) => a.status !== 'blocked')
     .reduce((sum, a) => sum + a.usageTodayMinutes + (a.otherDevicesUsageMinutes ?? 0), 0);
@@ -210,7 +213,19 @@ export default function ChildDashboard() {
           </View>
         ) : null}
 
-        {moment ? (
+        {familyPause ? (
+          <Card style={[styles.now, { backgroundColor: colors.secondary, borderColor: colors.secondary }]}>
+            <View style={[styles.nowIcon, { backgroundColor: colors.card }]}>
+              <Icon name="pause" size={24} color={colors.navy} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.nowTitle, { color: colors.foreground }]}>Sua família pausou os apps</Text>
+              <Text style={[styles.nowDetail, { color: colors.mutedForeground }]}>
+                Pausa {pauseLabel(familyPause, 'child')}. Ligações, emergência e o despertador continuam funcionando.
+              </Text>
+            </View>
+          </Card>
+        ) : moment ? (
           <Card style={[styles.now, moment.state === 'active' && { backgroundColor: colors.secondary, borderColor: colors.secondary }]}>
             <View style={[styles.nowIcon, { backgroundColor: moment.state === 'active' ? colors.card : colors.blueSoft }]}>
               <Icon name={iconName(moment.routine.icon, 'moon')} size={24} color={colors.navy} />

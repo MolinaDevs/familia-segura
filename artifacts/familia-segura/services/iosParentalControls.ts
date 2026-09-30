@@ -186,6 +186,8 @@ function usageEvents(selection: string, limitMinutes: number) {
 export async function applyNativePolicies(
   rules: AppRule[],
   routines: Routine[],
+  /** "Pausar agora" do responsável (null/ausente = sem pausa). */
+  pausedUntil?: string | Date | null,
 ): Promise<NativePolicyResult> {
   const native = await loadNativeControls();
   if (!native || native.getAuthorizationStatus() !== native.AuthorizationStatus.approved) {
@@ -293,10 +295,30 @@ export async function applyNativePolicies(
     },
     'routine-policy-sync',
   );
-  if (scheduledWindows.some((window) => currentWeekMinute >= window.start && currentWeekMinute < window.end)) {
-    native.enableBlockAllMode('routine-active');
+  const pauseEnd = pausedUntil ? new Date(pausedUntil) : null;
+  const paused = Boolean(pauseEnd && pauseEnd.getTime() > now.getTime());
+  if (paused || scheduledWindows.some((window) => currentWeekMinute >= window.start && currentWeekMinute < window.end)) {
+    native.enableBlockAllMode(paused ? 'family-pause' : 'routine-active');
   } else {
     native.disableBlockAllMode('routine-inactive');
+  }
+  // Fim da pausa sem depender de internet: a Apple exige janelas de 15 min ou mais. Pausas mais curtas
+  // (ou "até liberar") terminam pelo aviso do servidor e pela próxima sincronização.
+  if (paused && pauseEnd && remainingActivitySlots > 0) {
+    const minutesLeft = (pauseEnd.getTime() - now.getTime()) / 60_000;
+    if (minutesLeft >= 15 && minutesLeft <= 24 * 60) {
+      native.configureActions({ activityName: 'fs-family-pause', callbackName: 'intervalDidEnd', actions: [{ type: 'disableBlockAllMode' }] });
+      await native.startMonitoring(
+        'fs-family-pause',
+        {
+          intervalStart: { hour: now.getHours(), minute: now.getMinutes(), second: 0 },
+          intervalEnd: { hour: pauseEnd.getHours(), minute: pauseEnd.getMinutes(), second: 0 },
+          repeats: false,
+        },
+        [],
+      );
+      remainingActivitySlots--;
+    }
   }
   for (const [index, window] of scheduledWindows.entries()) {
     if (remainingActivitySlots === 0) break;

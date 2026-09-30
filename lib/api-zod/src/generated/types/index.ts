@@ -76,6 +76,7 @@ export * from './memberUpdateRole';
 export * from './notFoundResponse';
 export * from './pairingCode';
 export * from './pairingCodeInput';
+export * from './pauseInput';
 export * from './paymentRequiredResponse';
 export * from './pinVerifier';
 export * from './pinVerifyInput';

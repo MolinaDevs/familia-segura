@@ -4,7 +4,8 @@ import { db, appRulesTable, childrenTable, deviceAppsTable, familiesTable, routi
 import {
   CreateAppRuleBody, CreateAppRuleParams, CreateAppRuleResponse, CreateRoutineBody, CreateRoutineParams,
   CreateRoutineResponse, CreateTimeGrantBody, CreateTimeGrantParams, CreateTimeGrantResponse, DeleteAppRuleParams,
-  DeleteRoutineParams, ListCatalogAppsResponse, UpdateAppRuleBody, UpdateAppRuleParams, UpdateAppRuleResponse,
+  DeleteRoutineParams, ListCatalogAppsResponse, PauseChildBody, PauseChildParams, PauseChildResponse, ResumeChildParams,
+  ResumeChildResponse, UpdateAppRuleBody, UpdateAppRuleParams, UpdateAppRuleResponse,
   UpdateRoutineBody, UpdateRoutineParams, UpdateRoutineResponse,
 } from "@workspace/api-zod";
 import { EDITORS, fail, requireMember, type AuthedRequest } from "../lib/auth";
@@ -13,7 +14,7 @@ import { findCatalogEntry, findCatalogEntryByPackage, GLOBAL_CATALOG } from "../
 import { notifyDevicesPolicyChanged } from "../lib/push";
 import { localDate } from "../lib/time";
 import { familyPlan, PLAN_LIMITS } from "../lib/limits";
-import { grantsToday, routineView, ruleView, usageToday } from "../lib/views";
+import { childView, grantsToday, routineView, ruleView, usageToday } from "../lib/views";
 
 const router: IRouter = Router();
 const PACKAGE_RE = /^[a-zA-Z][a-zA-Z0-9_]*(\.[a-zA-Z0-9_]+)+$/;
@@ -184,6 +185,37 @@ router.delete("/family/routines/:routineId", requireMember(...EDITORS), async (r
   await audit(m.familyId, m.userId, "routine.deleted", `Rotina "${routine.title}" removida`);
   await notifyDevicesPolicyChanged(m.familyId, routine.childId);
   res.sendStatus(204);
+});
+
+/** "Até eu liberar" vira 30 dias: prático como indefinido e com rede de segurança se ninguém lembrar. */
+const PAUSE_UNTIL_RELEASE_MINUTES = 30 * 24 * 60;
+
+/** Pausar agora: todos os apps da criança param até o horário (ligações, emergência e despertador seguem). */
+router.post("/family/children/:childId/pause", requireMember(...EDITORS), async (req: AuthedRequest, res): Promise<void> => {
+  const p = PauseChildParams.safeParse(req.params), input = PauseChildBody.safeParse(req.body);
+  if (!p.success || !input.success) { fail(res, 400, "Invalid request"); return; }
+  const m = req.member!;
+  const child = await activeChild(m.familyId, p.data.childId);
+  if (!child) { fail(res, 404, "Child not found"); return; }
+  const minutes = input.data.minutes === 0 ? PAUSE_UNTIL_RELEASE_MINUTES : input.data.minutes;
+  const [updated] = await db.update(childrenTable).set({ pausedUntil: new Date(Date.now() + minutes * 60_000) })
+    .where(eq(childrenTable.id, child.id)).returning();
+  await audit(m.familyId, m.userId, "child.paused",
+    input.data.minutes === 0 ? `Apps de ${child.displayName} pausados até liberar` : `Apps de ${child.displayName} pausados por ${minutes} min`);
+  await notifyDevicesPolicyChanged(m.familyId, child.id);
+  res.json(PauseChildResponse.parse(childView(updated)));
+});
+
+router.delete("/family/children/:childId/pause", requireMember(...EDITORS), async (req: AuthedRequest, res): Promise<void> => {
+  const p = ResumeChildParams.safeParse(req.params);
+  if (!p.success) { fail(res, 400, "Invalid request"); return; }
+  const m = req.member!;
+  const child = await activeChild(m.familyId, p.data.childId);
+  if (!child) { fail(res, 404, "Child not found"); return; }
+  const [updated] = await db.update(childrenTable).set({ pausedUntil: null }).where(eq(childrenTable.id, child.id)).returning();
+  await audit(m.familyId, m.userId, "child.resumed", `Pausa de ${child.displayName} encerrada`);
+  await notifyDevicesPolicyChanged(m.familyId, child.id);
+  res.json(ResumeChildResponse.parse(childView(updated)));
 });
 
 /** Tempo extra só para hoje: não altera o limite diário (corrige o bug do limite que crescia para sempre). */

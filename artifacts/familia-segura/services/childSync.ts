@@ -161,7 +161,7 @@ async function syncAndroid(overview: ChildOverview, headers: Record<string, stri
 }
 
 async function syncIos(overview: ChildOverview, headers: Record<string, string>) {
-  await applyNativePolicies(overview.apps, overview.routines);
+  await applyNativePolicies(overview.apps, overview.routines, overview.policy.pausedUntil);
   await applyIosDeviceProtection(overview.policy);
   const state = await getNativeControlState();
   const device = getIosDeviceProtection();
@@ -206,7 +206,7 @@ async function doSync(): Promise<SyncResult> {
     const cached = await loadCachedOverview();
     // iOS: as regras ficam no próprio sistema (Screen Time); reaplicar do cache não estende prazo algum.
     if (cached && Platform.OS === 'ios') {
-      await applyNativePolicies(cached.apps, cached.routines).catch(() => undefined);
+      await applyNativePolicies(cached.apps, cached.routines, cached.policy.pausedUntil).catch(() => undefined);
       await applyIosDeviceProtection(cached.policy).catch(() => undefined);
     }
     return { status: 'offline', overview: cached };

@@ -26,6 +26,8 @@ export type AndroidPolicy = {
   webFilter: 'off' | 'adult';
   /** Liberação de instalação dada à distância pelo responsável. */
   installUnlockUntilEpochMs: number;
+  /** "Pausar agora": todos os apps em pausa até este instante (0 = sem pausa). */
+  pausedUntilEpochMs: number;
   blockedPackages: string[];
   pendingPackages: string[];
   /** Pacotes que o servidor acabou de receber no inventário (podem sair da quarentena local). */

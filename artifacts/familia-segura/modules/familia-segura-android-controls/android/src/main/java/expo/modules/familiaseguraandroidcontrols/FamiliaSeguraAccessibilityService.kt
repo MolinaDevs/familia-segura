@@ -247,6 +247,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
     val reason = when {
       pkg == PLAY_STORE && policy.optBoolean("blockAppInstalls", false) && !PolicyStore.guardianUnlocked(this) && !PolicyStore.installUnlocked(policy) ->
         getString(R.string.block_reason_store)
+      pauseActive(policy) -> pauseReason(policy)
       routineActive(policy) -> {
         if (scheduleBedtimeLock()) return
         getString(R.string.block_reason_routine)
@@ -351,6 +352,17 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
   }
 
   private fun routineActive(policy: JSONObject): Boolean = activeRoutines(policy).isNotEmpty()
+
+  /** "Pausar agora" do responsável: vale até o horário, mesmo sem internet (o horário já está na política). */
+  private fun pauseActive(policy: JSONObject): Boolean = policy.optLong("pausedUntilEpochMs", 0L) > System.currentTimeMillis()
+
+  private fun pauseReason(policy: JSONObject): String {
+    val until = policy.optLong("pausedUntilEpochMs", 0L)
+    // Mais de um dia = "até liberar" (o servidor usa 30 dias como rede de segurança).
+    if (until - System.currentTimeMillis() > 24 * 3600_000L) return getString(R.string.block_reason_pause_open)
+    val time = java.text.SimpleDateFormat("HH:mm", java.util.Locale("pt", "BR")).format(java.util.Date(until))
+    return getString(R.string.block_reason_pause, time)
+  }
 
   private fun activeRoutines(policy: JSONObject): List<JSONObject> {
     val active = mutableListOf<JSONObject>()

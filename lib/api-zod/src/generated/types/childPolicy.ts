@@ -19,6 +19,11 @@ export interface ChildPolicy {
      * @nullable
      */
   installUnlockUntil?: Date | null;
+  /**
+     * Pausa de todos os apps pedida pelo responsável ("Pausar agora").
+     * @nullable
+     */
+  pausedUntil?: Date | null;
   timezone: string;
   serverTime: Date;
   blockedPackages: string[];

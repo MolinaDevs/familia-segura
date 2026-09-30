@@ -11,8 +11,11 @@ import { PIN_ALGORITHM } from "./codes";
 // 3 ciclos da sincronização em segundo plano (~15 min cada): evita alarme falso de "sem contato".
 const ONLINE_WINDOW_MS = 45 * 60 * 1000;
 
+const activePause = (c: Child) => (c.pausedUntil && c.pausedUntil.getTime() > Date.now() ? c.pausedUntil : null);
+
 export const childView = (c: Child) => ({
   id: c.id, displayName: c.displayName, birthYear: c.birthYear, color: c.color, ageBand: ageBand(c.birthYear),
+  pausedUntil: activePause(c),
 });
 
 export const deviceView = (d: Device) => ({
@@ -122,7 +125,7 @@ export async function familyOverview(familyId: string, currentUserId?: string) {
   const today = localDate(family.timezone);
   const [members, children, devices, rules, routines, requests, consent, pendingApps, events, usage, grants, limits] = await Promise.all([
     db.select().from(membershipsTable).where(eq(membershipsTable.familyId, familyId)).orderBy(membershipsTable.createdAt),
-    db.select().from(childrenTable).where(and(eq(childrenTable.familyId, familyId), isNull(childrenTable.archivedAt))).orderBy(childrenTable.createdAt),
+    db.select().from(childrenTable).where(and(eq(childrenTable.familyId, familyId), isNull(childrenTable.archivedAt))).orderBy(childrenTable.createdAt, childrenTable.displayName, childrenTable.id),
     db.select().from(devicesTable).where(and(eq(devicesTable.familyId, familyId), ne(devicesTable.status, "revoked"))).orderBy(devicesTable.createdAt),
     db.select().from(appRulesTable).where(eq(appRulesTable.familyId, familyId)).orderBy(appRulesTable.appName),
     db.select().from(routinesTable).where(eq(routinesTable.familyId, familyId)),
@@ -188,6 +191,7 @@ export async function childOverview(device: Device) {
       blockAppRemoval: family.blockAppRemoval,
       webFilter: family.webFilter as "off" | "adult",
       installUnlockUntil: device.installUnlockUntil && device.installUnlockUntil.getTime() > Date.now() ? device.installUnlockUntil : null,
+      pausedUntil: activePause(child),
       timezone: family.timezone,
       serverTime: new Date(),
       blockedPackages: apps.filter((a) => a.status === "blocked").map((a) => a.packageName),

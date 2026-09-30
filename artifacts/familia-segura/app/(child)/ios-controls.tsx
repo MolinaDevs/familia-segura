@@ -51,7 +51,7 @@ export default function IOSControlsScreen() {
     if (nextState === 'approved') {
       const native = await loadNativeControls();
       setPicker(() => native?.DeviceActivitySelectionViewPersisted as React.ComponentType<PickerProps> | undefined ?? null);
-      if (data) setResult(await applyNativePolicies(data.apps, data.routines));
+      if (data) setResult(await applyNativePolicies(data.apps, data.routines, data.policy.pausedUntil));
       // Aplica também remoção/instalação/filtro web e informa ao responsável quais regras já têm app associado.
       void runChildSync();
     }

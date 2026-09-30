@@ -97,6 +97,7 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
     blockAppRemoval: policy?.blockAppRemoval ?? false,
     webFilter: policy?.webFilter ?? 'off',
     installUnlockUntilEpochMs: policy?.installUnlockUntil ? new Date(policy.installUnlockUntil).getTime() : 0,
+    pausedUntilEpochMs: policy?.pausedUntil ? new Date(policy.pausedUntil).getTime() : 0,
     blockedPackages: policy?.blockedPackages ?? [],
     pendingPackages: policy?.pendingPackages ?? [],
     ...(inventorySyncedPackages ? { inventorySyncedPackages } : {}),
@@ -119,7 +120,7 @@ export function applyAndroidPolicies(rules: AppRule[], routines: Routine[], poli
 export function clearAndroidPolicies() {
   AndroidControls?.savePolicies({
     validUntilEpochMs: 0, tamperProtection: false, quarantineNewApps: false, blockAppInstalls: false, blockAppRemoval: false,
-    webFilter: 'off', installUnlockUntilEpochMs: 0,
+    webFilter: 'off', installUnlockUntilEpochMs: 0, pausedUntilEpochMs: 0,
     blockedPackages: [], pendingPackages: [], apps: [], routines: [],
   });
 }

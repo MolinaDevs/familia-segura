@@ -53,6 +53,8 @@ export const childrenTable = pgTable("children", {
   id: id(), familyId: uuid("family_id").notNull().references(() => familiesTable.id, { onDelete: "cascade" }),
   displayName: text("display_name").notNull(), birthYear: integer("birth_year").notNull(),
   color: text("color").notNull().default("#2A5A4A"),
+  /** "Pausar agora": todos os apps em pausa até este horário (ligações, emergência e despertador continuam). */
+  pausedUntil: timestamp("paused_until", { withTimezone: true }),
   archivedAt: timestamp("archived_at", { withTimezone: true }),
   createdAt: created(),
 }, (t) => [index("children_family_idx").on(t.familyId)]);

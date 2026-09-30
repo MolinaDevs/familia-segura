@@ -135,3 +135,15 @@ por categoria. Localização fica de fora de propósito (privacidade e posiciona
 - App: contador "4 de 5 apps com limite no plano grátis" (Apps) e de rotinas (Rotina), selo PREMIUM na trava,
   modelos que não ligam a trava no grátis, comparativo Grátis × Premium na assinatura (também sem preços).
 - Testes: 58 (novos: limite de apps, limite de rotinas, trava Premium e rebaixamento).
+
+### Fase 2 — Pausar agora ✓
+
+- Servidor: `children.paused_until` (migração 0006), `POST/DELETE /family/children/{id}/pause` (15/30/60 min
+  ou "até liberar" = 30 dias), só responsáveis que editam; a política do aparelho traz `pausedUntil`; tarefa
+  de 1 em 1 minuto encerra pausas vencidas e avisa os aparelhos.
+- Android: bloqueia todos os apps (exceto telefone, emergência e relógio) até o horário, mesmo sem internet.
+- iPhone: modo "bloquear tudo" + agenda de fim da pausa (a Apple exige 15 min ou mais; pausas menores e "até
+  liberar" terminam pelo aviso do servidor).
+- App: cartão "Pausar os apps de {nome}" no painel, com "Liberar agora"; a tela da criança mostra a pausa.
+- Correção achada no teste: ordem das crianças instável quando criadas no mesmo instante (desempate por nome).
+- Testes: 61 (novos: pausa grátis, chega ao aparelho, até liberar, observador, outra família, expiração).

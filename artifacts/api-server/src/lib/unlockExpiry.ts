@@ -17,8 +17,19 @@ export async function expireInstallUnlocks(now: Date = new Date()) {
   return expired.rows.length;
 }
 
+/** Pausas ("Pausar agora") vencidas: limpa e avisa os aparelhos para liberar os apps na hora. */
+export async function expirePauses(now: Date = new Date()) {
+  const expired = await db.execute<{ family_id: string; id: string }>(sql`
+    update children set paused_until = null
+    where paused_until is not null and paused_until <= ${now.toISOString()}::timestamptz
+    returning family_id, id`);
+  for (const row of expired.rows) await notifyDevicesPolicyChanged(row.family_id, row.id);
+  return expired.rows.length;
+}
+
 export function scheduleUnlockExpiry() {
   setInterval(() => {
     expireInstallUnlocks().catch((err) => logger.error({ err }, "Falha ao encerrar liberações de instalação"));
+    expirePauses().catch((err) => logger.error({ err }, "Falha ao encerrar pausas"));
   }, 60_000).unref();
 }

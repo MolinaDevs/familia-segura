@@ -43,6 +43,13 @@
       "when": 1790712818454,
       "tag": "0005_travar_tela_rotina",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790784431053,
+      "tag": "0006_pausar_agora",
+      "breakpoints": true
     }
   ]
 }

@@ -6,7 +6,9 @@
   <string name="accessibility_service_description">Vê qual aplicativo está aberto para aplicar os limites, bloqueios e rotinas combinados com a família, e impede que a proteção seja desligada sem o PIN do responsável. Não lê mensagens, senhas nem o que é digitado.</string>
   <string name="block_title">Pausa combinada</string>
   <string name="block_reason_permanent">Este app não faz parte dos combinados da sua família. Se achar que ele deveria estar liberado, converse com seu responsável.</string>
-  <string name="block_reason_routine">Agora é hora da rotina combinada, e os apps estão em pausa. Ligações e emergência continuam funcionando.</string>
+  <string name="block_reason_routine">Agora é hora da rotina combinada, e os apps estão em pausa. Ligações, emergência e o despertador continuam funcionando.</string>
+  <string name="block_reason_pause">Sua família pausou os apps até %1$s. Ligações, emergência e o despertador continuam funcionando.</string>
+  <string name="block_reason_pause_open">Sua família pausou os apps por enquanto. Ligações, emergência e o despertador continuam funcionando.</string>
   <string name="block_reason_bedtime">Hora de descansar. A tela vai apagar em instantes. O despertador e as ligações de emergência continuam funcionando.</string>
   <string name="block_reason_limit">Seu tempo de hoje em %2$s acabou (%1$d minutos). Amanhã o tempo recomeça — ou peça mais pelo Família Segura.</string>
   <string name="block_reason_pending">Este app acabou de ser instalado e está esperando o OK do seu responsável. Você pode pedir a liberação pelo Família Segura.</string>

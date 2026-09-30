@@ -223,6 +223,40 @@ paths:
               schema: { $ref: "#/components/schemas/Routine" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "404": { $ref: "#/components/responses/NotFound" }
+  /family/children/{childId}/pause:
+    post:
+      operationId: pauseChild
+      tags: [rules]
+      summary: Pausa todos os apps da criança agora (ligações, emergência e despertador continuam)
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PauseInput" }
+      responses:
+        "200":
+          description: Pausa aplicada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChildProfile" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    delete:
+      operationId: resumeChild
+      tags: [rules]
+      summary: Encerra a pausa
+      parameters:
+        - $ref: "#/components/parameters/ChildId"
+      responses:
+        "200":
+          description: Pausa encerrada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ChildProfile" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
   /family/children/{childId}/grants:
     post:
       operationId: createTimeGrant
@@ -1108,6 +1142,19 @@ components:
         ageBand:
           type: string
           enum: [ate9, de10a12, de13a15, de16a17, adulto]
+        pausedUntil:
+          type: [string, "null"]
+          format: date-time
+          description: Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.
+    PauseInput:
+      type: object
+      required: [minutes]
+      properties:
+        minutes:
+          type: integer
+          minimum: 0
+          maximum: 720
+          description: Duração da pausa em minutos; 0 = até o responsável liberar.
     Device:
       type: object
       required: [id, childId, name, platform, status, protectionState, protectionIssues, lastSeenAt, online]
@@ -1300,6 +1347,10 @@ components:
           type: [string, "null"]
           format: date-time
           description: Até quando o responsável liberou (à distância) a instalação de apps neste aparelho.
+        pausedUntil:
+          type: [string, "null"]
+          format: date-time
+          description: Pausa de todos os apps pedida pelo responsável ("Pausar agora").
         timezone: { type: string }
         serverTime: { type: string, format: date-time }
         blockedPackages:

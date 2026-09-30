@@ -42,7 +42,8 @@ export const GetFamilyOverviewResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -199,7 +200,8 @@ export const CreateFamilyResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -383,7 +385,8 @@ export const CreateChildResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })
 
 
@@ -410,7 +413,8 @@ export const UpdateChildResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })
 
 
@@ -517,6 +521,49 @@ export const CreateRoutineResponse = zod.object({
   "enabled": zod.boolean(),
   "icon": zod.string(),
   "lockScreen": zod.boolean()
+})
+
+
+/**
+ * @summary Pausa todos os apps da criança agora (ligações, emergência e despertador continuam)
+ */
+export const PauseChildParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const pauseChildBodyMinutesMin = 0;
+export const pauseChildBodyMinutesMax = 720;
+
+
+
+export const PauseChildBody = zod.object({
+  "minutes": zod.number().int().min(pauseChildBodyMinutesMin).max(pauseChildBodyMinutesMax).describe('Duração da pausa em minutos; 0 = até o responsável liberar.')
+})
+
+export const PauseChildResponse = zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
+})
+
+
+/**
+ * @summary Encerra a pausa
+ */
+export const ResumeChildParams = zod.object({
+  "childId": zod.coerce.string().uuid()
+})
+
+export const ResumeChildResponse = zod.object({
+  "id": zod.string().uuid(),
+  "displayName": zod.string(),
+  "birthYear": zod.number().int(),
+  "color": zod.string(),
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })
 
 
@@ -910,7 +957,8 @@ export const AcceptInviteResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1164,7 +1212,8 @@ export const ExportFamilyDataResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 })),
   "devices": zod.array(zod.object({
   "id": zod.string().uuid(),
@@ -1292,7 +1341,8 @@ export const GetChildOverviewResponse = zod.object({
   "displayName": zod.string(),
   "birthYear": zod.number().int(),
   "color": zod.string(),
-  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto'])
+  "ageBand": zod.enum(['ate9', 'de10a12', 'de13a15', 'de16a17', 'adulto']),
+  "pausedUntil": zod.coerce.date().nullish().describe('Apps em pausa ("Pausar agora") até este horário; null quando não há pausa.')
 }),
   "deviceId": zod.string().uuid(),
   "apps": zod.array(zod.object({
@@ -1331,6 +1381,7 @@ export const GetChildOverviewResponse = zod.object({
   "blockAppRemoval": zod.boolean(),
   "webFilter": zod.enum(['off', 'adult']),
   "installUnlockUntil": zod.coerce.date().nullish().describe('Até quando o responsável liberou (à distância) a instalação de apps neste aparelho.'),
+  "pausedUntil": zod.coerce.date().nullish().describe('Pausa de todos os apps pedida pelo responsável ("Pausar agora").'),
   "timezone": zod.string(),
   "serverTime": zod.coerce.date(),
   "blockedPackages": zod.array(zod.string()),

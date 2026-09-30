@@ -48,8 +48,10 @@ import { MoonIcon } from 'phosphor-react-native/src/icons/Moon';
 import { MusicNotesIcon } from 'phosphor-react-native/src/icons/MusicNotes';
 import { PackageIcon } from 'phosphor-react-native/src/icons/Package';
 import { PaperPlaneTiltIcon } from 'phosphor-react-native/src/icons/PaperPlaneTilt';
+import { PauseCircleIcon } from 'phosphor-react-native/src/icons/PauseCircle';
 import { PencilSimpleIcon } from 'phosphor-react-native/src/icons/PencilSimple';
 import { PlayIcon } from 'phosphor-react-native/src/icons/Play';
+import { PlayCircleIcon } from 'phosphor-react-native/src/icons/PlayCircle';
 import { PlusIcon } from 'phosphor-react-native/src/icons/Plus';
 import { ProhibitIcon } from 'phosphor-react-native/src/icons/Prohibit';
 import { PulseIcon } from 'phosphor-react-native/src/icons/Pulse';
@@ -103,6 +105,7 @@ const ICONS = {
   home: HouseIcon, house: HouseIcon, grid: SquaresFourIcon, 'bar-chart-2': ChartBarIcon, activity: PulseIcon,
   'file-text': FileTextIcon, 'trending-up': TrendUpIcon,
   // rotinas
+  pause: PauseCircleIcon, resume: PlayCircleIcon,
   moon: MoonIcon, clock: ClockIcon, book: BookIcon, 'book-open': BookOpenIcon, coffee: CoffeeIcon,
   // categorias do catálogo de apps (vêm do servidor)
   play: PlayIcon, star: StarIcon, box: PackageIcon, camera: CameraIcon, chrome: GoogleChromeLogoIcon, crosshair: CrosshairIcon,
