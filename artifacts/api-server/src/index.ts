@@ -1,8 +1,10 @@
 import "./lib/env";
+import "./lib/monitoring";
 import { pool } from "@workspace/db";
 import app from "./app";
 import { stopJobs } from "./lib/jobs";
 import { logger } from "./lib/logger";
+import { flushMonitoring } from "./lib/monitoring";
 import { scheduleRetention } from "./lib/retention";
 import { scheduleUnlockExpiry } from "./lib/unlockExpiry";
 import { scheduleWeeklySummaries } from "./lib/weeklySummary";
@@ -68,7 +70,8 @@ function shutdown(signal: string) {
     process.exit(1);
   }, 10_000).unref();
   server.close(() => {
-    pool.end()
+    flushMonitoring()
+      .then(() => pool.end())
       .catch((err) => logger.error({ err }, "Falha ao fechar o pool do banco"))
       .finally(() => process.exit(0));
   });

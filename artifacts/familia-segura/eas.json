@@ -14,20 +14,30 @@
         "simulator": false
       },
       "env": {
-        "APP_VARIANT": "development"
+        "APP_VARIANT": "development",
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
     },
     "preview": {
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      }
+      },
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_APP_ENV": "beta"
+      },
+      "environment": "preview"
     },
     "production": {
       "autoIncrement": false,
       "environment": "production",
       "android": {
         "buildType": "app-bundle"
+      },
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_APP_ENV": "production"
       }
     }
   },

@@ -59,6 +59,12 @@ Siga `docs/TESTE_BETA.md`.
 - `EXPO_PUBLIC_API_URL` com `https://` (o app de produção recusa `http://`).
 - **Não** definir `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` nos perfis de produção.
 
+**Infra e monitoramento** (`docs/INFRAESTRUTURA.md`)
+- Render pelo `render.yaml` (New → Blueprint); plano pago (o grátis desliga quando parado).
+- Sentry: `SENTRY_DSN` no Render e `EXPO_PUBLIC_SENTRY_DSN` no EAS; alertas por e-mail.
+- UptimeRobot testando `https://api.seudominio/api/readyz` a cada minuto.
+- Contas das lojas como empresa: pedir o **D-U-N-S** antes (Apple e Google exigem).
+
 **GitHub e teste final**
 - Ativar alertas do Dependabot e "Secret scanning" (repositório público).
 - Build de teste com conta real: criar conta, entrar num 2º celular (código por e-mail), tocar em "Sair" e

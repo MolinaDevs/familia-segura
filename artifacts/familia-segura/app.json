@@ -133,7 +133,8 @@
           "delayAppMeasurementInit": true,
           "androidSdk": "classic"
         }
-      ]
+      ],
+      "@sentry/react-native"
     ],
     "experiments": {
       "typedRoutes": true,

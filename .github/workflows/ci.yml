@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Sem conta/token do Sentry no CI: não tentar enviar mapas de código nos builds nativos.
+  SENTRY_DISABLE_AUTO_UPLOAD: "true"
+
 jobs:
   check:
     runs-on: ubuntu-latest

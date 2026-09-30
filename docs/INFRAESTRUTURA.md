@@ -1,5 +1,7 @@
 # Infraestrutura, monitoramento e caminho até as lojas
 
+**Decisões do dono (30/09/2026):** hospedagem no **Render**; contas das lojas como **empresa (CNPJ)**.
+
 Documento para o dono (sem precisar de conhecimento técnico): o que falta para lançar, como o Família Segura
 vai rodar sem depender de nenhum computador pessoal, como saber na hora quando algo quebra e como testar com
 famílias reais antes de publicar. Estado em 30/09/2026.
@@ -94,8 +96,36 @@ migrar depois, se necessário, é simples: a API é um servidor Node comum e o b
 7. **Conferência pós-deploy**: `/api/readyz` responde; `/api/legal/privacy` com razão social/CNPJ; criar
    família de teste, parear um aparelho, receber o aviso de "pediu mais tempo".
 
-Os passos 2 e 3 podem virar um arquivo `render.yaml` no repositório (infraestrutura como código): a
-configuração inteira fica versionada e o Render cria tudo com um clique.
+Os passos 2 e 3 já estão no arquivo **`render.yaml`** na raiz do repositório (infraestrutura como código): no
+Render, **New → Blueprint →** escolher o repositório. Ele cria a API e o banco (sem acesso pela internet, só pela
+rede privada), só publica depois que o CI passa, roda as migrações antes de cada versão e pede as chaves
+secretas na criação — elas nunca ficam no repositório.
+
+### Contas das lojas como empresa (CNPJ)
+
+- **D-U-N-S** (número gratuito da Dun & Bradstreet, exigido pela Apple e pelo Google para contas de empresa):
+  consultar/solicitar pela ferramenta da Apple em developer.apple.com/enroll/duns-lookup. Pode levar até
+  ~2 semanas: **pedir primeiro**.
+- **Apple Developer Program** como organização (US$ 99/ano): razão social igual à do CNPJ/D-U-N-S, site da
+  empresa e e-mail com o domínio próprio. A razão social aparece como "vendedor" na App Store.
+- **Google Play Console** como organização (US$ 25): D-U-N-S, site e verificação da empresa. **Dispensa o teste
+  fechado obrigatório de 12 testadores/14 dias** das contas pessoais (o beta continua recomendado).
+- Os mesmos dados vão para `LEGAL_CONTROLLER_NAME`/`LEGAL_CONTROLLER_CNPJ` (Política de Privacidade).
+
+### Ativar o Sentry (monitoramento de erros)
+
+O código já está integrado no app e na API, **desligado até existir a chave**:
+1. Criar conta em sentry.io (plano Developer, grátis) e dois projetos: `familia-segura-api` (Node) e
+   `familia-segura-app` (React Native).
+2. API: colar o DSN do projeto da API em `SENTRY_DSN` no Render.
+3. App: colar o DSN do projeto do app em `EXPO_PUBLIC_SENTRY_DSN` no painel do EAS (ambientes preview e
+   production) e gerar um novo build.
+4. Opcional (erros com a linha exata do código no app): criar um token no Sentry, cadastrar `SENTRY_AUTH_TOKEN`,
+   `SENTRY_ORG` e `SENTRY_PROJECT` no EAS e trocar `SENTRY_DISABLE_AUTO_UPLOAD` para `false` no `eas.json`.
+5. No Sentry, ligar os alertas por e-mail de "erro novo" e "pico de erros".
+
+Privacidade: nenhum dado pessoal, corpo de requisição, cabeçalho de login, captura de tela ou gravação de
+sessão é enviado — só o erro, a versão e o modelo do aparelho (configurado em `lib/monitoring.ts` do app e da API).
 
 ### Ambientes
 
@@ -109,8 +139,8 @@ configuração inteira fica versionada e o Render cria tudo com um clique.
 | O quê | Ferramenta | Alerta quando | Já preparado no código |
 |---|---|---|---|
 | API fora do ar ou sem banco | UptimeRobot em `/api/readyz` | 2 falhas seguidas (≈2 min) | Sim (`/api/readyz` verifica o banco) |
-| Erros no servidor (500) | Sentry (API) | Erro novo ou pico | A integrar (precisa da conta) |
-| App travando/fechando | Sentry (app) + Play Console/App Store Connect | Erro novo; "sem travamentos" abaixo de 99,5% | A integrar |
+| Erros no servidor (500) | Sentry (API) | Erro novo ou pico | Sim — liga com `SENTRY_DSN` |
+| App travando/fechando | Sentry (app) + Play Console/App Store Connect | Erro novo; "sem travamentos" abaixo de 99,5% | Sim — liga com `EXPO_PUBLIC_SENTRY_DSN` |
 | Lentidão | Sentry Performance / métricas do Render | Resposta p95 acima de 1 s | Logs com tempo de resposta |
 | Banco cheio / muitas conexões | Painel do Render | Disco acima de 80% | Retenção de 12 meses apaga dados antigos |
 | Ataques e abusos | Logs (429/401) | Pico de 429 em pareamento/PIN | Limites de tentativas em todas as rotas sensíveis |
@@ -133,9 +163,8 @@ publicamente.
   Não passa pela Google; serve para amigos próximos na mesma semana.
 - **Teste interno do Google Play**: até 100 pessoas convidadas por e-mail, disponível em minutos, sem revisão
   completa.
-- **Teste fechado (obrigatório para conta pessoal)**: contas de desenvolvedor **pessoais** criadas depois de
-  novembro/2023 precisam de um teste fechado com **pelo menos 12 testadores por 14 dias seguidos** antes de
-  liberar a publicação. **Conta de empresa (CNPJ) não tem essa exigência.** Vale decidir antes de criar a conta.
+- **Teste fechado**: com a conta de empresa (CNPJ) não é obrigatório, mas é o melhor canal para o beta com as
+  famílias (até milhares de testadores por lista de e-mails ou grupo), com atualização automática pela loja.
 
 ### iPhone
 - **TestFlight**: interno (até 100 pessoas da equipe, sem revisão) e externo (até 10 mil, por link, com uma
@@ -163,8 +192,8 @@ publicamente.
 
 | Semana | O quê |
 |---|---|
-| 1 | Pedir a autorização da Apple; criar contas (lojas, Render, domínio, Sentry, UptimeRobot); decidir conta Google pessoal × empresa |
-| 1–2 | Subir API e banco; vincular EAS; integrar Sentry; primeiro build `preview`; testes da equipe em aparelhos reais |
+| 1 | Pedir o D-U-N-S e a autorização Family Controls da Apple; criar contas (lojas como empresa, Render, domínio, Sentry, UptimeRobot) |
+| 1–2 | Subir API e banco pelo `render.yaml`; vincular EAS; colar os DSNs do Sentry; primeiro build `preview`; testes da equipe em aparelhos reais |
 | 2–4 | Beta fechado (teste fechado do Google + TestFlight quando a Apple aprovar), com 15–20 famílias |
 | 4–5 | Corrigir o que o beta mostrar; preparar declarações do Google Play com vídeo; fichas das lojas |
 | 5–6 | Enviar para revisão; `PREMIUM_ACCEPT_SANDBOX=false`; lançamento |

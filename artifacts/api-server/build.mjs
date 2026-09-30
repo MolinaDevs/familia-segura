@@ -62,7 +62,7 @@ async function buildAll() {
       "@swc/*",
       "@aws-sdk/*",
       "@azure/*",
-      "@opentelemetry/*",
+      // @opentelemetry/* entra no bundle: vem do Sentry e não é dependência direta (o pnpm não o expõe ao dist).
       "@google-cloud/*",
       "@google/*",
       "googleapis",

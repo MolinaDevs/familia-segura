@@ -30,6 +30,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '@/hooks/useColors';
 import { BrandLoading } from '@/components/brand/BrandLoading';
 import { signOutCompletely } from '@/lib/session';
+import { setMonitoringMode, withMonitoring } from '@/lib/monitoring';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -109,12 +110,14 @@ function AuthInterceptor({ children }: React.PropsWithChildren) {
   return <SessionQueries key={identity}>{children}</SessionQueries>;
 }
 
-export default function RootLayout() {
+function RootLayout() {
   const [fontWaitExpired, setFontWaitExpired] = useState(false);
   // Aparelho da criança não depende do login (Clerk): abre mesmo sem internet e usa a credencial do aparelho.
   const [childMode, setChildMode] = useState<boolean | null>(null);
   useEffect(() => {
-    AsyncStorage.getItem('childMode').then((v) => setChildMode(v === 'true')).catch(() => setChildMode(false));
+    AsyncStorage.getItem('childMode')
+      .then((v) => { setChildMode(v === 'true'); setMonitoringMode(v === 'true' ? 'child' : 'guardian'); })
+      .catch(() => setChildMode(false));
   }, []);
   // Tipografia da marca: Nunito Sans no texto, Montserrat nos títulos (o letreiro do logo) — docs/DESIGN.md.
   const [fontsLoaded, fontError] = useFonts({
@@ -191,3 +194,5 @@ export default function RootLayout() {
     </SafeAreaProvider>
   );
 }
+
+export default withMonitoring(RootLayout);

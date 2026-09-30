@@ -60,6 +60,7 @@
     "@expo-google-fonts/montserrat": "^0.4.2",
     "@expo-google-fonts/nunito-sans": "^0.4.2",
     "@noble/hashes": "^1.8.0",
+    "@sentry/react-native": "~7.11.0",
     "expo-auth-session": "~57.0.12",
     "expo-background-task": "57.0.19",
     "expo-build-properties": "~57.0.21",
