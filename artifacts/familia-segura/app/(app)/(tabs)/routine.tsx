@@ -22,7 +22,7 @@ export default function RoutineScreen() {
 
   return (
     <Screen tabs eyebrow="Pausas e rotinas" title="Equilíbrio digital" onRefresh={refetch}
-      subtitle="Durante uma rotina os apps ficam pausados. Ligações e emergência continuam liberadas.">
+      subtitle="Durante uma rotina os apps ficam em pausa. Ligações, emergência e o despertador continuam funcionando.">
       <View style={{ height: 16 }} />
       <ChildSwitcher />
       {data.devices.length === 0 && <View style={{ marginBottom: 12 }}><Notice icon="smartphone" tone="warning">Pareie o aparelho de {data.childName} para as rotinas terem efeito.</Notice></View>}

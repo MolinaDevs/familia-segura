@@ -71,7 +71,7 @@ export default function RoutineEditScreen() {
   };
 
   return (
-    <Screen back title={existing ? 'Editar rotina' : 'Nova rotina'} subtitle={`Para ${data.childName}. Durante a rotina, só ligações e emergência ficam liberadas.`}>
+    <Screen back title={existing ? 'Editar rotina' : 'Nova rotina'} subtitle={`Para ${data.childName}. Durante a rotina os apps ficam em pausa; ligações, emergência e despertador continuam funcionando.`}>
       {!existing && (
         <>
           <SectionTitle>Modelos</SectionTitle>

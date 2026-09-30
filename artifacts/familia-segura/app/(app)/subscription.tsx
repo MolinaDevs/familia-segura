@@ -4,6 +4,7 @@ import {
   Modal, Linking
 } from 'react-native';
 import { Icon } from '@/components/Icon';
+import { Emblem } from '@/components/brand/Logo';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
@@ -12,6 +13,16 @@ import { useFamily } from '@/context/AppContext';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { goBack } from '@/lib/navigation';
+/** Período da loja em ISO 8601 (P1M, P3M, P1Y, P1W) → texto em português. */
+function periodLabel(period?: string | null) {
+  if (!period) return '';
+  const match = /^P(\d+)([DWMY])$/.exec(period);
+  if (!match) return '';
+  const n = Number(match[1]);
+  const unit = { D: ['dia', 'dias'], W: ['semana', 'semanas'], M: ['mês', 'meses'], Y: ['ano', 'anos'] }[match[2] as 'D' | 'W' | 'M' | 'Y'];
+  return n === 1 ? `por ${unit[0]}` : `a cada ${n} ${unit[1]}`;
+}
+
 export default function SubscriptionScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -167,12 +178,10 @@ export default function SubscriptionScreen() {
     return (
       <View style={styles.paywallContainer}>
         <View style={styles.header}>
-          <View style={[styles.iconContainer, { backgroundColor: colors.secondary }]}>
-            <Icon name="star" size={28} color={colors.primary} />
-          </View>
+          <Emblem size={84} />
           <Text style={[styles.title, { color: colors.foreground }]}>Família Segura Premium</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            Até 10 crianças e 10 aparelhos (iPhone e Android), até 4 responsáveis e 12 meses de relatórios.
+            Para famílias com mais de uma criança, mais de um aparelho ou mais de um responsável.
           </Text>
           <View style={{ gap: 6, marginTop: 14, alignSelf: 'stretch' }}>
             {[
@@ -192,13 +201,7 @@ export default function SubscriptionScreen() {
         <View style={styles.packagesList}>
           {packages.map((pkg) => {
             const isSelected = selectedPackage?.identifier === pkg.identifier;
-            const period = pkg.product.subscriptionPeriod === 'P1Y'
-              ? 'por ano'
-              : pkg.product.subscriptionPeriod === 'P1M'
-                ? 'por mês'
-                : pkg.product.subscriptionPeriod
-                  ? `a cada ${pkg.product.subscriptionPeriod}`
-                  : '';
+            const period = periodLabel(pkg.product.subscriptionPeriod);
             return (
               <Pressable
                 key={pkg.identifier}

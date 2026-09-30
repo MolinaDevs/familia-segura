@@ -221,7 +221,7 @@ export default function ChildDashboard() {
               </Text>
               <Text style={[styles.nowDetail, { color: colors.mutedForeground }]}>
                 {moment.state === 'active'
-                  ? `Os apps voltam às ${moment.until}. Ligações e emergência continuam funcionando.`
+                  ? `Os apps voltam às ${moment.until}. Ligações, emergência e o despertador continuam funcionando.`
                   : `Começa ${moment.startsIn}.`}
               </Text>
             </View>
