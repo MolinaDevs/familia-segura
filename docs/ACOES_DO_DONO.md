@@ -38,6 +38,31 @@ Siga `docs/TESTE_BETA.md`.
   cartão do Premium (nada quebra).
 - **RevenueCat:** o entitlement `premium` libera tudo do comparativo (docs/PLANO_LANCAMENTO.md §3).
 
+### 4.1 Configuração obrigatória de produção (revisões de 30/09/2026)
+**API**
+- `NODE_ENV=production`: sem `DATABASE_URL`, `CLERK_SECRET_KEY` e `CLERK_PUBLISHABLE_KEY` o servidor não sobe.
+- `DATABASE_URL` com `?sslmode=require` (conexão criptografada com o banco).
+- `TRUST_PROXY_HOPS`: `1` atrás de proxy/balanceador; `0` sem proxy.
+- `CORS_ORIGINS`: só o domínio web oficial (ou vazio).
+- `REVENUECAT_PROJECT_ID` e `REVENUECAT_SECRET_API_KEY` (sem eles todos ficam no plano grátis).
+- `DB_POOL_MAX` (padrão 10) × número de instâncias abaixo do limite de conexões do Postgres.
+- Nunca definir `DEV_AUTH` nem `PREMIUM_BYPASS`.
+
+**Deploy**
+- Rodar `pnpm --filter @workspace/db run migrate` **antes** de subir a versão nova.
+- Health check do balanceador em `/api/readyz`; liveness em `/api/healthz`.
+- Fora do Replit: Clerk com domínio próprio ou proxy desligado.
+- Backups do Postgres criptografados; acesso ao banco restrito por IP.
+
+**App (EAS)**
+- `EXPO_PUBLIC_API_URL` com `https://` (o app de produção recusa `http://`).
+- **Não** definir `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` nos perfis de produção.
+
+**GitHub e teste final**
+- Ativar alertas do Dependabot e "Secret scanning" (repositório público).
+- Build de teste com conta real: criar conta, entrar num 2º celular (código por e-mail), tocar em "Sair" e
+  confirmar que os avisos da família param de chegar.
+
 ## 5. Jurídico e comercial
 - Advogado: Política, Termos, RIPD (`docs/legal/RIPD_RASCUNHO.md`), DPAs com fornecedores, enquadramento no ECA Digital.
 - INPI: nome/marca "Família Segura".
