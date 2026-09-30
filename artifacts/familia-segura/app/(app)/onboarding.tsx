@@ -97,7 +97,8 @@ export default function Onboarding() {
         }
         await queryClient.invalidateQueries({ queryKey: getGetFamilyOverviewQueryKey() });
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        router.replace('/(app)');
+        // Família nova: boas-vindas em 4 telas antes do painel (o guia "Primeiros passos" continua lá).
+        router.replace('/(app)/welcome-tour');
       } catch (err: unknown) {
         console.error(err);
         setSubmitError('Não deu para criar a família agora. Confira a internet e tente de novo — nada foi salvo pela metade.');

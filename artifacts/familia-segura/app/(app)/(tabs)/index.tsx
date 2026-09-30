@@ -1,6 +1,7 @@
 import { Icon, iconName } from '@/components/Icon';
 import { routineMoment } from '@/lib/routineTime';
 import { PauseCard } from '@/components/PauseCard';
+import { GettingStarted } from '@/components/GettingStarted';
 import { isStale, shortDate } from '@/lib/deviceContact';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
@@ -57,12 +58,6 @@ export default function HomeScreen() {
     return [];
   });
 
-  const steps = [
-    { done: Boolean(overview?.settings.hasGuardianPin), title: 'Definir o PIN do responsável', detail: 'Necessário para impedir desinstalação.', go: () => router.push('/(app)/settings') },
-    { done: data.allDevices.length > 0, title: 'Parear o aparelho da criança', detail: 'iPhone ou Android.', go: () => router.push('/(app)/pair-device') },
-    { done: data.apps.length > 1, title: 'Escolher os apps e limites', detail: 'Use o catálogo ou os apps instalados.', go: () => router.push('/(app)/add-app') },
-  ];
-  const showSteps = canEdit && steps.some((s) => !s.done);
 
   const resolve = (requestId: string, status: 'approved' | 'denied') => {
     void Haptics.selectionAsync();
@@ -80,15 +75,7 @@ export default function HomeScreen() {
       <ChildSwitcher />
       {isOffline && <View style={{ marginBottom: 12 }}><Notice icon="wifi-off" tone="warning">Sem conexão. Mostrando os últimos dados salvos; alterações ficam pausadas.</Notice></View>}
 
-      {showSteps && (
-        <Card style={{ marginBottom: 20 }}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Primeiros passos</Text>
-          {steps.map((step) => (
-            <Row key={step.title} icon={step.done ? 'check-circle' : 'circle'} iconColor={step.done ? colors.success : colors.mutedForeground}
-              title={step.title} detail={step.done ? 'Concluído' : step.detail} onPress={step.done ? undefined : step.go} />
-          ))}
-        </Card>
-      )}
+      {canEdit ? <GettingStarted overview={overview} childName={data.childName} timedApps={data.apps.length} /> : null}
 
       {data.childId ? (
         <PauseCard

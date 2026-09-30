@@ -169,3 +169,13 @@ por categoria. Localização fica de fora de propósito (privacidade e posiciona
 - Sem ID real (produção) ou se o anúncio falhar: cartão da casa "Sem anúncios no Premium", que pode ser
   fechado por 7 dias. Na web, só o cartão da casa.
 - Política de Privacidade e RIPD atualizadas (antes diziam "não exibimos anúncios").
+
+### Fase 5 — Primeiros passos guiados ✓
+
+- Tour de boas-vindas (`app/(app)/welcome-tour.tsx`) logo após criar a família: 4 telas curtas (começo,
+  conectar o celular, ativar a proteção com o PIN, ajustar os combinados), com progresso, voltar e "Pular".
+- Guia "Primeiros passos" no painel (`components/GettingStarted.tsx`): 5 passos em ordem (PIN → conectar →
+  ativar proteção → apps e limites → rotinas), barra de progresso, passo atual destacado, cada um abre a
+  tela certa, atalho "Ver o tour"; some quando tudo está pronto.
+- Dicas de contexto (`components/TipCard.tsx`) na primeira visita a Apps, Rotina e Relatórios; "Entendi"
+  esconde para sempre.

@@ -30,6 +30,7 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerBackTitle: 'Voltar', headerShown: false }}>
       <Stack.Screen name="onboarding" options={{ headerShown: false, animation: 'fade' }} />
+      <Stack.Screen name="welcome-tour" options={{ headerShown: false, animation: 'fade', gestureEnabled: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: 'fade' }} />
       <Stack.Screen name="app/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="settings" options={{ headerShown: false, presentation: 'modal' }} />

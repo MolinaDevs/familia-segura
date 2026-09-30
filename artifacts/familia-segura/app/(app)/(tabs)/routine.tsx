@@ -8,6 +8,7 @@ import { Button, Card, EmptyState, Notice, Screen, SectionTitle, Toggle } from '
 import { PlanUsage } from '@/components/PlanHint';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { TipCard } from '@/components/TipCard';
 
 const DAY_LABELS: Record<string, string> = { dom: 'dom', seg: 'seg', ter: 'ter', qua: 'qua', qui: 'qui', sex: 'sex', sab: 'sáb' };
 const formatDays = (days: string) => {
@@ -28,6 +29,9 @@ export default function RoutineScreen() {
       <ChildSwitcher />
       {data.devices.length === 0 && <View style={{ marginBottom: 12 }}><Notice icon="smartphone" tone="warning">Pareie o aparelho de {data.childName} para as rotinas terem efeito.</Notice></View>}
 
+      <TipCard id="routine" icon="moon" title="Rotina é pausa com hora marcada">
+        Nos horários da rotina todos os apps param, menos ligações, emergência e despertador. Para uma pausa agora, use o botão no painel.
+      </TipCard>
       <SectionTitle action={canEdit ? '+ Nova rotina' : undefined} onAction={() => router.push('/(app)/routine-edit')}>Rotinas de {data.childName}</SectionTitle>
       <PlanUsage plan={data.limits?.plan} used={data.routines.length} max={data.limits?.maxRoutines} label="rotinas" />
       {data.limits?.plan === 'free' ? <View style={{ height: 12 }} /> : null}

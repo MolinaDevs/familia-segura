@@ -7,6 +7,7 @@ import { DailyUsageChart, RankBars, StatTile, UsageHeatmap, useChildColor } from
 import { Button, Card, Chip, EmptyState, formatMinutes, Notice, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { TipCard } from '@/components/TipCard';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { apiStatus } from '@/lib/apiErrors';
 
@@ -39,6 +40,9 @@ export default function ReportsScreen() {
     <Screen tabs eyebrow="Relatórios" title="Uso da família" refreshing={report.isRefetching} onRefresh={() => void report.refetch()}>
       <View style={{ height: 16 }} />
       <ChildSwitcher value={childId} onChange={setChildId} allowAll />
+      <TipCard id="reports" icon="bar-chart-2" title="Lendo os relatórios">
+        Os números juntam todos os aparelhos da criança. Toque num dia do gráfico para ver o total, e compare com a linha do limite.
+      </TipCard>
       <View style={styles.periods}>
         {PERIODS.map((p) => <Chip key={p.days} label={p.label} selected={days === p.days} onPress={() => setDays(p.days)} />)}
       </View>

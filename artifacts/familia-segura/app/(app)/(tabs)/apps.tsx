@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Button, Card, EmptyState, Notice, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { TipCard } from '@/components/TipCard';
 import { AdSlot } from '@/components/ads/AdSlot';
 import { PlanUsage } from '@/components/PlanHint';
 
@@ -20,6 +21,9 @@ export default function AppsScreen() {
     <Screen tabs eyebrow="Controle de apps" title="Aplicativos" onRefresh={refetch}>
       <View style={{ height: 16 }} />
       <ChildSwitcher />
+      <TipCard id="apps" icon="grid" title="Como funcionam os limites">
+        Toque num app para mudar o limite do dia ou bloquear. O limite é da criança: soma todos os aparelhos dela.
+      </TipCard>
 
       {settings && (
         <Card style={{ gap: 6 }} onPress={canEdit ? () => router.push('/(app)/settings') : undefined}>
