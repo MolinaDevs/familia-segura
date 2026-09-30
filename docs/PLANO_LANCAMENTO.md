@@ -195,3 +195,9 @@ por categoria. Localização fica de fora de propósito (privacidade e posiciona
 Conta Apple Developer + entitlement Family Controls, EAS, Google Play Console, AdMob (IDs reais), RevenueCat
 (produtos e preço), revisão jurídica (Política, Termos, RIPD, anúncios e ECA Digital) e os testes em aparelho real
 do checklist. Tudo o que é código está pronto e testado (63 testes de API; Android e iOS compilando no CI).
+
+### Verificação final ✓
+
+CI verde em `9549d82` (checagem + 63 testes de API, Android e iOS). Achado no CI: o `build.gradle` do
+`react-native-google-mobile-ads` 17.2 falha sem `googleMobileAdsJson`; resolvido com `androidSdk: "classic"` no
+plugin (o build real no EAS também quebraria).
