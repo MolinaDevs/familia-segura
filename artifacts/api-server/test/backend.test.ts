@@ -124,4 +124,25 @@ describe("backend (revisão 2026-09-30)", () => {
     expect((await db.execute(sql`select count(*)::int as n from push_tokens`)).rows[0]).toEqual({ n: 0 });
     await api().delete("/api/family/push-tokens").send({ token: "ExponentPushToken[meu]" }).expect(401);
   });
+
+  it("S17: em produção, compra da loja de teste/sandbox não libera Premium", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("REVENUECAT_PROJECT_ID", "proj");
+    vi.stubEnv("REVENUECAT_SECRET_API_KEY", "sk_test");
+    const premium = { items: [{ entitlement_id: "premium", lookup_key: "premium", expires_at: null }] };
+    const subscription = (store: string, environment: string) => ({
+      items: [{ gives_access: true, store, environment, entitlements: { items: [{ id: "entl1", lookup_key: "premium" }] } }],
+    });
+    let subs = subscription("test_store", "sandbox");
+    vi.stubGlobal("fetch", vi.fn(async (url: string) =>
+      new Response(JSON.stringify(url.endsWith("/subscriptions") ? subs : premium), { status: 200 })));
+    expect(await hasPremium("espertinho")).toBe(false);
+    subs = subscription("app_store", "sandbox");
+    expect(await hasPremium("testflight")).toBe(false);
+    vi.stubEnv("PREMIUM_ACCEPT_SANDBOX", "true");
+    expect(await hasPremium("beta")).toBe(true);
+    vi.stubEnv("PREMIUM_ACCEPT_SANDBOX", "false");
+    subs = subscription("play_store", "production");
+    expect(await hasPremium("assinante")).toBe(true);
+  });
 });

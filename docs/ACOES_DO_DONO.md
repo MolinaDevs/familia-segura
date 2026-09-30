@@ -45,6 +45,7 @@ Siga `docs/TESTE_BETA.md`.
 - `TRUST_PROXY_HOPS`: `1` atrás de proxy/balanceador; `0` sem proxy.
 - `CORS_ORIGINS`: só o domínio web oficial (ou vazio).
 - `REVENUECAT_PROJECT_ID` e `REVENUECAT_SECRET_API_KEY` (sem eles todos ficam no plano grátis).
+- `PREMIUM_ACCEPT_SANDBOX=true` **só durante o beta** (compras de teste do TestFlight/teste fechado); no lançamento, `false` ou ausente.
 - `DB_POOL_MAX` (padrão 10) × número de instâncias abaixo do limite de conexões do Postgres.
 - Nunca definir `DEV_AUTH` nem `PREMIUM_BYPASS`.
 

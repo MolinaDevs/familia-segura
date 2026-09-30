@@ -30,6 +30,15 @@ type CachedEntitlement = {
   validUntil: number;
 };
 
+type SubscriptionsResponse = {
+  items?: Array<{
+    gives_access?: boolean;
+    store?: string;
+    environment?: string;
+    entitlements?: { items?: Array<{ id?: string; lookup_key?: string }> };
+  }>;
+};
+
 type ActiveEntitlementsResponse = {
   items?: Array<{
     entitlement_id?: string;
@@ -54,6 +63,38 @@ function remember(userId: string, entry: CachedEntitlement) {
 export function clearEntitlementCache() {
   accessCache.clear();
   inFlight.clear();
+}
+
+/**
+ * Compras de teste (loja de teste da RevenueCat, sandbox da Apple/Google) são gratuitas. Em produção só valem
+ * assinaturas reais — a chave da loja de teste é pública (está no app/repositório), então qualquer um poderia
+ * "comprar" de graça com o próprio id. No ambiente de beta (TestFlight/teste fechado), PREMIUM_ACCEPT_SANDBOX=true.
+ */
+function realPurchasesOnly(): boolean {
+  return process.env.NODE_ENV === "production" && process.env.PREMIUM_ACCEPT_SANDBOX !== "true";
+}
+
+const matchesEntitlement = (item: { id?: string; lookup_key?: string }) =>
+  item.lookup_key === PREMIUM_ENTITLEMENT || item.id === PREMIUM_ENTITLEMENT;
+
+/** Há assinatura real (loja de verdade, ambiente de produção) que dá acesso ao Premium? */
+async function hasRealSubscription(projectId: string, secretKey: string, userId: string) {
+  const response = await fetch(
+    `${REVENUECAT_API}/v2/projects/${encodeURIComponent(projectId)}/customers/${encodeURIComponent(userId)}/subscriptions`,
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${secretKey}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    },
+  );
+  if (response.status === 404) return false;
+  if (!response.ok) throw new Error(`RevenueCat subscriptions check failed (${response.status})`);
+  const payload = (await response.json()) as SubscriptionsResponse;
+  return (payload.items ?? []).some((sub) =>
+    sub.gives_access === true
+    && sub.environment === "production"
+    && sub.store !== "test_store"
+    && (sub.entitlements?.items ?? []).some(matchesEntitlement));
 }
 
 export function premiumBypassEnabled(): boolean {
@@ -110,6 +151,11 @@ async function checkEntitlement(projectId: string, secretKey: string, userId: st
     const entitlement = payload.items?.find(
       (item) => item.lookup_key === PREMIUM_ENTITLEMENT || item.entitlement_id === PREMIUM_ENTITLEMENT,
     );
+    // Em produção o direito precisa vir de assinatura real (loja de verdade, ambiente de produção).
+    if (entitlement && realPurchasesOnly() && !(await hasRealSubscription(projectId, secretKey, userId))) {
+      remember(userId, { active: false, checkedAt: now, validUntil: now });
+      return false;
+    }
     if (!entitlement) {
       remember(userId, { active: false, checkedAt: now, validUntil: now });
       return false;
