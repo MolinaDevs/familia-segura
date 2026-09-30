@@ -43,4 +43,26 @@ describe("segurança (revisão 2026-09-30)", () => {
     expect(res.headers["x-content-type-options"]).toBe("nosniff");
     expect(res.headers["x-powered-by"]).toBeUndefined();
   });
+
+  it("S11: páginas legais não aceitam nomes internos do objeto (sem 500)", async () => {
+    for (const name of ["__proto__", "constructor", "toString", "hasOwnProperty"]) {
+      expect((await api().get(`/api/legal/${name}`)).status, name).toBe(404);
+    }
+    expect((await api().get("/api/legal/privacy")).status).toBe(200);
+  });
+
+  it("S12: exportação completa limitada por usuário", async () => {
+    await createFamily();
+    for (let i = 0; i < 10; i++) expect((await api().get("/api/family/export").set(asGuardian(OWNER))).status).toBe(200);
+    const blocked = await api().get("/api/family/export").set(asGuardian(OWNER));
+    expect(blocked.status).toBe(429);
+    expect(blocked.body.code).toBe("RATE_LIMITED");
+  });
+
+  it("S13: geração de códigos de pareamento limitada por família", async () => {
+    const family = await createFamily();
+    const create = () => api().post("/api/family/pairing-codes").set(asGuardian(OWNER)).send({ childId: family.children[0].id });
+    for (let i = 0; i < 20; i++) expect((await create()).status).toBe(201);
+    expect((await create()).status).toBe(429);
+  });
 });

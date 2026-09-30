@@ -95,6 +95,9 @@ router.patch("/family/settings", requireMember(...EDITORS), async (req: AuthedRe
 router.put("/family/guardian-pin", requireMember(...EDITORS), async (req: AuthedRequest, res): Promise<void> => {
   const input = SetGuardianPinBody.safeParse(req.body);
   if (!input.success) { fail(res, 400, "O PIN deve ter de 4 a 8 números"); return; }
+  if (!(await consumeRateLimit(`pin-set:${req.member!.familyId}`, 10, 60 * 60 * 1000))) {
+    fail(res, 429, "Muitas trocas de PIN seguidas. Aguarde um pouco.", "RATE_LIMITED"); return;
+  }
   if (isWeakPin(input.data.pin)) {
     fail(res, 400, "Esse PIN é fácil de adivinhar. Evite sequências, números repetidos e anos.", "WEAK_PIN"); return;
   }
@@ -161,6 +164,9 @@ router.post("/family/invites", requireMember("owner"), async (req: AuthedRequest
   const input = CreateInviteBody.safeParse(req.body);
   if (!input.success) { fail(res, 400, input.error.message); return; }
   const m = req.member!;
+  if (!(await consumeRateLimit(`invite-create:${m.familyId}`, 20, 60 * 60 * 1000))) {
+    fail(res, 429, "Muitos convites gerados. Aguarde um pouco.", "RATE_LIMITED"); return;
+  }
   const plan = await familyPlan(m.familyId);
   const counts = await countFamily(m.familyId);
   const max = PLAN_LIMITS[plan].maxGuardians;
@@ -271,6 +277,10 @@ router.get("/family/audit", requireMember(), async (req: AuthedRequest, res): Pr
 
 router.get("/family/export", requireMember("owner", "guardian"), async (req: AuthedRequest, res): Promise<void> => {
   const m = req.member!;
+  // Exportação completa é pesada e é o alvo de quem roubar uma sessão: poucas por hora.
+  if (!(await consumeRateLimit(`export:${m.userId}`, 10, 60 * 60 * 1000))) {
+    fail(res, 429, "Muitas exportações seguidas. Aguarde um pouco.", "RATE_LIMITED"); return;
+  }
   res.json(ExportFamilyDataResponse.parse({ exportedAt: new Date(), data: await familyOverview(m.familyId, m.userId), auditEvents: await auditRows(m.familyId) }));
 });
 

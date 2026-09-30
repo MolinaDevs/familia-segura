@@ -56,9 +56,11 @@ aceitos (ferramentas de build) documentados.
 
 ## 4. Riscos aceitos
 
-- `decode-uri-component` < 0.5 e `uuid` < 11.1.1: só em ferramentas de build (Expo CLI, plugins), sem entrada
-  controlada por atacante; a correção exige subir versão principal e quebraria o Expo CLI. Reavaliar quando o
-  Expo atualizar.
+- `uuid` < 11.1.1: só em ferramentas de build (plugins do Xcode no prebuild), sem entrada controlada por
+  atacante. Reavaliar quando o Expo atualizar.
+- `decode-uri-component` < 0.5: **está no app** (expo-router → query-string), não só no build como dito na
+  primeira versão deste relatório. A versão corrigida é só ESM e quebraria o `require` do query-string; mitigado
+  em `app/+native-intent.tsx`, que descarta links externos malformados ou longos antes do roteador (§7).
 - **Limites do sistema operacional** (documentados em `docs/ANDROID_PROTECAO.md`): restaurar o aparelho de
   fábrica e o modo de segurança do Android não podem ser bloqueados por um app comum; o responsável recebe o
   alerta "proteção desligada" e o aparelho aparece sem contato. No iPhone, a proteção vale a da Apple (Tempo de
@@ -80,3 +82,24 @@ aceitos (ferramentas de build) documentados.
 
 Testes automatizados novos (PIN fraco, limite de eventos, aviso deduplicado); suíte da API, checagem de tipos
 e build Android/iOS no CI.
+
+## 7. Auditoria direcionada (30/09/2026, 2ª rodada)
+
+Pedido: XSS, rotas expostas, chaves expostas, banco aberto, SQL injection, limites de tentativas e pacotes
+inventados.
+
+| Tema | Verificação | Resultado |
+|---|---|---|
+| XSS | API só devolve JSON (`nosniff`, CSP `default-src 'none'`); única página HTML (documentos legais) é estática e escapada; app React Native não usa `innerHTML`/WebView/`eval`; textos da criança (pedidos) só aparecem como texto. | Sem vetor. **S11**: `/api/legal/__proto__` dava 500 → só documentos próprios do objeto (404). |
+| Rotas expostas | Mapa das 48 rotas: todas as de dados exigem conta (papel checado) ou credencial do aparelho. Públicas: `healthz`, `readyz`, `legal/*`, `devices/pair` (limitada) e o proxy do Clerk (destino fixo). | Sem rota aberta indevida. |
+| Chaves expostas | Varredura do código e de **todo o histórico do git** (Clerk `sk_`, AWS, Google, GitHub, chaves privadas, URLs de banco com senha); nenhum `.env` versionado. Chaves `EXPO_PUBLIC_*` são públicas por natureza (Clerk publishable, RevenueCat pública, AdMob). | Nada vazado. **S12**: a chave da **loja de teste** da RevenueCat era usada também no web em produção (Premium sem pagar) → só em build de desenvolvimento. |
+| Banco aberto | Postgres local publicado em todas as interfaces com senha de desenvolvimento. | **S13**: porta presa a `127.0.0.1`; em produção, aviso se `DATABASE_URL` não tiver `sslmode=require`. |
+| SQL injection | Todas as consultas via Drizzle/`sql` parametrizado; um único `sql.raw` com constante. | **S14**: `sql.raw` removido — nenhum SQL montado com texto. |
+| Limite de tentativas | PIN (5/15 min), pareamento (30/10 min por IP), convite (10/15 min), eventos (30/10 min), global (600/5 min por IP), login/senha (proteção do próprio Clerk). | **S15**: escritas limitadas por identidade (150/5 min por conta/aparelho); códigos de pareamento (20/h), convites (20/h), troca de PIN (10/h), exportação (10/h), pedidos de tempo (20/h por criança); `TRUST_PROXY_HOPS` configurável (sem proxy = 0, senão o IP é forjável). |
+| Pacotes inventados | 139 dependências diretas conferidas no registro do npm (existência, data, downloads); lockfile só com o registro oficial (sem tarball/git externos) e instalação congelada verificando integridade. | Nenhum pacote inexistente ou suspeito. **S16**: `fast-uri` corrigido por override; `vitest` 3 → 4.1.11 (leitura de arquivo via mock); link malformado filtrado (decode-uri-component). |
+
+Testes novos em `test/seguranca.test.ts` (S11 legal, exportação e códigos de pareamento com limite): **76/76**.
+
+Para o dono: em produção definir `TRUST_PROXY_HOPS` conforme a hospedagem (1 atrás de um proxy/balanceador) e
+`DATABASE_URL` com `sslmode=require`; **não** definir `EXPO_PUBLIC_REVENUECAT_TEST_API_KEY` nos perfis de
+produção do EAS.

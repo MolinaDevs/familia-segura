@@ -34,6 +34,9 @@ router.post("/family/pairing-codes", requireMember(...EDITORS), async (req: Auth
   if (!child) { fail(res, 404, "Child not found"); return; }
   const plan = await familyPlan(m.familyId);
   const counts = await countFamily(m.familyId);
+  if (!(await consumeRateLimit(`pairing-code:${m.familyId}`, 20, 60 * 60 * 1000))) {
+    fail(res, 429, "Muitos códigos gerados. Aguarde um pouco e use o último código.", "RATE_LIMITED"); return;
+  }
   if (counts.devices >= PLAN_LIMITS[plan].maxDevices) {
     const e = deviceLimitError(plan, PLAN_LIMITS[plan].maxDevices);
     fail(res, e.status, e.message, e.code); return;

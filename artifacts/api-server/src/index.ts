@@ -25,6 +25,12 @@ if (Number.isNaN(port) || port <= 0) {
 if (process.env.NODE_ENV === "production") {
   const missing = ["DATABASE_URL", "CLERK_SECRET_KEY", "CLERK_PUBLISHABLE_KEY"].filter((name) => !process.env[name]);
   if (missing.length > 0) throw new Error(`Variáveis obrigatórias ausentes em produção: ${missing.join(", ")}`);
+  // Banco fora desta máquina/rede interna sem TLS: senha e dados das famílias trafegariam abertos.
+  const dbHost = new URL(process.env.DATABASE_URL!).hostname;
+  const internalHost = ["localhost", "127.0.0.1", "::1"].includes(dbHost) || !dbHost.includes(".");
+  if (!internalHost && !/[?&]sslmode=(require|verify-ca|verify-full)/.test(process.env.DATABASE_URL!)) {
+    logger.warn("DATABASE_URL sem sslmode=require: use conexão criptografada com o banco em produção");
+  }
   for (const name of ["REVENUECAT_PROJECT_ID", "REVENUECAT_SECRET_API_KEY"]) {
     if (!process.env[name]) logger.warn(`${name} ausente: todas as famílias ficam no plano gratuito`);
   }

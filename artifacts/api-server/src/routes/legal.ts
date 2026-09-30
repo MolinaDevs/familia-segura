@@ -210,7 +210,8 @@ function renderPage(page: LegalPage) {
 }
 
 router.get("/legal/:document", (req, res: Response): void => {
-  const page = pages[req.params.document];
+  // Só documentos próprios do objeto: "__proto__"/"constructor" não viram página (nem erro 500).
+  const page = Object.hasOwn(pages, req.params.document) ? pages[req.params.document] : undefined;
   if (!page) {
     res.status(404).type("text/plain").send("Documento não encontrado");
     return;

@@ -7,6 +7,7 @@ import {
 import { clerkUserId, deviceFromRequest, EDITORS, fail, findMembership, requireMember, type AuthedRequest } from "../lib/auth";
 import { notifyDevicesPolicyChanged, notifyGuardians } from "../lib/push";
 import { localDate } from "../lib/time";
+import { consumeRateLimit } from "../lib/rateLimit";
 import { timeRequestView } from "../lib/views";
 
 const router: IRouter = Router();
@@ -29,6 +30,10 @@ router.post("/family/time-requests", async (req: AuthedRequest, res): Promise<vo
   const [child] = await db.select().from(childrenTable)
     .where(and(eq(childrenTable.id, childId), eq(childrenTable.familyId, familyId), isNull(childrenTable.archivedAt)));
   if (!child) { fail(res, 404, "Child not found"); return; }
+  // Cada pedido vira aviso no celular dos responsáveis: 20 por hora por criança.
+  if (!(await consumeRateLimit(`time-request:${child.id}`, 20, 60 * 60 * 1000))) {
+    fail(res, 429, "Muitos pedidos seguidos. Espere a resposta dos responsáveis.", "RATE_LIMITED"); return;
+  }
   const kind = input.data.kind ?? "time";
   // Pedido de instalação: vem do aparelho (é ele que será liberado); o app pedido ainda não tem regra.
   if (kind === "install" && !device) { fail(res, 400, "Pedido de instalação só pelo aparelho da criança", "DEVICE_REQUIRED"); return; }

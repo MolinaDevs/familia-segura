@@ -50,12 +50,20 @@ function isTestEnvironment() {
   return __DEV__ || Platform.OS === 'web' || Constants.executionEnvironment === 'storeClient';
 }
 
+/**
+ * A chave da loja de teste libera "compras" sem pagamento: só em build de desenvolvimento.
+ * Web e Expo Go em produção ficam sem compras (a assinatura é feita no app das lojas).
+ */
+function testKeyAllowed() {
+  return __DEV__;
+}
+
 function getRevenueCatApiKey() {
   const testKey = process.env.EXPO_PUBLIC_REVENUECAT_TEST_API_KEY;
   const iosKey = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
   const androidKey = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
   const selected = isTestEnvironment()
-    ? testKey
+    ? (testKeyAllowed() ? testKey : undefined)
     : Platform.OS === 'ios'
       ? iosKey
       : androidKey;

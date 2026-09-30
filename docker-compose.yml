@@ -9,7 +9,8 @@ services:
       POSTGRES_PASSWORD: familia
       POSTGRES_DB: familia_segura
     ports:
-      - "55432:5432"
+      # Só nesta máquina: a senha é de desenvolvimento e o banco não pode ficar visível na rede local.
+      - "127.0.0.1:55432:5432"
     volumes:
       - familia-segura-db:/var/lib/postgresql/data
     healthcheck:

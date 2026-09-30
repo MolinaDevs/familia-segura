@@ -40,6 +40,6 @@
     "supertest": "^7.3.0",
     "thread-stream": "3.1.0",
     "tsx": "catalog:",
-    "vitest": "^3.2.7"
+    "vitest": "^4.1.11"
   }
 }

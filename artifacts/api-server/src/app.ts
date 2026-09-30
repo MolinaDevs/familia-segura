@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import express, { type Express } from "express";
 import cors from "cors";
-import { rateLimit } from "express-rate-limit";
+import { ipKeyGenerator, rateLimit } from "express-rate-limit";
+import { sha256 } from "./lib/codes";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -42,7 +43,9 @@ app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 // Apps nativos não enviam Origin; navegadores só são aceitos se listados em CORS_ORIGINS.
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
 app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)), exposedHeaders: ["X-Request-Id"] }));
-app.set("trust proxy", 1);
+// Quantos proxies confiáveis há na frente da API (o IP do cliente vem do X-Forwarded-For). Sem proxy: 0 —
+// senão qualquer um forja o cabeçalho e escapa dos limites por IP.
+app.set("trust proxy", Number(process.env.TRUST_PROXY_HOPS ?? 1));
 app.disable("x-powered-by");
 app.use((_req, res, next) => {
   res.set("X-Content-Type-Options", "nosniff");
@@ -65,6 +68,20 @@ app.use("/api", rateLimit({
   legacyHeaders: false,
   skip: (req) => req.path === "/healthz" || req.path === "/readyz",
   message: { error: "Muitas requisições. Aguarde alguns minutos.", code: "RATE_LIMITED" },
+}));
+// Escritas por identidade (conta, aparelho ou IP sem credencial): 150 a cada 5 min. Leituras ficam no limite
+// global; rotas sensíveis (PIN, pareamento, convites, eventos, exportação) têm limites próprios, mais baixos.
+app.use("/api", rateLimit({
+  windowMs: 5 * 60_000,
+  limit: Number(process.env.RATE_LIMIT_WRITE ?? 150),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  skip: (req) => req.method === "GET" || req.method === "HEAD" || req.method === "OPTIONS",
+  keyGenerator: (req) => {
+    const auth = req.header("authorization");
+    return auth ? `auth:${sha256(auth)}` : `ip:${ipKeyGenerator(req.ip ?? "")}`;
+  },
+  message: { error: "Muitas alterações seguidas. Aguarde alguns minutos.", code: "RATE_LIMITED" },
 }));
 // Inventário Android (até 600 apps) passa do limite padrão de 100 KB. A API só aceita JSON.
 app.use(express.json({ limit: "512kb" }));

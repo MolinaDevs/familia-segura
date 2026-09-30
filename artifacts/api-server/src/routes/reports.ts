@@ -36,7 +36,8 @@ router.get("/family/reports/usage", requireMember(), async (req: AuthedRequest, 
   const scopeIds = childId ? [childId] : children.map((c) => c.id);
   if (scopeIds.length === 0) scopeIds.push("00000000-0000-0000-0000-000000000000");
   const scopeList = sql.join(scopeIds.map((id) => sql`${id}::uuid`), sql`, `);
-  const inScope = (column: string) => sql`${sql.raw(column)} in (${scopeList})`;
+  // Sem SQL cru: a coluna é fixa e os ids vão como parâmetros.
+  const inScope = (_column: "child_id") => sql`child_id in (${scopeList})`;
 
   const [daily, previous, apps, heatmap, byDevice, byChild, grantsByDay, reached, requests, extra, tamper] = await Promise.all([
     rows<{ day: string; minutes: number }>(sql`select day::text as day, sum(minutes)::int as minutes from usage_daily
