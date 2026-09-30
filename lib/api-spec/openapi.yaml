@@ -817,12 +817,22 @@ components:
         webFilter: { type: string, enum: [off, adult] }
     FamilyLimits:
       type: object
-      required: [plan, maxChildren, maxDevices, maxGuardians, children, devices, guardians]
+      required: [plan, maxChildren, maxDevices, maxGuardians, maxTimedApps, maxRoutines, reportDays, features, children, devices, guardians]
       properties:
         plan: { type: string, enum: [free, premium] }
         maxChildren: { type: integer }
         maxDevices: { type: integer }
         maxGuardians: { type: integer }
+        maxTimedApps: { type: integer, description: "Apps com limite de tempo por criança (bloqueados não contam)" }
+        maxRoutines: { type: integer, description: "Rotinas por criança" }
+        reportDays: { type: integer }
+        features:
+          type: object
+          required: [lockScreen, weeklySummary, adFree]
+          properties:
+            lockScreen: { type: boolean, description: "Trava de tela nas rotinas (Android)" }
+            weeklySummary: { type: boolean, description: "Resumo semanal por notificação" }
+            adFree: { type: boolean, description: "Sem anúncios no app do responsável" }
         children: { type: integer }
         devices: { type: integer }
         guardians: { type: integer }

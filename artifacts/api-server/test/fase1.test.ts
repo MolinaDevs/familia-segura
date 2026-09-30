@@ -231,20 +231,26 @@ describe("regras e rotinas", () => {
     await api().delete(`/api/family/routines/${created.body.id}`).set(asGuardian(OWNER)).expect(204);
   });
 
-  it("travar a tela: padrão desligado, liga por rotina e chega ao aparelho", async () => {
+  it("travar a tela: Premium liga por rotina e chega ao aparelho; grátis recusa", async () => {
+    setPremium(false);
     const family = await createFamily();
     const childId = family.children[0].id;
-    // A rotina de dormir criada com a família já trava a tela.
     const bedtime = family.routines.find((r: { title: string }) => r.title === "Hora de dormir");
-    expect(bedtime?.lockScreen).toBe(true);
-    const created = await api().post(`/api/family/children/${childId}/routines`).set(asGuardian(OWNER))
-      .send({ title: "Escola", days: "seg,ter,qua,qui,sex", startTime: "07:00", endTime: "12:00" });
-    expect(created.body.lockScreen).toBe(false);
-    const updated = await api().patch(`/api/family/routines/${created.body.id}`).set(asGuardian(OWNER)).send({ lockScreen: true });
+    expect(bedtime?.lockScreen).toBe(false);
+    // Grátis: ligar a trava é recurso Premium.
+    const free = await api().patch(`/api/family/routines/${bedtime.id}`).set(asGuardian(OWNER)).send({ lockScreen: true });
+    expect(free.status).toBe(402);
+    expect(free.body.code).toBe("PREMIUM_FEATURE");
+    setPremium(true);
+    const updated = await api().patch(`/api/family/routines/${bedtime.id}`).set(asGuardian(OWNER)).send({ lockScreen: true });
     expect(updated.body.lockScreen).toBe(true);
     const { deviceToken } = await pairDevice(OWNER, childId, "android");
     const overview = (await api().get("/api/child/overview").set(asDevice(deviceToken))).body;
-    expect(overview.routines.find((r: { id: string }) => r.id === created.body.id)?.lockScreen).toBe(true);
+    expect(overview.routines.find((r: { id: string }) => r.id === bedtime.id)?.lockScreen).toBe(true);
+    // Rebaixamento: a configuração fica guardada, mas deixa de valer no aparelho.
+    setPremium(false);
+    const after = (await api().get("/api/child/overview").set(asDevice(deviceToken))).body;
+    expect(after.routines.find((r: { id: string }) => r.id === bedtime.id)?.lockScreen).toBe(false);
   });
 
   it("plano gratuito também edita limites e bloqueios (o básico não é pago)", async () => {
@@ -371,5 +377,48 @@ describe("PIN do responsável e alertas de adulteração", () => {
     const sent = capturePush();
     await api().patch("/api/family/apps/youtube/rules").set(asGuardian(OWNER)).send({ childId, dailyLimitMinutes: 20 }).expect(200);
     expect(sent).toEqual([expect.objectContaining({ to: "ExponentPushToken[child-1]", data: { type: "policy_changed" } })]);
+  });
+});
+
+describe("plano grátis × Premium", () => {
+  it("grátis: até 5 apps com limite; bloquear continua ilimitado; desbloquear no limite pede Premium", async () => {
+    setPremium(false);
+    const family = await createFamily();
+    const childId = family.children[0].id;
+    const add = (catalogAppId: string, status?: "blocked") =>
+      api().post(`/api/family/children/${childId}/apps`).set(asGuardian(OWNER)).send({ catalogAppId, dailyLimitMinutes: 30, ...(status ? { status } : {}) });
+    // A família já nasce com o YouTube (1º app com limite); mais 4 chegam aos 5 do plano grátis.
+    for (const app of ["roblox", "minecraft", "whatsapp", "netflix"]) expect((await add(app)).status).toBe(201);
+    const sixth = await add("spotify");
+    expect(sixth.status).toBe(402);
+    expect(sixth.body.code).toBe("TIMED_APPS_LIMIT");
+    // Bloquear é segurança: não conta no limite.
+    expect((await add("tiktok", "blocked")).status).toBe(201);
+    expect((await add("instagram", "blocked")).status).toBe(201);
+    const unblock = await api().patch("/api/family/apps/tiktok/rules").set(asGuardian(OWNER)).send({ childId, status: "allowed" });
+    expect(unblock.status).toBe(402);
+    // Premium libera.
+    setPremium(true);
+    expect((await add("spotify")).status).toBe(201);
+    const limits = (await api().get("/api/family").set(asGuardian(OWNER))).body.limits;
+    expect(limits.maxTimedApps).toBeGreaterThan(5);
+    expect(limits.features.adFree).toBe(true);
+  });
+
+  it("grátis: até 2 rotinas por criança; Premium ilimitado", async () => {
+    setPremium(false);
+    const family = await createFamily();
+    const childId = family.children[0].id;
+    const add = (title: string) => api().post(`/api/family/children/${childId}/routines`).set(asGuardian(OWNER))
+      .send({ title, days: "seg,ter", startTime: "14:00", endTime: "15:00" });
+    // A família já nasce com a "Hora de dormir".
+    expect((await add("Lição de casa")).status).toBe(201);
+    const third = await add("Escola");
+    expect(third.status).toBe(402);
+    expect(third.body.code).toBe("ROUTINE_LIMIT");
+    const limits = (await api().get("/api/family").set(asGuardian(OWNER))).body.limits;
+    expect(limits).toMatchObject({ plan: "free", maxRoutines: 2, maxTimedApps: 5, features: { lockScreen: false, adFree: false } });
+    setPremium(true);
+    expect((await add("Escola")).status).toBe(201);
   });
 });

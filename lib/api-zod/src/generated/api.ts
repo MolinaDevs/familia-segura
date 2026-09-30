@@ -127,6 +127,14 @@ export const GetFamilyOverviewResponse = zod.object({
   "maxChildren": zod.number().int(),
   "maxDevices": zod.number().int(),
   "maxGuardians": zod.number().int(),
+  "maxTimedApps": zod.number().int().describe('Apps com limite de tempo por criança (bloqueados não contam)'),
+  "maxRoutines": zod.number().int().describe('Rotinas por criança'),
+  "reportDays": zod.number().int(),
+  "features": zod.object({
+  "lockScreen": zod.boolean().describe('Trava de tela nas rotinas (Android)'),
+  "weeklySummary": zod.boolean().describe('Resumo semanal por notificação'),
+  "adFree": zod.boolean().describe('Sem anúncios no app do responsável')
+}),
   "children": zod.number().int(),
   "devices": zod.number().int(),
   "guardians": zod.number().int()
@@ -276,6 +284,14 @@ export const CreateFamilyResponse = zod.object({
   "maxChildren": zod.number().int(),
   "maxDevices": zod.number().int(),
   "maxGuardians": zod.number().int(),
+  "maxTimedApps": zod.number().int().describe('Apps com limite de tempo por criança (bloqueados não contam)'),
+  "maxRoutines": zod.number().int().describe('Rotinas por criança'),
+  "reportDays": zod.number().int(),
+  "features": zod.object({
+  "lockScreen": zod.boolean().describe('Trava de tela nas rotinas (Android)'),
+  "weeklySummary": zod.boolean().describe('Resumo semanal por notificação'),
+  "adFree": zod.boolean().describe('Sem anúncios no app do responsável')
+}),
   "children": zod.number().int(),
   "devices": zod.number().int(),
   "guardians": zod.number().int()
@@ -979,6 +995,14 @@ export const AcceptInviteResponse = zod.object({
   "maxChildren": zod.number().int(),
   "maxDevices": zod.number().int(),
   "maxGuardians": zod.number().int(),
+  "maxTimedApps": zod.number().int().describe('Apps com limite de tempo por criança (bloqueados não contam)'),
+  "maxRoutines": zod.number().int().describe('Rotinas por criança'),
+  "reportDays": zod.number().int(),
+  "features": zod.object({
+  "lockScreen": zod.boolean().describe('Trava de tela nas rotinas (Android)'),
+  "weeklySummary": zod.boolean().describe('Resumo semanal por notificação'),
+  "adFree": zod.boolean().describe('Sem anúncios no app do responsável')
+}),
   "children": zod.number().int(),
   "devices": zod.number().int(),
   "guardians": zod.number().int()
@@ -1225,6 +1249,14 @@ export const ExportFamilyDataResponse = zod.object({
   "maxChildren": zod.number().int(),
   "maxDevices": zod.number().int(),
   "maxGuardians": zod.number().int(),
+  "maxTimedApps": zod.number().int().describe('Apps com limite de tempo por criança (bloqueados não contam)'),
+  "maxRoutines": zod.number().int().describe('Rotinas por criança'),
+  "reportDays": zod.number().int(),
+  "features": zod.object({
+  "lockScreen": zod.boolean().describe('Trava de tela nas rotinas (Android)'),
+  "weeklySummary": zod.boolean().describe('Resumo semanal por notificação'),
+  "adFree": zod.boolean().describe('Sem anúncios no app do responsável')
+}),
   "children": zod.number().int(),
   "devices": zod.number().int(),
   "guardians": zod.number().int()

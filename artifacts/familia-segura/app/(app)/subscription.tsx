@@ -23,6 +23,49 @@ function periodLabel(period?: string | null) {
   return n === 1 ? `por ${unit[0]}` : `a cada ${n} ${unit[1]}`;
 }
 
+/** Grátis × Premium (docs/PLANO_LANCAMENTO.md §3). Segurança igual nos dois; o Premium vende escala e conforto. */
+const PLAN_ROWS: Array<{ label: string; free: string | boolean; premium: string | boolean }> = [
+  { label: 'Crianças e aparelhos', free: '1 e 1', premium: 'até 10 e 10' },
+  { label: 'Responsáveis na família', free: '1', premium: 'até 4' },
+  { label: 'Apps com limite de tempo', free: 'até 5', premium: 'ilimitados' },
+  { label: 'Rotinas por criança', free: 'até 2', premium: 'ilimitadas' },
+  { label: 'Travar a tela na hora de dormir', free: false, premium: true },
+  { label: 'Relatórios', free: '7 dias', premium: '12 meses' },
+  { label: 'Resumo semanal no celular', free: false, premium: true },
+  { label: 'Sem anúncios', free: false, premium: true },
+  { label: 'Bloquear, pausar agora, filtro adulto e proteção contra desinstalar', free: true, premium: true },
+];
+
+function PlanCell({ value, highlight }: { value: string | boolean; highlight?: boolean }) {
+  const colors = useColors();
+  if (typeof value === 'boolean') {
+    return value
+      ? <Icon name="check-circle" size={18} color={highlight ? colors.primary : colors.success} />
+      : <Icon name="x" size={16} color={colors.mutedForeground} />;
+  }
+  return <Text style={[styles.cellText, { color: highlight ? colors.primary : colors.foreground }]}>{value}</Text>;
+}
+
+function PlanComparison() {
+  const colors = useColors();
+  return (
+    <View style={[styles.compare, { borderColor: colors.border, backgroundColor: colors.card }]}>
+      <View style={[styles.compareRow, { borderBottomColor: colors.border }]}>
+        <Text style={[styles.compareHead, { color: colors.mutedForeground, flex: 1.6 }]}>RECURSO</Text>
+        <Text style={[styles.compareHead, { color: colors.mutedForeground }]}>GRÁTIS</Text>
+        <Text style={[styles.compareHead, { color: colors.primary }]}>PREMIUM</Text>
+      </View>
+      {PLAN_ROWS.map((row, i) => (
+        <View key={row.label} style={[styles.compareRow, i < PLAN_ROWS.length - 1 && { borderBottomColor: colors.border }]}>
+          <Text style={[styles.compareLabel, { color: colors.foreground }]}>{row.label}</Text>
+          <View style={styles.compareCell}><PlanCell value={row.free} /></View>
+          <View style={styles.compareCell}><PlanCell value={row.premium} highlight /></View>
+        </View>
+      ))}
+    </View>
+  );
+}
+
 export default function SubscriptionScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -110,11 +153,18 @@ export default function SubscriptionScreen() {
 
     if (!packages.length && !errorMessage) {
       return (
-        <View style={styles.centerContainer}>
-          <Icon name="wifi-off" size={28} color={colors.mutedForeground} />
-          <Text style={[styles.loadingText, { color: colors.mutedForeground, textAlign: 'center' }]}>
-            Os planos não estão disponíveis agora. Tente novamente em instantes.
-          </Text>
+        <View style={styles.paywallContainer}>
+          <View style={styles.header}>
+            <Emblem size={84} />
+            <Text style={[styles.title, { color: colors.foreground }]}>Família Segura Premium</Text>
+            <PlanComparison />
+          </View>
+          <View style={[styles.centerContainer, { flex: 0, paddingVertical: 16 }]}>
+            <Icon name="wifi-off" size={24} color={colors.mutedForeground} />
+            <Text style={[styles.loadingText, { color: colors.mutedForeground, textAlign: 'center' }]}>
+              Os preços não carregaram agora. Confira a internet e tente de novo em instantes.
+            </Text>
+          </View>
         </View>
       );
     }
@@ -183,19 +233,7 @@ export default function SubscriptionScreen() {
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
             Para famílias com mais de uma criança, mais de um aparelho ou mais de um responsável.
           </Text>
-          <View style={{ gap: 6, marginTop: 14, alignSelf: 'stretch' }}>
-            {[
-              'Até 10 crianças e 10 aparelhos na mesma família',
-              'Convide o outro responsável ou um observador',
-              'Gráficos de uso com histórico de até 12 meses',
-              'O básico continua grátis: 1 criança, 1 aparelho, limites e bloqueios',
-            ].map((item) => (
-              <View key={item} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-                <Icon name="check" size={16} color={colors.primary} style={{ marginTop: 2 }} />
-                <Text style={{ flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 14, lineHeight: 20, color: colors.foreground }}>{item}</Text>
-              </View>
-            ))}
-          </View>
+          <PlanComparison />
         </View>
 
         <View style={styles.packagesList}>
@@ -635,4 +673,10 @@ const styles = StyleSheet.create({
   pressed: {
     opacity: 0.7,
   },
+  compare: { alignSelf: 'stretch', borderWidth: 1, borderRadius: 18, marginTop: 16, overflow: 'hidden' },
+  compareRow: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: 'transparent' },
+  compareHead: { flex: 1, fontFamily: 'NunitoSans_800ExtraBold', fontSize: 10.5, letterSpacing: 1, textAlign: 'center' },
+  compareLabel: { flex: 1.6, fontFamily: 'NunitoSans_600SemiBold', fontSize: 13, lineHeight: 18 },
+  compareCell: { flex: 1, alignItems: 'center' },
+  cellText: { fontFamily: 'NunitoSans_700Bold', fontSize: 12.5, textAlign: 'center' },
 });

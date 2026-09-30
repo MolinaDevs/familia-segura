@@ -5,6 +5,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { ChildSwitcher } from '@/components/ChildSwitcher';
 import { Button, Card, EmptyState, Notice, Screen, SectionTitle, Toggle } from '@/components/ui';
+import { PlanUsage } from '@/components/PlanHint';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 
@@ -28,6 +29,8 @@ export default function RoutineScreen() {
       {data.devices.length === 0 && <View style={{ marginBottom: 12 }}><Notice icon="smartphone" tone="warning">Pareie o aparelho de {data.childName} para as rotinas terem efeito.</Notice></View>}
 
       <SectionTitle action={canEdit ? '+ Nova rotina' : undefined} onAction={() => router.push('/(app)/routine-edit')}>Rotinas de {data.childName}</SectionTitle>
+      <PlanUsage plan={data.limits?.plan} used={data.routines.length} max={data.limits?.maxRoutines} label="rotinas" />
+      {data.limits?.plan === 'free' ? <View style={{ height: 12 }} /> : null}
       {data.routines.length === 0 && (
         <EmptyState icon="moon" title="Nenhuma rotina" detail="Crie pausas para dormir, estudar ou comer em família."
           action={canEdit ? <Button label="Criar rotina" onPress={() => router.push('/(app)/routine-edit')} style={{ alignSelf: 'stretch', marginTop: 8 }} /> : undefined} />

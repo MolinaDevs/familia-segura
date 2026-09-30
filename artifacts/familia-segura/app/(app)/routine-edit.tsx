@@ -9,6 +9,7 @@ import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
 import { goBack } from '@/lib/navigation';
+import { PremiumBadge } from '@/components/PlanHint';
 const DAYS = [
   { key: 'dom', label: 'D' }, { key: 'seg', label: 'S' }, { key: 'ter', label: 'T' }, { key: 'qua', label: 'Q' },
   { key: 'qui', label: 'Q' }, { key: 'sex', label: 'S' }, { key: 'sab', label: 'S' },
@@ -38,6 +39,12 @@ export default function RoutineEditScreen() {
   const [end, setEnd] = useState(existing?.end ?? '07:00');
   const [days, setDays] = useState<string[]>(existing ? existing.days.split(',') : ['seg', 'ter', 'qua', 'qui', 'sex']);
   const [lockScreen, setLockScreen] = useState(existing?.lockScreen ?? false);
+  // Travar a tela é Premium; no grátis o selo aparece e ligar leva aos planos.
+  const lockAllowed = data.limits?.features.lockScreen ?? true;
+  const changeLock = (value: boolean) => {
+    if (value && !lockAllowed) { router.push('/(app)/subscription'); return; }
+    setLockScreen(value);
+  };
   // Aberto por link direto, a rotina chega depois do primeiro render.
   useEffect(() => {
     if (!existing) return;
@@ -78,7 +85,7 @@ export default function RoutineEditScreen() {
           <View style={styles.wrap}>
             {TEMPLATES.map((t) => (
               <Chip key={t.title} label={t.title} selected={title === t.title}
-                onPress={() => { setTitle(t.title); setIcon(t.icon); setStart(t.startTime); setEnd(t.endTime); setDays(t.days); setLockScreen(t.lockScreen); }} />
+                onPress={() => { setTitle(t.title); setIcon(t.icon); setStart(t.startTime); setEnd(t.endTime); setDays(t.days); setLockScreen(t.lockScreen && lockAllowed); }} />
             ))}
           </View>
         </>
@@ -115,13 +122,19 @@ export default function RoutineEditScreen() {
       <SectionTitle>Tela</SectionTitle>
       <View style={[styles.toggle, { borderColor: colors.border, backgroundColor: colors.card }]}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.toggleTitle, { color: colors.foreground }]}>Travar a tela</Text>
+          <View style={styles.toggleHead}>
+            <Text style={[styles.toggleTitle, { color: colors.foreground }]}>Travar a tela</Text>
+            {!lockAllowed ? <PremiumBadge /> : null}
+          </View>
           <Text style={[styles.hint, { color: colors.mutedForeground, marginTop: 2 }]}>
             Android: o aparelho trava sempre que for desbloqueado durante a rotina. Ligações, emergência e despertador continuam funcionando. No iPhone e iPad os apps ficam pausados.
           </Text>
         </View>
-        <Toggle value={lockScreen} onValueChange={setLockScreen} testID="routine-lock-screen" accessibilityLabel="Travar a tela durante a rotina" />
+        <Toggle value={lockScreen && lockAllowed} onValueChange={changeLock} testID="routine-lock-screen" accessibilityLabel="Travar a tela durante a rotina" />
       </View>
+      {!lockAllowed && existing?.lockScreen ? (
+        <Text style={[styles.hint, { color: colors.mutedForeground }]}>A trava desta rotina está guardada e volta a valer se você assinar o Premium.</Text>
+      ) : null}
 
       <View style={{ height: 20 }} />
       {data.devices.length === 0 && <View style={{ marginBottom: 12 }}><Notice icon="smartphone" tone="warning">Pareie um aparelho para a rotina ter efeito.</Notice></View>}
@@ -140,5 +153,6 @@ const styles = StyleSheet.create({
   label: { fontFamily: 'NunitoSans_500Medium', fontSize: 12, marginBottom: 6 },
   hint: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, marginTop: 8 },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 14 },
+  toggleHead: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   toggleTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
 });

@@ -5,6 +5,7 @@
  * API segura do Família Segura
  * OpenAPI spec version: 0.3.0
  */
+import type { FamilyLimitsFeatures } from './familyLimitsFeatures';
 import type { FamilyLimitsPlan } from './familyLimitsPlan';
 
 export interface FamilyLimits {
@@ -12,6 +13,12 @@ export interface FamilyLimits {
   maxChildren: number;
   maxDevices: number;
   maxGuardians: number;
+  /** Apps com limite de tempo por criança (bloqueados não contam) */
+  maxTimedApps: number;
+  /** Rotinas por criança */
+  maxRoutines: number;
+  reportDays: number;
+  features: FamilyLimitsFeatures;
   children: number;
   devices: number;
   guardians: number;

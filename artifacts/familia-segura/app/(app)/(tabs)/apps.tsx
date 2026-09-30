@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Button, Card, EmptyState, Notice, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { PlanUsage } from '@/components/PlanHint';
 
 export default function AppsScreen() {
   const colors = useColors();
@@ -35,6 +36,9 @@ export default function AppsScreen() {
       )}
 
       <SectionTitle action={canEdit ? '+ Adicionar' : undefined} onAction={() => router.push('/(app)/add-app')}>Regras de {data.childName}</SectionTitle>
+      <PlanUsage plan={data.limits?.plan} used={data.apps.filter((a) => a.status !== 'bloqueado').length}
+        max={data.limits?.maxTimedApps} label="apps com limite de tempo" />
+      {data.limits?.plan === 'free' ? <View style={{ height: 12 }} /> : null}
       {sortedApps.length === 0 ? (
         <EmptyState icon="grid" title="Nenhum app com regra" detail="Escolha os apps que precisam de limite ou bloqueio."
           action={canEdit ? <Button label="Adicionar app" onPress={() => router.push('/(app)/add-app')} style={{ alignSelf: 'stretch', marginTop: 8 }} /> : undefined} />

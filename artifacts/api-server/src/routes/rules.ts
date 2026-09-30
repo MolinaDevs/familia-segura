@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, isNull, sql } from "drizzle-orm";
+import { and, eq, isNull, ne, sql } from "drizzle-orm";
 import { db, appRulesTable, childrenTable, deviceAppsTable, familiesTable, routinesTable, temporaryGrantsTable } from "@workspace/db";
 import {
   CreateAppRuleBody, CreateAppRuleParams, CreateAppRuleResponse, CreateRoutineBody, CreateRoutineParams,
@@ -12,6 +12,7 @@ import { audit } from "../lib/audit";
 import { findCatalogEntry, findCatalogEntryByPackage, GLOBAL_CATALOG } from "../lib/catalog";
 import { notifyDevicesPolicyChanged } from "../lib/push";
 import { localDate } from "../lib/time";
+import { familyPlan, PLAN_LIMITS } from "../lib/limits";
 import { grantsToday, routineView, ruleView, usageToday } from "../lib/views";
 
 const router: IRouter = Router();
@@ -22,6 +23,17 @@ async function activeChild(familyId: string, childId: string) {
     .where(and(eq(childrenTable.id, childId), eq(childrenTable.familyId, familyId), isNull(childrenTable.archivedAt)));
   return child;
 }
+
+/** Apps com limite de tempo (bloqueados não contam: bloquear é segurança e fica ilimitado no grátis). */
+async function timedAppsCount(childId: string, exceptAppId?: string) {
+  const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(appRulesTable)
+    .where(and(eq(appRulesTable.childId, childId), ne(appRulesTable.status, "blocked"),
+      exceptAppId ? ne(appRulesTable.appId, exceptAppId) : undefined));
+  return Number(row?.n ?? 0);
+}
+
+const TIMED_APPS_MESSAGE = (max: number) =>
+  `No plano grátis dá para ter até ${max} apps com limite de tempo (bloquear apps continua ilimitado). Assine o Premium para limites ilimitados.`;
 
 async function familyToday(familyId: string) {
   const [family] = await db.select({ timezone: familiesTable.timezone }).from(familiesTable).where(eq(familiesTable.id, familyId));
@@ -69,6 +81,13 @@ router.post("/family/children/:childId/apps", requireMember(...EDITORS), async (
     fail(res, 400, "Informe um app do catálogo ou um nome", "APP_REQUIRED"); return;
   }
 
+  if ((input.data.status ?? "allowed") !== "blocked") {
+    const limits = PLAN_LIMITS[await familyPlan(m.familyId)];
+    if (await timedAppsCount(child.id) >= limits.maxTimedApps) {
+      fail(res, 402, TIMED_APPS_MESSAGE(limits.maxTimedApps), "TIMED_APPS_LIMIT"); return;
+    }
+  }
+
   const [rule] = await db.insert(appRulesTable).values({
     familyId: m.familyId, childId: child.id, ...values,
     dailyLimitMinutes: input.data.dailyLimitMinutes ?? 60, status: input.data.status ?? "allowed",
@@ -96,6 +115,14 @@ router.patch("/family/apps/:appId/rules", requireMember(...EDITORS), async (req:
   if (!p.success || !input.success) { fail(res, 400, "Invalid request"); return; }
   const m = req.member!;
   const { childId, ...update } = input.data;
+  if (update.status && update.status !== "blocked") {
+    const limits = PLAN_LIMITS[await familyPlan(m.familyId)];
+    const [current] = await db.select({ status: appRulesTable.status }).from(appRulesTable)
+      .where(and(eq(appRulesTable.appId, p.data.appId), eq(appRulesTable.childId, childId), eq(appRulesTable.familyId, m.familyId)));
+    if (current?.status === "blocked" && await timedAppsCount(childId, p.data.appId) >= limits.maxTimedApps) {
+      fail(res, 402, TIMED_APPS_MESSAGE(limits.maxTimedApps), "TIMED_APPS_LIMIT"); return;
+    }
+  }
   const [rule] = await db.update(appRulesTable).set(update)
     .where(and(eq(appRulesTable.appId, p.data.appId), eq(appRulesTable.childId, childId), eq(appRulesTable.familyId, m.familyId))).returning();
   if (!rule) { fail(res, 404, "Rule not found"); return; }
@@ -113,10 +140,16 @@ router.post("/family/children/:childId/routines", requireMember(...EDITORS), asy
   const child = await activeChild(m.familyId, p.data.childId);
   if (!child) { fail(res, 404, "Child not found"); return; }
   if (input.data.startTime === input.data.endTime) { fail(res, 400, "Início e fim não podem ser iguais", "EMPTY_ROUTINE"); return; }
+  const limits = PLAN_LIMITS[await familyPlan(m.familyId)];
+  const [{ routines }] = await db.select({ routines: sql<number>`count(*)::int` }).from(routinesTable).where(eq(routinesTable.childId, child.id));
+  if (Number(routines) >= limits.maxRoutines) {
+    fail(res, 402, `No plano grátis dá para ter até ${limits.maxRoutines} rotinas por criança. Assine o Premium para rotinas ilimitadas.`, "ROUTINE_LIMIT"); return;
+  }
   const [routine] = await db.insert(routinesTable).values({
     familyId: m.familyId, childId: child.id, title: input.data.title, description: input.data.description ?? "",
     days: input.data.days, startTime: input.data.startTime, endTime: input.data.endTime,
-    icon: input.data.icon ?? "clock", enabled: input.data.enabled ?? true, lockScreen: input.data.lockScreen ?? false,
+    // Trava de tela é Premium: no grátis a rotina é criada sem ela (as sugestões por idade não falham).
+    icon: input.data.icon ?? "clock", enabled: input.data.enabled ?? true, lockScreen: limits.lockScreen && (input.data.lockScreen ?? false),
   }).returning();
   await audit(m.familyId, m.userId, "routine.created", `Rotina "${routine.title}" criada para ${child.displayName}`);
   await notifyDevicesPolicyChanged(m.familyId, child.id);
@@ -127,6 +160,12 @@ router.patch("/family/routines/:routineId", requireMember(...EDITORS), async (re
   const p = UpdateRoutineParams.safeParse(req.params), input = UpdateRoutineBody.safeParse(req.body);
   if (!p.success || !input.success) { fail(res, 400, "Invalid request"); return; }
   const m = req.member!;
+  if (input.data.lockScreen && !PLAN_LIMITS[await familyPlan(m.familyId)].lockScreen) {
+    // Rebaixamento: a trava que já estava guardada pode continuar; só ligar uma nova é Premium.
+    const [current] = await db.select({ lockScreen: routinesTable.lockScreen }).from(routinesTable)
+      .where(and(eq(routinesTable.id, p.data.routineId), eq(routinesTable.familyId, m.familyId)));
+    if (!current?.lockScreen) { fail(res, 402, "Travar a tela na hora de dormir é um recurso Premium.", "PREMIUM_FEATURE"); return; }
+  }
   const [routine] = await db.update(routinesTable).set(input.data)
     .where(and(eq(routinesTable.id, p.data.routineId), eq(routinesTable.familyId, m.familyId))).returning();
   if (!routine) { fail(res, 404, "Routine not found"); return; }

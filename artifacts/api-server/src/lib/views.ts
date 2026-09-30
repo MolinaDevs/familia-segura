@@ -91,7 +91,12 @@ export async function familyLimits(familyId: string) {
   const plan = await familyPlan(familyId);
   const limits = PLAN_LIMITS[plan];
   const counts = await countFamily(familyId);
-  return { plan, maxChildren: limits.maxChildren, maxDevices: limits.maxDevices, maxGuardians: limits.maxGuardians, ...counts };
+  return {
+    plan, maxChildren: limits.maxChildren, maxDevices: limits.maxDevices, maxGuardians: limits.maxGuardians,
+    maxTimedApps: limits.maxTimedApps, maxRoutines: limits.maxRoutines, reportDays: limits.reportDays,
+    features: { lockScreen: limits.lockScreen, weeklySummary: limits.weeklySummary, adFree: limits.adFree },
+    ...counts,
+  };
 }
 
 /** Contagens usadas nos limites. Aceita a transação para contar com a linha da família travada. */
@@ -159,6 +164,7 @@ export async function childOverview(device: Device) {
     .where(and(eq(childrenTable.id, device.childId), eq(childrenTable.familyId, device.familyId), isNull(childrenTable.archivedAt)));
   if (!family || !child) return undefined;
   const today = localDate(family.timezone);
+  const premium = PLAN_LIMITS[await familyPlan(family.id)].lockScreen;
   const [rules, routines, apps, requests, usage, grants, deviceUsage] = await Promise.all([
     db.select().from(appRulesTable).where(and(eq(appRulesTable.childId, child.id), eq(appRulesTable.familyId, family.id))).orderBy(appRulesTable.appName),
     db.select().from(routinesTable).where(and(eq(routinesTable.childId, child.id), eq(routinesTable.familyId, family.id))),
@@ -172,7 +178,8 @@ export async function childOverview(device: Device) {
     child: childView(child),
     deviceId: device.id,
     apps: rules.map((r) => ruleView(r, usage, grants, "child", deviceUsage)),
-    routines: routines.map(routineView),
+    // Trava de tela é Premium: sem assinatura a configuração fica guardada, mas não vale no aparelho.
+    routines: routines.map((r) => ({ ...routineView(r), lockScreen: r.lockScreen && premium })),
     collectedData: ["tempo de uso dos apps com regra", "apps instalados (Android)", "estado da proteção do aparelho", "seus pedidos de tempo"],
     policy: {
       leaseHours: family.offlineLeaseHours,

@@ -49,6 +49,7 @@ export * from './family';
 export * from './familyExport';
 export * from './familyInput';
 export * from './familyLimits';
+export * from './familyLimitsFeatures';
 export * from './familyLimitsPlan';
 export * from './familyMember';
 export * from './familyMemberRole';

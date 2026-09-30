@@ -99,11 +99,26 @@ export const FamilyLimitsPlan = {
   premium: 'premium',
 } as const;
 
+export type FamilyLimitsFeatures = {
+  /** Trava de tela nas rotinas (Android) */
+  lockScreen: boolean;
+  /** Resumo semanal por notificação */
+  weeklySummary: boolean;
+  /** Sem anúncios no app do responsável */
+  adFree: boolean;
+};
+
 export interface FamilyLimits {
   plan: FamilyLimitsPlan;
   maxChildren: number;
   maxDevices: number;
   maxGuardians: number;
+  /** Apps com limite de tempo por criança (bloqueados não contam) */
+  maxTimedApps: number;
+  /** Rotinas por criança */
+  maxRoutines: number;
+  reportDays: number;
+  features: FamilyLimitsFeatures;
   children: number;
   devices: number;
   guardians: number;

@@ -7,8 +7,16 @@ import { hasPremium } from "../middlewares/requirePremium";
  * Responsáveis (titular + co-responsáveis + observadores) ficam fora dessa conta, com teto próprio.
  */
 export const PLAN_LIMITS = {
-  free: { maxChildren: 1, maxDevices: 1, maxGuardians: 1, reportDays: 7 },
-  premium: { maxChildren: 10, maxDevices: 10, maxGuardians: 4, reportDays: 365 },
+  // Segurança (bloquear, pausar, filtro adulto, anti-desinstalação) é igual nos dois planos;
+  // o Premium vende escala e conforto (docs/PLANO_LANCAMENTO.md §3).
+  free: {
+    maxChildren: 1, maxDevices: 1, maxGuardians: 1, reportDays: 7,
+    maxTimedApps: 5, maxRoutines: 2, lockScreen: false, weeklySummary: false, adFree: false,
+  },
+  premium: {
+    maxChildren: 10, maxDevices: 10, maxGuardians: 4, reportDays: 365,
+    maxTimedApps: 1000, maxRoutines: 1000, lockScreen: true, weeklySummary: true, adFree: true,
+  },
 } as const;
 
 export type Plan = keyof typeof PLAN_LIMITS;

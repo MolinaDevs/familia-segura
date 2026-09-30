@@ -45,7 +45,7 @@ router.post("/family", requireAuth, async (req: AuthedRequest, res): Promise<voi
     await tx.insert(consentsTable).values({ familyId: created.id, userId: user.id, consentType: "family" });
     const [child] = await tx.insert(childrenTable).values({ familyId: created.id, displayName: input.data.childName, birthYear: input.data.childBirthYear, color: CHILD_COLORS[0] }).returning();
     await tx.insert(appRulesTable).values({ familyId: created.id, childId: child.id, appId: "youtube", appName: "YouTube", category: "Vídeo", icon: "youtube", iconColor: "#FF0000", androidPackages: ["com.google.android.youtube"] });
-    await tx.insert(routinesTable).values({ familyId: created.id, childId: child.id, title: "Hora de dormir", description: "Desconectar e descansar", days: "dom,seg,ter,qua,qui", startTime: "21:00", endTime: "07:00", icon: "moon", lockScreen: true });
+    await tx.insert(routinesTable).values({ familyId: created.id, childId: child.id, title: "Hora de dormir", description: "Desconectar e descansar", days: "dom,seg,ter,qua,qui", startTime: "21:00", endTime: "07:00", icon: "moon", lockScreen: false });
     await tx.insert(auditEventsTable).values({ familyId: created.id, userId: user.id, action: "family.created", summary: "Família criada com consentimento" });
     return { family: created, userId: user.id };
   });
