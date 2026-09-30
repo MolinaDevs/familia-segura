@@ -7,6 +7,7 @@ import { DailyUsageChart, RankBars, StatTile, UsageHeatmap, useChildColor } from
 import { Button, Card, Chip, EmptyState, formatMinutes, Notice, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { apiStatus } from '@/lib/apiErrors';
 
 const PERIODS = [
@@ -141,6 +142,7 @@ export default function ReportsScreen() {
           {data.children.length === 0 && <Text style={{ color: colors.mutedForeground }}>Nenhuma criança cadastrada.</Text>}
         </>
       )}
+      <AdSlot />
     </Screen>
   );
 }

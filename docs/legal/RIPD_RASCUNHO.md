@@ -27,7 +27,7 @@
   palavras que indicam desligamento/desinstalação.
 - Retenção: uso e eventos por 12 meses (rotina automática `runRetention`); códigos e convites vencidos apagados.
 - Transparência: tela da criança lista regras e dados compartilhados; página pública "Para a criança".
-- Sem publicidade, venda ou perfilamento comercial.
+- Sem venda de dados nem perfilamento comercial. Plano grátis: banner não personalizado (Google AdMob) só no app do responsável; o aparelho da criança nunca mostra nem inicializa anúncios.
 
 ## 4. Riscos e medidas
 

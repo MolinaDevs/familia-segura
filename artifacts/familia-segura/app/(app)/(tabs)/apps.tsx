@@ -7,6 +7,7 @@ import { StatusPill } from '@/components/StatusPill';
 import { Button, Card, EmptyState, Notice, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { AdSlot } from '@/components/ads/AdSlot';
 import { PlanUsage } from '@/components/PlanHint';
 
 export default function AppsScreen() {
@@ -75,6 +76,7 @@ export default function AppsScreen() {
           <Notice icon="smartphone">iPhone/iPad: cada regra nova precisa ser associada ao app no próprio aparelho (Área do responsável → Configurar a proteção).</Notice>
         </View>
       )}
+      <AdSlot />
     </Screen>
   );
 }

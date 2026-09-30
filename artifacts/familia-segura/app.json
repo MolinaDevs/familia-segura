@@ -79,7 +79,8 @@
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_CONTACTS",
         "android.permission.READ_SMS",
-        "android.permission.QUERY_ALL_PACKAGES"
+        "android.permission.QUERY_ALL_PACKAGES",
+        "com.google.android.gms.permission.AD_ID"
       ]
     },
     "web": {
@@ -122,7 +123,15 @@
           "defaultChannel": "alertas"
         }
       ],
-      "expo-background-task"
+      "expo-background-task",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511",
+          "delayAppMeasurementInit": true
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

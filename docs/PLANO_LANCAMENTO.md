@@ -157,3 +157,15 @@ por categoria. Localização fica de fora de propósito (privacidade e posiciona
   novos → aparelho; resumo → Relatórios; pedido de tempo → painel.
 - Relatórios mostram, no grátis, o que o Premium acrescenta ali.
 - Testes: 63 (novos: cálculo do resumo; envio só domingo à noite, só Premium, uma vez).
+
+### Fase 4 — Anúncios no plano grátis ✓
+
+- `react-native-google-mobile-ads` 17.2 com IDs de **teste** oficiais do Google no `app.json` (o dono troca
+  pelos reais do AdMob) e `delayAppMeasurementInit`; permissão `AD_ID` bloqueada no Android (anúncio não
+  personalizado não precisa dela).
+- `components/ads/AdSlot`: um banner adaptativo com selo "Publicidade", só no fim de Relatórios e Apps, só no
+  plano grátis, depois de 3 dias de conta, `requestNonPersonalizedAdsOnly`, classificação G. O SDK só é
+  inicializado quando o banner vai aparecer — o modo criança nunca chega lá.
+- Sem ID real (produção) ou se o anúncio falhar: cartão da casa "Sem anúncios no Premium", que pode ser
+  fechado por 7 dias. Na web, só o cartão da casa.
+- Política de Privacidade e RIPD atualizadas (antes diziam "não exibimos anúncios").

@@ -44,12 +44,12 @@ const pages: Record<string, LegalPage> = {
         body: "O aplicativo instalado no aparelho da criança mostra quais regras e rotinas estão ativas e quais dados são compartilhados com a família, em linguagem simples. Não há monitoramento oculto.",
       },
       {
-        title: "Sem publicidade e sem perfilamento",
-        body: "Não exibimos anúncios, não vendemos dados, não criamos perfis comportamentais para fins comerciais e não usamos dados de crianças e adolescentes para publicidade, em linha com o ECA Digital.",
+        title: "Anúncios: só para o responsável e sem perfilamento",
+        body: "No plano grátis, o app do responsável (adulto) mostra um banner não personalizado do Google AdMob no fim de algumas telas, com classificação de conteúdo livre. O aparelho da criança nunca mostra anúncios nem inicializa o serviço de anúncios. Não vendemos dados, não criamos perfis comportamentais para fins comerciais e não usamos dados de crianças e adolescentes para publicidade, em linha com o ECA Digital. No Premium não há anúncios.",
       },
       {
         title: "Com quem compartilhamos",
-        body: "Apenas com operadores necessários ao serviço: provedor de autenticação (Clerk), gestão de assinaturas (RevenueCat, Apple e Google), envio de notificações (Expo) e infraestrutura de hospedagem e banco de dados. Cada um trata só o necessário à sua função. Pode haver transferência internacional para esses prestadores, com as salvaguardas contratuais previstas na LGPD.",
+        body: "Apenas com operadores necessários ao serviço: provedor de autenticação (Clerk), gestão de assinaturas (RevenueCat, Apple e Google), envio de notificações (Expo), anúncios não personalizados no app do responsável no plano grátis (Google AdMob) e infraestrutura de hospedagem e banco de dados. Cada um trata só o necessário à sua função. Pode haver transferência internacional para esses prestadores, com as salvaguardas contratuais previstas na LGPD.",
       },
       {
         title: "Retenção",
