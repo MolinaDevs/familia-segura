@@ -1,4 +1,4 @@
-import { Icon } from '@/components/Icon';
+import { Icon, iconName } from '@/components/Icon';
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import React from 'react';
@@ -37,7 +37,7 @@ export default function RoutineScreen() {
           <Card key={routine.id} onPress={canEdit ? () => router.push({ pathname: '/(app)/routine-edit', params: { id: routine.id } }) : undefined}>
             <View style={styles.top}>
               <View style={[styles.icon, { backgroundColor: routine.enabled ? colors.primary : colors.muted }]}>
-                <Icon name={(routine.icon || 'clock') as React.ComponentProps<typeof Icon>['name']} size={20} color={routine.enabled ? colors.primaryForeground : colors.mutedForeground} />
+                <Icon name={iconName(routine.icon, 'clock')} size={20} color={routine.enabled ? colors.primaryForeground : colors.mutedForeground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.title, { color: colors.foreground }]}>{routine.title}</Text>

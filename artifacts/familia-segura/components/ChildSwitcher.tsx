@@ -3,6 +3,7 @@ import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { textOn } from '@/lib/contrast';
 
 /**
  * Seletor de criança no topo das telas (até 10 crianças).
@@ -35,7 +36,7 @@ export function ChildSwitcher({ value, onChange, allowAll }: { value?: string | 
             accessibilityLabel={`Ver ${child.displayName}`} onPress={() => pick(child.id)}
             style={[styles.chip, { borderColor: active ? child.color : colors.border, backgroundColor: active ? colors.secondary : colors.card }]}>
             <View style={[styles.avatar, { backgroundColor: child.color }]}>
-              <Text style={styles.initial}>{child.displayName.slice(0, 1).toUpperCase()}</Text>
+              <Text style={[styles.initial, { color: textOn(child.color) }]}>{child.displayName.slice(0, 1).toUpperCase()}</Text>
             </View>
             <Text style={[styles.label, { color: colors.foreground }]}>{child.displayName}</Text>
           </Pressable>
@@ -57,6 +58,6 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 99, paddingLeft: 5, paddingRight: 14, paddingVertical: 5, minHeight: 40 },
   add: { paddingHorizontal: 12, borderStyle: 'dashed' },
   avatar: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  initial: { color: '#FFFFFF', fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
+  initial: { fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
   label: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
 });

@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   pinInput: { width: 220, height: 60, borderWidth: 1, borderRadius: 16, textAlign: 'center', fontFamily: 'Montserrat_700Bold', fontSize: 26, letterSpacing: 8 },
   error: { fontFamily: 'NunitoSans_500Medium', fontSize: 13, textAlign: 'center' },
   primary: { width: 220, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
+  primaryText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   warning: { flexDirection: 'row', gap: 10, padding: 14, borderRadius: 14, alignItems: 'flex-start' },
   option: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, borderRadius: 18, padding: 16 },
   optionTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15, marginBottom: 2 },

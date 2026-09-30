@@ -11,7 +11,7 @@ import { useColors } from '@/hooks/useColors';
 
 type IconName = React.ComponentProps<typeof Icon>['name'];
 
-// No navegador, o foco já aparece na borda lavanda do campo; o contorno padrão ficaria duplicado.
+// No navegador, o foco já aparece na borda azul do campo; o contorno padrão ficaria duplicado.
 const WEB_NO_OUTLINE = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
 
 /** Moldura das telas de conta: fundo da marca, barra com voltar + assinatura, rolagem que respeita o teclado. */
@@ -65,7 +65,7 @@ export function AuthHeader({ title, subtitle, icon }: { title: string; subtitle?
   );
 }
 
-/** Superfície do formulário. A "costura" lavanda no topo marca a abertura (não é moldura). */
+/** Superfície do formulário. A "costura" laranja no topo marca a abertura (não é moldura). */
 export function AuthCard({ children }: PropsWithChildren) {
   const colors = useColors();
   return (
@@ -76,7 +76,7 @@ export function AuthCard({ children }: PropsWithChildren) {
   );
 }
 
-/** Campo com rótulo em cima, ícone, foco lavanda, erro embaixo e (senha) botão de mostrar. */
+/** Campo com rótulo em cima, ícone, foco azul, erro embaixo e (senha) botão de mostrar. */
 export function AuthField({
   label, icon, error, helper, secure, right, style, ...input
 }: TextInputProps & { label: string; icon?: IconName; error?: string | null; helper?: string; secure?: boolean; right?: ReactNode }) {

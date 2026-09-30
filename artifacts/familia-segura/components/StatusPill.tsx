@@ -1,19 +1,20 @@
-import { Icon } from '@/components/Icon';
+import { Icon, type IconName } from '@/components/Icon';
 import { StyleSheet, Text, View } from 'react-native';
 import { AppStatus } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
 
 export function StatusPill({ status }: { status: AppStatus }) {
   const colors = useColors();
-  const config = {
+  const config: Record<AppStatus, { label: string; icon: IconName; color: string; background: string }> = {
     permitido: { label: 'Permitido', icon: 'check-circle', color: colors.success, background: colors.successSoft },
     atenção: { label: 'Atenção', icon: 'clock', color: colors.warning, background: colors.warningSoft },
     bloqueado: { label: 'Bloqueado', icon: 'slash', color: colors.destructive, background: colors.dangerSoft },
-  }[status];
+  };
+  const item = config[status];
   return (
-    <View style={[styles.pill, { backgroundColor: config.background }]} accessibilityLabel={`Status: ${config.label}`}>
-      <Icon name={config.icon as React.ComponentProps<typeof Icon>['name']} size={12} color={config.color} />
-      <Text style={[styles.label, { color: config.color }]}>{config.label}</Text>
+    <View style={[styles.pill, { backgroundColor: item.background }]} accessibilityLabel={`Status: ${item.label}`}>
+      <Icon name={item.icon} size={12} color={item.color} />
+      <Text style={[styles.label, { color: item.color }]}>{item.label}</Text>
     </View>
   );
 }

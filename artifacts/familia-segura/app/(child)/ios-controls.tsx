@@ -144,7 +144,7 @@ const styles = StyleSheet.create({
   statusTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
   statusDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
   primaryButton: { height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 },
-  primaryButtonText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
+  primaryButtonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   summary: { fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 18, marginVertical: 18 },
   ruleCard: { borderWidth: 1, borderRadius: 20, padding: 16, marginTop: 12 },
   ruleTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },

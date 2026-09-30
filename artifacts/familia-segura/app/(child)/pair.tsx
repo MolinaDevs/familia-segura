@@ -1,32 +1,47 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, ActivityIndicator, Platform } from 'react-native';
-import { Alert } from '@/lib/alert';
+import { Platform, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { usePairDevice } from '@workspace/api-client-react';
-import { useColors } from '@/hooks/useColors';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Icon } from '@/components/Icon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
 import Constants from 'expo-constants';
-
+import { useColors } from '@/hooks/useColors';
+import { AuthButton, AuthCard, AuthField, AuthHeader, AuthShell, FormMessage, TrustNote } from '@/components/auth/AuthKit';
 import { goBack } from '@/lib/navigation';
-export default function PairDeviceScreen() {
+
+/** "abcd2345" → "ABCD-2345" enquanto digita (o código tem 8 caracteres). */
+function formatCode(value: string) {
+  const clean = value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 8);
+  return clean.length > 4 ? `${clean.slice(0, 4)}-${clean.slice(4)}` : clean;
+}
+
+function Step({ n, children }: { n: number; children: React.ReactNode }) {
   const colors = useColors();
-  const insets = useSafeAreaInsets();
+  return (
+    <View style={styles.step}>
+      <View style={[styles.stepNumber, { backgroundColor: colors.blueSoft }]}>
+        <Text style={[styles.stepNumberText, { color: colors.navy }]}>{n}</Text>
+      </View>
+      <Text style={[styles.stepText, { color: colors.foreground }]}>{children}</Text>
+    </View>
+  );
+}
+
+export default function PairDeviceScreen() {
   const router = useRouter();
-  
   const pairDevice = usePairDevice();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const normalized = code.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const normalized = code.replace(/[^A-Z0-9]/g, '');
   const ready = normalized.length === 8;
 
   const handlePair = async () => {
-    if (!ready) return;
+    if (!ready || loading) return;
     setLoading(true);
+    setError(null);
     try {
       const result = await pairDevice.mutateAsync({
         data: {
@@ -36,7 +51,7 @@ export default function PairDeviceScreen() {
           osVersion: String(Platform.Version),
           appVersion: Constants.expoConfig?.version,
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        }
+        },
       });
       await AsyncStorage.setItem('childMode', 'true');
       if (Platform.OS !== 'web') {
@@ -44,77 +59,63 @@ export default function PairDeviceScreen() {
         await SecureStore.setItemAsync('childId', result.device.childId);
         await SecureStore.setItemAsync('deviceToken', result.deviceToken);
       }
-      
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Próximo passo: o responsável conclui a configuração da proteção neste aparelho.
       router.replace('/(child)/guardian');
     } catch (err) {
       const status = (err as { status?: number }).status;
-      Alert.alert(
-        'Não foi possível vincular',
-        status === 409 ? 'A família atingiu o limite de aparelhos. Peça ao responsável para remover um aparelho antigo.'
-          : status === 429 ? 'Muitas tentativas. Aguarde alguns minutos.'
-          : 'Código inválido ou expirado. Peça um novo código ao responsável.',
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      setError(
+        status === 409 ? 'A família já está no limite de aparelhos. O responsável pode remover um aparelho antigo em Família.'
+          : status === 429 ? 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.'
+          : 'Esse código não funcionou. Cada código vale 15 minutos e só uma vez: peça um novo ao responsável.',
       );
       setLoading(false);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
-      <Pressable onPress={() => goBack('/')} style={styles.backButton}>
-        <Icon name="x" size={24} color={colors.foreground} />
-      </Pressable>
+    <AuthShell onBack={() => goBack('/')} backLabel="Voltar ao início">
+      <AuthHeader
+        title="Conectar este aparelho"
+        subtitle="Leva um minuto. Depois disso, as regras combinadas pela família passam a valer aqui."
+      />
 
-      <View style={styles.header}>
-        <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Icon name="link" size={32} color={colors.primaryForeground} />
-        </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Conectar ao responsável</Text>
-        <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          No app do responsável, toque em Família → + Parear. Digite aqui o código que aparecer.
-        </Text>
-      </View>
-      
-      <View style={styles.form}>
-        <TextInput
-          style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
+      <AuthCard>
+        <Step n={1}>No celular do responsável, abra <Text style={styles.strong}>Família</Text> e toque em <Text style={styles.strong}>+ Parear</Text>.</Step>
+        <Step n={2}>Digite abaixo o código de 8 letras e números que aparecer.</Step>
+
+        <AuthField
+          label="Código de pareamento"
+          icon="link"
           value={code}
-          onChangeText={(value) => setCode(value.toUpperCase())}
+          onChangeText={(value) => { setCode(formatCode(value)); setError(null); }}
           placeholder="ABCD-2345"
-          placeholderTextColor={colors.mutedForeground}
           autoCapitalize="characters"
           autoCorrect={false}
+          autoComplete="off"
           maxLength={9}
+          returnKeyType="go"
+          onSubmitEditing={() => void handlePair()}
+          style={styles.code}
+          testID="pair-code"
         />
-        
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            { backgroundColor: colors.primary },
-            pressed && styles.pressed,
-            (!ready || loading) && { opacity: 0.5 }
-          ]}
-          onPress={handlePair}
-          disabled={!ready || loading}
-        >
-          {loading ? <ActivityIndicator color={colors.primaryForeground} /> : <Text style={[styles.buttonText, { color: colors.primaryForeground }]}>Vincular</Text>}
-        </Pressable>
-      </View>
-    </View>
+
+        {error ? <FormMessage tone="error">{error}</FormMessage> : null}
+
+        <AuthButton label="Conectar" onPress={() => void handlePair()} loading={loading} disabled={!ready} testID="pair-submit" />
+      </AuthCard>
+
+      <TrustNote />
+    </AuthShell>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, paddingHorizontal: 24 },
-  backButton: { marginTop: 10, alignSelf: 'flex-start' },
-  header: { marginTop: 40, marginBottom: 40, alignItems: 'center' },
-  iconContainer: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  title: { fontFamily: 'Montserrat_700Bold', fontSize: 26, marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontFamily: 'NunitoSans_400Regular', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 280 },
-  form: { flex: 1, gap: 16, alignItems: 'center' },
-  input: { height: 72, width: '100%', borderWidth: 2, borderRadius: 20, textAlign: 'center', fontFamily: 'Montserrat_700Bold', fontSize: 28, letterSpacing: 4 },
-  button: { height: 56, width: '100%', borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  buttonText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 17 },
-  pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
+  step: { flexDirection: 'row', alignItems: 'flex-start', gap: 12 },
+  stepNumber: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginTop: 1 },
+  stepNumberText: { fontFamily: 'Montserrat_700Bold', fontSize: 13 },
+  stepText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 15, lineHeight: 22 },
+  strong: { fontFamily: 'NunitoSans_800ExtraBold' },
+  code: { fontFamily: 'Montserrat_700Bold', fontSize: 22, letterSpacing: 4 },
 });

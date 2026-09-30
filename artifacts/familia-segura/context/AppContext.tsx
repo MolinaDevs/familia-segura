@@ -75,7 +75,7 @@ const emptyData: FamilyData = {
   guardianName: '',
   childName: 'Criança',
   childAge: 10,
-  childColor: '#2A5A4A',
+  childColor: '#1C5A96',
   children: [],
   lastSynced: 'Nunca',
   apps: [],
@@ -120,7 +120,7 @@ function mapOverview(overview: FamilyOverview | undefined, selectedChildId: stri
     guardianName: me?.displayName ?? owner?.displayName ?? '',
     childName: child?.displayName ?? 'Criança',
     childAge: child ? new Date().getFullYear() - child.birthYear : 10,
-    childColor: child?.color ?? '#2A5A4A',
+    childColor: child?.color ?? '#1C5A96',
     children: overview.children,
     apps: overview.apps.filter((a) => a.childId === childId).map((app) => ({
       id: app.appId,

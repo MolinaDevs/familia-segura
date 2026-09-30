@@ -1,4 +1,4 @@
-import { Icon } from '@/components/Icon';
+import { Icon, iconName } from '@/components/Icon';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -184,7 +184,7 @@ export default function HomeScreen() {
           <SectionTitle action="Ajustar" onAction={() => router.push('/(app)/(tabs)/routine')}>Rotina</SectionTitle>
           {activeRoutine ? (
             <Card style={styles.appRow}>
-              <Icon name={(activeRoutine.icon || 'moon') as React.ComponentProps<typeof Icon>['name']} size={22} color={colors.primary} />
+              <Icon name={iconName(activeRoutine.icon, 'moon')} size={22} color={colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.reqTitle, { color: colors.foreground }]}>{activeRoutine.title}</Text>
                 <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>{activeRoutine.start} às {activeRoutine.end}</Text>

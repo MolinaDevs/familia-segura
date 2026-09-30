@@ -17,6 +17,7 @@ import { ChatCircleIcon } from 'phosphor-react-native/src/icons/ChatCircle';
 import { ChatTextIcon } from 'phosphor-react-native/src/icons/ChatText';
 import { CheckIcon } from 'phosphor-react-native/src/icons/Check';
 import { CheckCircleIcon } from 'phosphor-react-native/src/icons/CheckCircle';
+import { CircleIcon } from 'phosphor-react-native/src/icons/Circle';
 import { ClockIcon } from 'phosphor-react-native/src/icons/Clock';
 import { CoffeeIcon } from 'phosphor-react-native/src/icons/Coffee';
 import { CpuIcon } from 'phosphor-react-native/src/icons/Cpu';
@@ -90,7 +91,7 @@ const ICONS = {
   'trash-2': TrashIcon, 'edit-3': PencilSimpleIcon, 'refresh-cw': ArrowsClockwiseIcon, 'log-out': SignOutIcon,
   'share-2': ShareNetworkIcon, link: LinkIcon, settings: GearIcon, sliders: SlidersHorizontalIcon, download: DownloadSimpleIcon,
   // estados
-  'check-circle': CheckCircleIcon, 'alert-circle': WarningCircleIcon, 'alert-triangle': WarningIcon, info: InfoIcon,
+  circle: CircleIcon, 'check-circle': CheckCircleIcon, 'alert-circle': WarningCircleIcon, 'alert-triangle': WarningIcon, info: InfoIcon,
   'info-circle': InfoIcon, 'help-circle': QuestionIcon, slash: ProhibitIcon, eye: EyeIcon, 'eye-off': EyeSlashIcon,
   // proteção
   shield: ShieldCheckIcon, 'shield-off': ShieldSlashIcon, lock: LockIcon, unlock: LockOpenIcon, key: KeyIcon, hash: HashIcon,
@@ -113,19 +114,23 @@ const ICONS = {
 
 export type IconName = keyof typeof ICONS;
 
+/** Nome vindo do servidor (catálogo de apps, rotinas): desconhecido vira um ícone genérico de app. */
+export const iconName = (value: string | null | undefined, fallback: IconName = 'grid'): IconName =>
+  value && value in ICONS ? (value as IconName) : fallback;
+
 /** Ícones de controle (setas, fechar, marcar) ficam em traço firme; o resto em duotone. */
 const BOLD = new Set<string>(['arrow-left', 'chevron-right', 'x', 'plus', 'check', 'eye', 'eye-off']);
 
 export function Icon({ name, size = 20, color, weight, style, testID }: {
-  /** Nome conhecido ou vindo do servidor (catálogo); desconhecido cai num ícone genérico de app. */
-  name: IconName | (string & {});
+  /** Nome conhecido. Nome vindo do servidor passa por `iconName()`. */
+  name: IconName;
   size?: number;
   color?: ColorValue;
   weight?: IconWeight;
   style?: StyleProp<ViewStyle>;
   testID?: string;
 }) {
-  const Component = (ICONS as Record<string, PhosphorIcon>)[name] ?? AppWindowIcon;
+  const Component: PhosphorIcon = ICONS[name] ?? AppWindowIcon;
   return (
     <Component
       size={size}

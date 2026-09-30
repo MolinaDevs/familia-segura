@@ -338,7 +338,7 @@ const styles = StyleSheet.create({
   label: { fontFamily: 'NunitoSans_500Medium', fontSize: 14 },
   input: { height: 48, borderWidth: 1, borderRadius: 12, paddingHorizontal: 16, fontFamily: 'NunitoSans_400Regular', fontSize: 15 },
   button: { height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  buttonText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 16 },
+  buttonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 16 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 8 },

@@ -10,6 +10,7 @@ import { Button, Card, Divider, Row, Screen, SectionTitle } from '@/components/u
 import { useFamily } from '@/context/AppContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useColors } from '@/hooks/useColors';
+import { textOn } from '@/lib/contrast';
 import { showApiError } from '@/lib/apiErrors';
 import { openLegal } from '@/lib/legal';
 
@@ -72,7 +73,7 @@ export default function FamilyScreen() {
               <Row
                 title={child.displayName}
                 detail={`${new Date().getFullYear() - child.birthYear} anos · ${devices.length === 0 ? 'nenhum aparelho' : `${devices.length} aparelho(s)`}`}
-                right={<View style={[styles.avatar, { backgroundColor: childColor(child.color) }]}><Text style={styles.initial}>{child.displayName[0]?.toUpperCase()}</Text></View>}
+                right={<View style={[styles.avatar, { backgroundColor: childColor(child.color) }]}><Text style={[styles.initial, { color: textOn(childColor(child.color)) }]}>{child.displayName[0]?.toUpperCase()}</Text></View>}
                 onPress={canEdit ? () => router.push({ pathname: '/(app)/child-edit', params: { id: child.id } }) : undefined}
               />
             </View>
@@ -133,6 +134,6 @@ export default function FamilyScreen() {
 
 const styles = StyleSheet.create({
   avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  initial: { color: '#FFFFFF', fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
+  initial: { fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
   empty: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, textAlign: 'center', paddingVertical: 14 },
 });
