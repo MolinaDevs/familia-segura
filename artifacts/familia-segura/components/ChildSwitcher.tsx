@@ -55,7 +55,7 @@ export function ChildSwitcher({ value, onChange, allowAll }: { value?: string | 
 const styles = StyleSheet.create({
   scroll: { marginHorizontal: -20, marginBottom: 18, flexGrow: 0 },
   row: { paddingHorizontal: 20, gap: 8 },
-  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 99, paddingLeft: 5, paddingRight: 14, paddingVertical: 5, minHeight: 40 },
+  chip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 99, paddingLeft: 5, paddingRight: 14, paddingVertical: 5, minHeight: 44 },
   add: { paddingHorizontal: 12, borderStyle: 'dashed' },
   avatar: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   initial: { fontFamily: 'NunitoSans_700Bold', fontSize: 13 },

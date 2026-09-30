@@ -53,6 +53,18 @@ Itens marcados como externos não podem ser concluídos apenas no código.
 - [ ] Exclusão remove a família e não cancela silenciosamente a assinatura.
 - [ ] Links legais e suporte abrem no build de produção.
 
+## Recursos novos (aparelho real)
+
+- [ ] Pausar agora: Android bloqueia na hora e libera sozinho no horário, mesmo offline; iPhone bloqueia tudo e
+      libera no fim (pausas de 15 min ou mais) ou pelo aviso do servidor.
+- [ ] Plano grátis: 6º app com limite e 3ª rotina pedem Premium; bloquear continua liberado; trava de tela com selo.
+- [ ] Rebaixamento: sair do Premium mantém regras e a trava deixa de valer; assinar de novo reativa.
+- [ ] Resumo semanal chega no domingo à noite (Premium) e abre os Relatórios ao tocar.
+- [ ] Anúncio: aparece só no fim de Relatórios e Apps, só no grátis, depois de 3 dias; nunca no aparelho da criança
+      (conferir com proxy que o modo criança não faz requisições ao AdMob).
+- [ ] Primeiros passos: tour após criar a família, guia com progresso no painel, dicas de Apps/Rotina/Relatórios.
+- [ ] Toque em cada tipo de notificação abre a tela certa.
+
 ## Metadados
 
 - [ ] Ícone revisado em 1024×1024 sem transparência indevida.

@@ -72,6 +72,14 @@ os mesmos que o app e o catálogo do servidor já usam — nome desconhecido cai
 - **Chips e selos:** pílula. **Interruptor:** `Toggle` (trilho azul, botão branco).
 - **Estado vazio:** ícone em bolha azul, título em Montserrat, orientação do que fazer.
 - **Carregamento:** `BrandLoading` (emblema que respira + letreiro + barra deslizante). Spinner só dentro de botão.
+- **Pausar agora** (`PauseCard`): cartão no painel com 15 min / 30 min / 1 hora / Até eu liberar; em pausa, fundo
+  azul-claro, horário e "Liberar agora".
+- **Plano grátis** (`PlanUsage`, `PremiumBadge`): "3 de 5 … no plano grátis" com barra, discreto até encher (aí
+  fica pêssego); selo PREMIUM laranja em recursos pagos. Informar, não pressionar.
+- **Primeiros passos** (`GettingStarted`, `welcome-tour`, `TipCard`): guia com progresso e passo atual em
+  destaque; tour de 4 telas com "Pular"; dica amarela de uma frase com "Entendi", uma vez por tela.
+- **Anúncio** (`AdSlot`, `HouseAd`): só no fim de Relatórios e Apps, com o selo "Publicidade", separado por
+  divisória; nunca entre conteúdo, nunca em tela cheia, nunca na criança.
 
 ## 7. Texto (copywriting)
 

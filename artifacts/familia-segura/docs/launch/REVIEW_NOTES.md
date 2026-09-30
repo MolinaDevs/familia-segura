@@ -28,7 +28,10 @@ acesso"), nunca neste repositório. Se possível, deixar um aparelho de teste j�
 
 - Família → Premium: planos mensal e anual da oferta atual da loja; compra com conta sandbox.
 - Restaurar compra no segundo aparelho; "Gerenciar assinatura" abre a loja.
-- Após expirar, nada é apagado nem desbloqueado; só não é possível adicionar crianças/aparelhos além do plano grátis.
+- Após expirar, nada é apagado nem desbloqueado; só não é possível adicionar crianças, aparelhos, apps com
+  limite ou rotinas além do plano grátis. A trava de tela (Android) fica guardada e para de valer.
+- Plano grátis mostra um banner não personalizado só no app do responsável (fim de Relatórios e Apps). O modo
+  criança (aparelho pareado) nunca mostra anúncios nem inicializa o SDK.
 
 ## Google Play — declarações
 

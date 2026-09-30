@@ -19,18 +19,28 @@
 | Tempo de Uso (Apple) | Grátis, integrado ao iOS | Só Apple; pai com Android fica de fora |
 | Qustodio, Kaspersky Safe Kids, Norton Family, FamiSafe | Multiplataforma | Produto estrangeiro, foco em vigilância; menos transparência para a criança; suporte em PT-BR limitado |
 
-## Planos (proposta)
+## Planos (em vigor — ver `docs/PLANO_LANCAMENTO.md` §3)
 
 | | Grátis | Premium |
 |---|---|---|
-| Crianças / aparelhos | 1 / 1 | até 10 / até 10 |
-| Responsáveis | 1 | até 4 (titular, co-responsáveis, observadores) |
-| Limites, bloqueios, rotinas, pedidos de tempo | ✓ | ✓ |
-| Anti-desinstalação, aprovação de apps novos | ✓ | ✓ |
+| Crianças / aparelhos / responsáveis | 1 / 1 / 1 | até 10 / 10 / 4 |
+| Bloquear apps, aprovar instalações, anti-desinstalação, filtro adulto, **pausar agora** | ✓ | ✓ |
+| Pedidos de tempo e tempo extra | ✓ | ✓ |
+| Apps com limite de tempo | até 5 | ilimitados |
+| Rotinas por criança | até 2 | ilimitadas |
+| Travar a tela na hora de dormir (Android) | — | ✓ |
 | Relatórios | 7 dias | 12 meses |
+| Resumo semanal no celular | — | ✓ |
+| Anúncios | 1 banner discreto, só no app do responsável | nenhum |
 
-**Por que o básico é grátis:** proteção pela metade gera avaliações ruins e desinstalação. O Premium cobra
-por escala (famílias com mais filhos/aparelhos, guarda compartilhada) e por histórico.
+**Por que a segurança é grátis:** proteção pela metade gera avaliações ruins e desinstalação — e um controle
+parental que cobra para bloquear não é ético. O Premium cobra por **escala** (mais filhos, aparelhos e
+responsáveis), **conforto** (limites e rotinas ilimitados, trava de tela, resumo semanal) e **histórico**, e
+tira o anúncio.
+
+**Anúncios sem espantar:** um único banner não personalizado no fim de Relatórios e Apps, nunca no painel,
+em alertas, no cadastro ou na criança; 3 dias sem anúncio para o usuário novo; cartão da casa (Premium)
+quando não há anúncio. Receita esperada é pequena — o anúncio existe mais para dar motivo de assinar.
 
 **Preço sugerido para teste (A/B na loja):** R$ 19,90/mês ou R$ 149,90/ano, com 7 dias grátis.
 Faixa a validar: R$ 14,90–24,90/mês. As lojas cobram 15% (programas de pequenas empresas) — incluir no cálculo.

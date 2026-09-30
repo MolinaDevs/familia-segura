@@ -106,6 +106,8 @@ export function Chip({ label, selected, onPress, color, testID }: { label: strin
       accessibilityRole="button"
       accessibilityState={{ selected: Boolean(selected) }}
       onPress={onPress}
+      // Área de toque de 48 px (o chip visível tem 40): recomendação de acessibilidade para toque.
+      hitSlop={4}
       style={[styles.chip, { borderColor: selected ? tint : colors.border, backgroundColor: selected ? colors.secondary : colors.card }]}
     >
       <Text style={[styles.chipText, { color: selected ? tint : colors.foreground }]}>{label}</Text>
@@ -215,7 +217,7 @@ const styles = StyleSheet.create({
   card: { borderRadius: 24, borderWidth: 1, padding: 18, shadowOpacity: 0.07, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 1 },
   button: { minHeight: 50, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16 },
   buttonText: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 15 },
-  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
+  chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, minHeight: 40, justifyContent: 'center' },
   chipText: { fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, minHeight: 56 },
   rowIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },

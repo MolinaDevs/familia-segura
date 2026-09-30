@@ -30,6 +30,13 @@ Siga `docs/TESTE_BETA.md`.
 - RevenueCat: **Secret API key v2**; produtos nas lojas; oferta `default`.
 - Hospedagem da API + Postgres 15+ (`docs/DEPLOY.md`).
 - Dados do controlador: `LEGAL_CONTROLLER_NAME`, `LEGAL_CONTROLLER_CNPJ`, `LEGAL_DPO_EMAIL`.
+- **AdMob (anúncios do plano grátis):** criar a conta e os apps Android/iOS; trocar os IDs de **teste** do
+  plugin `react-native-google-mobile-ads` em `artifacts/familia-segura/app.json` pelos IDs reais dos apps; criar
+  um bloco "Banner" por plataforma e definir `EXPO_PUBLIC_ADMOB_BANNER_ANDROID` e `EXPO_PUBLIC_ADMOB_BANNER_IOS`
+  no EAS. No AdMob: classificação máxima **G**, anúncios **não personalizados**, bloquear categorias sensíveis
+  (namoro, apostas, álcool, política). Publicar o `app-ads.txt` no site do app. Sem os IDs, o app mostra só o
+  cartão do Premium (nada quebra).
+- **RevenueCat:** o entitlement `premium` libera tudo do comparativo (docs/PLANO_LANCAMENTO.md §3).
 
 ## 5. Jurídico e comercial
 - Advogado: Política, Termos, RIPD (`docs/legal/RIPD_RASCUNHO.md`), DPAs com fornecedores, enquadramento no ECA Digital.

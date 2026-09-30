@@ -18,12 +18,23 @@ Este documento é um roteiro para preenchimento nas lojas. Confirmar as resposta
 
 Não usar os dados para rastreamento entre empresas ou publicidade direcionada.
 
+**Anúncios (plano grátis, só no app do responsável):** o Google Mobile Ads SDK traz o próprio manifesto de
+privacidade. Declarar, conforme a orientação atual do Google para o AdMob, os dados que o SDK coleta para
+**publicidade de terceiros** (ex.: interação com o produto/anúncio, dados de diagnóstico e identificadores do
+app), marcados como **não usados para rastreamento**. O app não pede ATT e só solicita anúncios não
+personalizados. O aparelho da criança nunca inicializa o SDK.
+
 ## Google Play Data Safety
 
 - Dados criptografados em trânsito: sim.
 - Exclusão disponível: sim, no aplicativo e em `/api/legal/delete-account`.
 - Conta obrigatória para responsável: sim.
-- Dados compartilhados com prestadores: Clerk (autenticação), RevenueCat/Google Play (assinatura) e Replit (infraestrutura), somente para prestação do serviço.
+- Dados compartilhados com prestadores: Clerk (autenticação), RevenueCat/Google Play (assinatura), Expo (notificações) e a hospedagem, somente para prestação do serviço.
+- **Contém anúncios: sim** (plano grátis, só no app do responsável, não personalizados). Declarar o Google
+  AdMob como destinatário dos dados que o SDK coleta para publicidade, conforme a página de divulgação de
+  dados do AdMob para o Play. A permissão `AD_ID` é bloqueada no build.
+- Público-alvo na Play Console: **adultos (18+)** — o app é operado pelo responsável; o modo criança não mostra
+  anúncios. Revisar com o jurídico antes de enviar (política Families e ECA Digital, art. 22 e 26).
 - Coleta de atividade em apps: minutos por app e lista de apps instalados, para controle parental, aprovação de apps e relatórios.
 - Device Admin: usado apenas para impedir a desinstalação sem o PIN do responsável (declarar na Play Console).
 - Retenção: dados de uso por até 12 meses; exclusão completa ao excluir a família.

@@ -179,3 +179,19 @@ por categoria. Localização fica de fora de propósito (privacidade e posiciona
   tela certa, atalho "Ver o tour"; some quando tudo está pronto.
 - Dicas de contexto (`components/TipCard.tsx`) na primeira visita a Apps, Rotina e Relatórios; "Entendi"
   esconde para sempre.
+
+### Fase 6 — Acessibilidade, lojas e ações do dono ✓
+
+- Toque: chips com 40 px visíveis e área de 48 px; seletor de criança com 44 px.
+- Loja (`artifacts/familia-segura/docs/launch/`): descrição com pausar agora, resumo semanal e o novo
+  comparativo de planos; Data Safety e App Privacy com o AdMob ("contém anúncios", não usado para
+  rastreamento, público-alvo adulto); notas de revisão sobre planos e anúncios; checklist com os testes em
+  aparelho real dos recursos novos.
+- `docs/COMERCIAL.md` com os planos em vigor; `docs/ACOES_DO_DONO.md` com AdMob (IDs reais, bloco de banner,
+  classificação G, categorias sensíveis bloqueadas, app-ads.txt); `docs/DESIGN.md` com os componentes novos.
+
+## 9. O que depende do dono para publicar
+
+Conta Apple Developer + entitlement Family Controls, EAS, Google Play Console, AdMob (IDs reais), RevenueCat
+(produtos e preço), revisão jurídica (Política, Termos, RIPD, anúncios e ECA Digital) e os testes em aparelho real
+do checklist. Tudo o que é código está pronto e testado (63 testes de API; Android e iOS compilando no CI).
