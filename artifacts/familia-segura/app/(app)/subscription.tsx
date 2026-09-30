@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, Platform, ActivityIndicator, 
   Modal, Linking
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
@@ -100,7 +100,7 @@ export default function SubscriptionScreen() {
     if (!packages.length && !errorMessage) {
       return (
         <View style={styles.centerContainer}>
-          <Feather name="wifi-off" size={28} color={colors.mutedForeground} />
+          <Icon name="wifi-off" size={28} color={colors.mutedForeground} />
           <Text style={[styles.loadingText, { color: colors.mutedForeground, textAlign: 'center' }]}>
             Os planos não estão disponíveis agora. Tente novamente em instantes.
           </Text>
@@ -114,7 +114,7 @@ export default function SubscriptionScreen() {
       return (
         <View style={styles.activeContainer}>
           <View style={[styles.statusBadge, { backgroundColor: familyPremium ? colors.primary : colors.muted }]}>
-            <Feather name={familyPremium ? 'shield' : 'info'} size={32} color={familyPremium ? colors.primaryForeground : colors.mutedForeground} />
+            <Icon name={familyPremium ? 'shield' : 'info'} size={32} color={familyPremium ? colors.primaryForeground : colors.mutedForeground} />
           </View>
           <Text style={[styles.activeTitle, { color: colors.foreground }]}>
             {familyPremium ? 'Sua família já é Premium' : 'A assinatura é do titular'}
@@ -132,7 +132,7 @@ export default function SubscriptionScreen() {
       return (
         <View style={styles.activeContainer}>
           <View style={[styles.statusBadge, { backgroundColor: colors.primary }]}>
-            <Feather name="shield" size={32} color={colors.primaryForeground} />
+            <Icon name="shield" size={32} color={colors.primaryForeground} />
           </View>
           <Text style={[styles.activeTitle, { color: colors.foreground }]}>
             Sua família está protegida
@@ -155,7 +155,7 @@ export default function SubscriptionScreen() {
           </Pressable>
 
           <View style={[styles.infoBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-            <Feather name="info" size={20} color={colors.secondaryForeground} />
+            <Icon name="info" size={20} color={colors.secondaryForeground} />
             <Text style={[styles.infoBoxText, { color: colors.secondaryForeground }]}>
               Caso a assinatura expire, o aplicativo retorna ao acesso básico. Suas configurações de segurança e limites atuais não serão apagados.
             </Text>
@@ -168,7 +168,7 @@ export default function SubscriptionScreen() {
       <View style={styles.paywallContainer}>
         <View style={styles.header}>
           <View style={[styles.iconContainer, { backgroundColor: colors.secondary }]}>
-            <Feather name="star" size={28} color={colors.primary} />
+            <Icon name="star" size={28} color={colors.primary} />
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>Família Segura Premium</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
@@ -182,8 +182,8 @@ export default function SubscriptionScreen() {
               'O básico continua grátis: 1 criança, 1 aparelho, limites e bloqueios',
             ].map((item) => (
               <View key={item} style={{ flexDirection: 'row', gap: 8, alignItems: 'flex-start' }}>
-                <Feather name="check" size={16} color={colors.primary} style={{ marginTop: 2 }} />
-                <Text style={{ flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20, color: colors.foreground }}>{item}</Text>
+                <Icon name="check" size={16} color={colors.primary} style={{ marginTop: 2 }} />
+                <Text style={{ flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 14, lineHeight: 20, color: colors.foreground }}>{item}</Text>
               </View>
             ))}
           </View>
@@ -228,7 +228,7 @@ export default function SubscriptionScreen() {
                 
                 {isSelected && (
                   <View style={[styles.selectedIndicator, { backgroundColor: colors.primary }]}>
-                    <Feather name="check" size={14} color={colors.primaryForeground} />
+                    <Icon name="check" size={14} color={colors.primaryForeground} />
                   </View>
                 )}
               </Pressable>
@@ -286,7 +286,7 @@ export default function SubscriptionScreen() {
       >
         <View style={styles.nav}>
           <Pressable testID="sub-back" onPress={() => goBack('/(app)/(tabs)/profile')} hitSlop={10}>
-            <Feather name="x" size={24} color={colors.foreground} />
+            <Icon name="x" size={24} color={colors.foreground} />
           </Pressable>
         </View>
 
@@ -323,7 +323,7 @@ export default function SubscriptionScreen() {
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.modalHeader}>
-              <Feather name="alert-circle" size={24} color={colors.primary} />
+              <Icon name="alert-circle" size={24} color={colors.primary} />
               <Text style={[styles.modalTitle, { color: colors.foreground }]}>Ambiente de Teste</Text>
             </View>
             <Text style={[styles.modalText, { color: colors.mutedForeground }]}>
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'NunitoSans_500Medium',
     fontSize: 15,
     marginTop: 16,
   },
@@ -388,7 +388,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   errorText: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'NunitoSans_500Medium',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -398,7 +398,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   successText: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'NunitoSans_500Medium',
     fontSize: 14,
     textAlign: 'center',
   },
@@ -417,13 +417,13 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   activeTitle: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'NunitoSans_700Bold',
     fontSize: 24,
     textAlign: 'center',
     marginBottom: 12,
   },
   activeDesc: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'NunitoSans_400Regular',
     fontSize: 15,
     textAlign: 'center',
     lineHeight: 22,
@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   actionButtonText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'NunitoSans_600SemiBold',
     fontSize: 16,
   },
   infoBox: {
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
   },
   infoBoxText: {
     flex: 1,
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'NunitoSans_400Regular',
     fontSize: 13,
     lineHeight: 20,
   },
@@ -470,14 +470,14 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   title: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'NunitoSans_700Bold',
     fontSize: 28,
     textAlign: 'center',
     letterSpacing: -0.5,
     marginBottom: 12,
   },
   subtitle: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'NunitoSans_400Regular',
     fontSize: 16,
     textAlign: 'center',
     lineHeight: 24,
@@ -500,23 +500,23 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   packageName: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'NunitoSans_700Bold',
     fontSize: 17,
     marginBottom: 4,
   },
   packageDesc: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'NunitoSans_500Medium',
     fontSize: 13,
   },
   packagePriceBox: {
     alignItems: 'flex-end',
   },
   packagePrice: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'NunitoSans_700Bold',
     fontSize: 18,
   },
   packagePeriod: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'NunitoSans_400Regular',
     fontSize: 11,
     marginTop: 3,
   },
@@ -543,7 +543,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   subscribeButtonText: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'NunitoSans_700Bold',
     fontSize: 16,
   },
   restoreButton: {
@@ -551,11 +551,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   restoreButtonText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'NunitoSans_600SemiBold',
     fontSize: 15,
   },
   renewalText: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'NunitoSans_400Regular',
     fontSize: 11,
     lineHeight: 17,
     textAlign: 'center',
@@ -569,12 +569,12 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
   legalText: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'NunitoSans_500Medium',
     fontSize: 12,
     textDecorationLine: 'underline',
   },
   legalDot: {
-    fontFamily: 'Nunito_500Medium',
+    fontFamily: 'NunitoSans_500Medium',
     fontSize: 12,
   },
   modalOverlay: {
@@ -597,11 +597,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modalTitle: {
-    fontFamily: 'Nunito_700Bold',
+    fontFamily: 'NunitoSans_700Bold',
     fontSize: 18,
   },
   modalText: {
-    fontFamily: 'Nunito_400Regular',
+    fontFamily: 'NunitoSans_400Regular',
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 32,
@@ -617,7 +617,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   modalCancelText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'NunitoSans_600SemiBold',
     fontSize: 15,
   },
   modalConfirm: {
@@ -626,7 +626,7 @@ const styles = StyleSheet.create({
     borderRadius: 100,
   },
   modalConfirmText: {
-    fontFamily: 'Nunito_600SemiBold',
+    fontFamily: 'NunitoSans_600SemiBold',
     fontSize: 15,
   },
   pressed: {

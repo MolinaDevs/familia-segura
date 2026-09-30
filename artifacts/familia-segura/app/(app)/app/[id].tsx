@@ -96,14 +96,14 @@ export default function AppDetailScreen() {
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', marginBottom: 24 },
-  name: { fontFamily: 'Fredoka_600SemiBold', fontSize: 25, letterSpacing: -0.6, marginTop: 12 },
-  category: { fontFamily: 'Nunito_400Regular', fontSize: 13, marginTop: 4 },
+  name: { fontFamily: 'Montserrat_700Bold', fontSize: 25, letterSpacing: -0.6, marginTop: 12 },
+  category: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, marginTop: 4 },
   usageHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 12 },
-  label: { fontFamily: 'Nunito_700Bold', fontSize: 10, letterSpacing: 1.2 },
-  usage: { fontFamily: 'Fredoka_600SemiBold', fontSize: 26, letterSpacing: -0.7 },
+  label: { fontFamily: 'NunitoSans_700Bold', fontSize: 10, letterSpacing: 1.2 },
+  usage: { fontFamily: 'Montserrat_700Bold', fontSize: 26, letterSpacing: -0.7 },
   track: { height: 9, borderRadius: 99, overflow: 'hidden' },
   progress: { height: '100%', borderRadius: 99 },
-  footer: { fontFamily: 'Nunito_500Medium', fontSize: 12, marginTop: 12 },
+  footer: { fontFamily: 'NunitoSans_500Medium', fontSize: 12, marginTop: 12 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  helper: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 19 },
+  helper: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 19 },
 });

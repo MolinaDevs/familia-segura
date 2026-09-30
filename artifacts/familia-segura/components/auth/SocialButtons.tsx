@@ -188,7 +188,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   buttonContent: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 12 },
-  buttonText: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  buttonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
   disabled: { opacity: 0.55 },
   status: {
@@ -199,5 +199,5 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 11,
   },
-  statusText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 12, lineHeight: 17 },
+  statusText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 17 },
 });

@@ -28,6 +28,6 @@ export default function OAuthCallbackScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  title: { fontFamily: 'Nunito_600SemiBold', fontSize: 16, textAlign: 'center' },
-  message: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  title: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 16, textAlign: 'center' },
+  message: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 19, textAlign: 'center' },
 });

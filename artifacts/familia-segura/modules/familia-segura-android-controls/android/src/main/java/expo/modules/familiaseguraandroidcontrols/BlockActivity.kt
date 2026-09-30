@@ -16,7 +16,7 @@ import android.widget.TextView
 
 /**
  * Tela de pausa mostrada quando um app, uma rotina ou uma configuração está bloqueada.
- * Segue a marca (docs/DESIGN.md): fundo verde de bebê, texto tinta, ação lavanda, sem quinas.
+ * Segue a marca (docs/DESIGN.md): fundo creme do logo, texto azul-marinho, ação azul do escudo.
  */
 class BlockActivity : Activity() {
   companion object {
@@ -24,7 +24,7 @@ class BlockActivity : Activity() {
     const val EXTRA_APP_NAME = "appName"
   }
 
-  /** Paleta da marca nos dois temas. Só tons "-deep" carregam texto (contraste AA medido). */
+  /** Paleta da marca nos dois temas (contraste AA medido). No escuro o emblema fica sobre placa creme. */
   private data class Palette(
     val background: Int,
     val surface: Int,
@@ -34,21 +34,24 @@ class BlockActivity : Activity() {
     val primary: Int,
     val onPrimary: Int,
     val accent: Int,
+    val plate: Int,
   )
 
   private val palette: Palette by lazy {
     val night = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
     if (night) {
       Palette(
-        background = Color.parseColor("#16121F"), surface = Color.parseColor("#201A2C"), border = Color.parseColor("#30283F"),
-        ink = Color.parseColor("#EDE8F7"), inkMuted = Color.parseColor("#A99FBF"),
-        primary = Color.parseColor("#B9A2FB"), onPrimary = Color.parseColor("#1B1030"), accent = Color.parseColor("#FF8FA9"),
+        background = Color.parseColor("#0C1A2E"), surface = Color.parseColor("#13243D"), border = Color.parseColor("#223A5C"),
+        ink = Color.parseColor("#EAF1F9"), inkMuted = Color.parseColor("#9FB1C8"),
+        primary = Color.parseColor("#7DB6EC"), onPrimary = Color.parseColor("#0A1B30"), accent = Color.parseColor("#F6A46E"),
+        plate = Color.parseColor("#FCF8F0"),
       )
     } else {
       Palette(
-        background = Color.parseColor("#EFF8F2"), surface = Color.parseColor("#FAFDFB"), border = Color.parseColor("#D8E7DD"),
-        ink = Color.parseColor("#2E2545"), inkMuted = Color.parseColor("#675C80"),
-        primary = Color.parseColor("#6D3FD1"), onPrimary = Color.WHITE, accent = Color.parseColor("#C2185B"),
+        background = Color.parseColor("#FCF8F0"), surface = Color.WHITE, border = Color.parseColor("#E9E1D3"),
+        ink = Color.parseColor("#142B4D"), inkMuted = Color.parseColor("#56657A"),
+        primary = Color.parseColor("#1C5A96"), onPrimary = Color.WHITE, accent = Color.parseColor("#A14912"),
+        plate = Color.parseColor("#FCF8F0"),
       )
     }
   }
@@ -103,10 +106,10 @@ class BlockActivity : Activity() {
     isFocusable = true
     if (primary) {
       setTextColor(palette.onPrimary)
-      background = rounded(palette.primary, 16f)
+      background = rounded(palette.primary, 14f)
     } else {
       setTextColor(palette.primary)
-      background = rounded(Color.TRANSPARENT, 16f)
+      background = rounded(Color.TRANSPARENT, 14f)
     }
     setOnClickListener { onClick() }
   }
@@ -119,14 +122,17 @@ class BlockActivity : Activity() {
     val card = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
       gravity = Gravity.CENTER_HORIZONTAL
-      background = rounded(p.surface, 28f, p.border)
+      background = rounded(p.surface, 24f, p.border)
       setPadding(dp(24f), dp(28f), dp(24f), dp(20f))
     }
     card.addView(ImageView(this).apply {
-      setImageResource(R.drawable.fs_brand_mark)
+      setImageResource(R.drawable.fs_brand_emblem)
+      adjustViewBounds = true
+      background = rounded(p.plate, 22f)
+      setPadding(dp(8f), dp(8f), dp(8f), dp(8f))
       contentDescription = null
       importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-    }, LinearLayout.LayoutParams(dp(96f), dp(96f)))
+    }, LinearLayout.LayoutParams(dp(104f), dp(112f)))
     card.addView(text(getString(R.string.block_title), 24f, p.ink, bold = true, topDp = 14f))
     intent.getStringExtra(EXTRA_APP_NAME)?.takeIf { it.isNotBlank() }?.let {
       card.addView(text(it.uppercase(), 12f, p.accent, bold = true, topDp = 6f).apply { letterSpacing = 0.14f })

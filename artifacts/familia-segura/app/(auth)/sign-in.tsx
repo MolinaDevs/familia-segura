@@ -76,8 +76,8 @@ export default function SignInPage() {
   return (
     <AuthShell onBack={() => goBack('/')}>
       <AuthHeader
-        title="Que bom ter você de volta"
-        subtitle="Entre para ver o dia das crianças, responder pedidos e ajustar os combinados."
+        title="Entre na sua conta"
+        subtitle="Veja o dia das crianças, responda pedidos e ajuste os combinados."
       />
 
       <AuthCard>
@@ -138,5 +138,5 @@ export default function SignInPage() {
 }
 
 const styles = StyleSheet.create({
-  forgot: { fontFamily: 'Nunito_700Bold', fontSize: 13.5 },
+  forgot: { fontFamily: 'NunitoSans_700Bold', fontSize: 13.5 },
 });

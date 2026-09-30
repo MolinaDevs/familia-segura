@@ -1,7 +1,7 @@
 import React from 'react';
 import { Platform, StyleSheet, useColorScheme, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { BlurView } from 'expo-blur';
 import { isLiquidGlassAvailable } from 'expo-glass-effect';
 import { Tabs } from 'expo-router';
@@ -19,7 +19,7 @@ function NativeTabLayout() {
         <NativeTabs.Trigger.Icon
           sf={{ default: 'house', selected: 'house.fill' }}
         />
-        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Label>Início</NativeTabs.Trigger.Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="apps">
         <NativeTabs.Trigger.Icon sf={{ default: 'square.grid.2x2', selected: 'square.grid.2x2.fill' }} />
@@ -53,7 +53,7 @@ function ClassicTabLayout() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.mutedForeground,
-        tabBarLabelStyle: { fontFamily: 'Nunito_700Bold', fontSize: 11 },
+        tabBarLabelStyle: { fontFamily: 'NunitoSans_700Bold', fontSize: 11 },
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
@@ -83,19 +83,19 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) =>
+          title: 'Início',
+          tabBarIcon: ({ color, focused }) =>
             isIOS ? (
               <SymbolView name="house" tintColor={color} size={24} />
             ) : (
-              <Feather name="home" size={22} color={color} />
+              <Icon name="home" size={22} color={color} weight={focused ? 'fill' : 'regular'} />
             ),
         }}
       />
-      <Tabs.Screen name="apps" options={{ title: 'Apps', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="square.grid.2x2" tintColor={color} size={23} /> : <Feather name="grid" size={21} color={color} /> }} />
-      <Tabs.Screen name="routine" options={{ title: 'Rotina', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="moon" tintColor={color} size={23} /> : <Feather name="moon" size={21} color={color} /> }} />
-      <Tabs.Screen name="reports" options={{ title: 'Relatórios', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="chart.bar" tintColor={color} size={23} /> : <Feather name="bar-chart-2" size={21} color={color} /> }} />
-      <Tabs.Screen name="profile" options={{ title: 'Família', tabBarIcon: ({ color }) => isIOS ? <SymbolView name="person.2" tintColor={color} size={23} /> : <Feather name="users" size={21} color={color} /> }} />
+      <Tabs.Screen name="apps" options={{ title: 'Apps', tabBarIcon: ({ color, focused }) => isIOS ? <SymbolView name="square.grid.2x2" tintColor={color} size={23} /> : <Icon name="grid" size={22} color={color} weight={focused ? 'fill' : 'regular'} /> }} />
+      <Tabs.Screen name="routine" options={{ title: 'Rotina', tabBarIcon: ({ color, focused }) => isIOS ? <SymbolView name="moon" tintColor={color} size={23} /> : <Icon name="moon" size={22} color={color} weight={focused ? 'fill' : 'regular'} /> }} />
+      <Tabs.Screen name="reports" options={{ title: 'Relatórios', tabBarIcon: ({ color, focused }) => isIOS ? <SymbolView name="chart.bar" tintColor={color} size={23} /> : <Icon name="bar-chart-2" size={22} color={color} weight={focused ? 'fill' : 'regular'} /> }} />
+      <Tabs.Screen name="profile" options={{ title: 'Família', tabBarIcon: ({ color, focused }) => isIOS ? <SymbolView name="person.2" tintColor={color} size={23} /> : <Icon name="users" size={22} color={color} weight={focused ? 'fill' : 'regular'} /> }} />
     </Tabs>
   );
 }

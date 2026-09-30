@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, AppState, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
@@ -91,7 +91,7 @@ export default function AndroidControlsScreen() {
     >
       <View style={styles.nav}>
         <Pressable testID="android-controls-back" onPress={() => goBack('/(child)/guardian')} hitSlop={10}>
-          <Feather name="arrow-left" size={23} color={colors.foreground} />
+          <Icon name="arrow-left" size={23} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Controle no Android</Text>
         <View style={{ width: 23 }} />
@@ -99,7 +99,7 @@ export default function AndroidControlsScreen() {
 
       <View style={[styles.statusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={[styles.statusIcon, { backgroundColor: summary.state === 'active' ? colors.secondary : colors.muted }]}>
-          <Feather name={summary.state === 'active' ? 'shield' : 'alert-circle'} size={24} color={summary.state === 'active' ? colors.secondaryForeground : colors.mutedForeground} />
+          <Icon name={summary.state === 'active' ? 'shield' : 'alert-circle'} size={24} color={summary.state === 'active' ? colors.secondaryForeground : colors.mutedForeground} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.statusTitle, { color: colors.foreground }]}>{copy.title}</Text>
@@ -117,7 +117,7 @@ export default function AndroidControlsScreen() {
           <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, { backgroundColor: status?.usageAccessGranted ? colors.secondary : colors.muted }]}>
-                <Feather name={status?.usageAccessGranted ? 'check' : 'bar-chart-2'} size={18} color={status?.usageAccessGranted ? colors.secondaryForeground : colors.foreground} />
+                <Icon name={status?.usageAccessGranted ? 'check' : 'bar-chart-2'} size={18} color={status?.usageAccessGranted ? colors.secondaryForeground : colors.foreground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.stepTitle, { color: colors.foreground }]}>1. Acesso ao uso</Text>
@@ -132,7 +132,7 @@ export default function AndroidControlsScreen() {
           <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, { backgroundColor: status?.accessibilityEnabled ? colors.secondary : colors.muted }]}>
-                <Feather name={status?.accessibilityEnabled ? 'check' : 'shield'} size={18} color={status?.accessibilityEnabled ? colors.secondaryForeground : colors.foreground} />
+                <Icon name={status?.accessibilityEnabled ? 'check' : 'shield'} size={18} color={status?.accessibilityEnabled ? colors.secondaryForeground : colors.foreground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.stepTitle, { color: colors.foreground }]}>2. Serviço de proteção</Text>
@@ -141,7 +141,7 @@ export default function AndroidControlsScreen() {
             </View>
             <Pressable testID="android-disclosure-consent" onPress={acceptDisclosure} style={styles.disclosureRow}>
               <View style={[styles.checkbox, { borderColor: disclosureAccepted ? colors.primary : colors.input, backgroundColor: disclosureAccepted ? colors.primary : colors.background }]}>
-                {disclosureAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
+                {disclosureAccepted && <Icon name="check" size={14} color={colors.primaryForeground} />}
               </View>
               <Text style={[styles.disclosureText, { color: colors.foreground }]}>
                 Entendi que o Família Segura usa o serviço de acessibilidade para identificar o aplicativo em primeiro plano e aplicar limites, pausas e bloqueios, e para impedir que a criança abra as telas de Configurações que desligariam a proteção ou desinstalariam o app (a identificação usa apenas o nome do app nessas telas). Ele não lê mensagens, senhas nem o que é digitado, e nada disso é enviado ao servidor.
@@ -162,7 +162,7 @@ export default function AndroidControlsScreen() {
           <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, { backgroundColor: status?.deviceAdminActive ? colors.secondary : colors.muted }]}>
-                <Feather name={status?.deviceAdminActive ? 'check' : 'lock'} size={18} color={status?.deviceAdminActive ? colors.secondaryForeground : colors.foreground} />
+                <Icon name={status?.deviceAdminActive ? 'check' : 'lock'} size={18} color={status?.deviceAdminActive ? colors.secondaryForeground : colors.foreground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.stepTitle, { color: colors.foreground }]}>3. Proteção contra desinstalação</Text>
@@ -179,7 +179,7 @@ export default function AndroidControlsScreen() {
           <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.stepHeader}>
               <View style={[styles.stepNumber, { backgroundColor: status?.batteryOptimizationExempt ? colors.secondary : colors.accent }]}>
-                <Feather name="battery-charging" size={18} color={status?.batteryOptimizationExempt ? colors.secondaryForeground : colors.accentForeground} />
+                <Icon name="battery-charging" size={18} color={status?.batteryOptimizationExempt ? colors.secondaryForeground : colors.accentForeground} />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.stepTitle, { color: colors.foreground }]}>4. Bateria</Text>
@@ -195,7 +195,7 @@ export default function AndroidControlsScreen() {
             <View style={[styles.stepCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.stepHeader}>
                 <View style={[styles.stepNumber, { backgroundColor: androidWebFilterActive(status) ? colors.secondary : colors.muted }]}>
-                  <Feather name={androidWebFilterActive(status) ? 'check' : 'globe'} size={18} color={androidWebFilterActive(status) ? colors.secondaryForeground : colors.foreground} />
+                  <Icon name={androidWebFilterActive(status) ? 'check' : 'globe'} size={18} color={androidWebFilterActive(status) ? colors.secondaryForeground : colors.foreground} />
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.stepTitle, { color: colors.foreground }]}>5. Filtro de conteúdo adulto</Text>
@@ -227,7 +227,7 @@ export default function AndroidControlsScreen() {
       )}
 
       <View style={[styles.note, { backgroundColor: colors.secondary }]}>
-        <Feather name="lock" size={18} color={colors.secondaryForeground} />
+        <Icon name="lock" size={18} color={colors.secondaryForeground} />
         <Text style={[styles.noteText, { color: colors.secondaryForeground }]}>
           As regras ficam neste aparelho para funcionar offline. O servidor recebe o estado da proteção, os totais de uso por app e a lista de apps instalados (para o responsável aprovar apps novos).
         </Text>
@@ -239,29 +239,29 @@ export default function AndroidControlsScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20 },
   nav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 },
-  navTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  navTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   statusCard: { flexDirection: 'row', gap: 13, alignItems: 'flex-start', borderWidth: 1, borderRadius: 20, padding: 16 },
   statusIcon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  statusTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
-  statusDetail: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
-  issue: { fontFamily: 'Nunito_500Medium', fontSize: 11, lineHeight: 17, marginTop: 2 },
+  statusTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
+  statusDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
+  issue: { fontFamily: 'NunitoSans_500Medium', fontSize: 11, lineHeight: 17, marginTop: 2 },
   loader: { marginVertical: 20 },
-  sectionTitle: { fontFamily: 'Nunito_700Bold', fontSize: 18, marginTop: 24, marginBottom: 2 },
+  sectionTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 18, marginTop: 24, marginBottom: 2 },
   stepCard: { borderWidth: 1, borderRadius: 20, padding: 16, marginTop: 12 },
   stepHeader: { flexDirection: 'row', gap: 12, alignItems: 'flex-start' },
   stepNumber: { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  stepTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15 },
-  stepDetail: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18, marginTop: 3 },
+  stepTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 15 },
+  stepDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18, marginTop: 3 },
   disclosureRow: { flexDirection: 'row', gap: 10, alignItems: 'flex-start', marginTop: 16 },
   checkbox: { width: 22, height: 22, borderRadius: 7, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  disclosureText: { flex: 1, fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18 },
+  disclosureText: { flex: 1, fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18 },
   primaryButton: { minHeight: 48, borderRadius: 15, alignItems: 'center', justifyContent: 'center', marginTop: 16, paddingHorizontal: 12 },
-  primaryButtonText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14, textAlign: 'center' },
+  primaryButtonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14, textAlign: 'center' },
   secondaryButton: { minHeight: 46, borderRadius: 15, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginTop: 16, paddingHorizontal: 12 },
-  secondaryButtonText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13, textAlign: 'center' },
-  dnsHost: { fontFamily: 'Nunito_700Bold', fontSize: 14, textAlign: 'center', borderWidth: 1, borderRadius: 12, paddingVertical: 12, marginTop: 10 },
-  summary: { fontFamily: 'Nunito_500Medium', fontSize: 12, lineHeight: 18, marginTop: 18 },
+  secondaryButtonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 13, textAlign: 'center' },
+  dnsHost: { fontFamily: 'NunitoSans_700Bold', fontSize: 14, textAlign: 'center', borderWidth: 1, borderRadius: 12, paddingVertical: 12, marginTop: 10 },
+  summary: { fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 18, marginTop: 18 },
   note: { flexDirection: 'row', gap: 10, borderRadius: 18, padding: 15, marginTop: 22 },
-  noteText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 12, lineHeight: 18 },
+  noteText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 18 },
   pressed: { opacity: 0.75 },
 });

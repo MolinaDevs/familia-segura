@@ -44,5 +44,5 @@ export default function AppLayout() {
 
 const styles = StyleSheet.create({
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  loadingText: { fontFamily: 'Nunito_500Medium', fontSize: 13 },
+  loadingText: { fontFamily: 'NunitoSans_500Medium', fontSize: 13 },
 });

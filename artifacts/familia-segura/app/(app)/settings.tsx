@@ -117,8 +117,8 @@ export default function SettingsScreen() {
 }
 
 const styles = StyleSheet.create({
-  body: { fontFamily: 'Nunito_500Medium', fontSize: 14, lineHeight: 20 },
-  hint: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18 },
-  input: { height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'Nunito_600SemiBold', fontSize: 18, letterSpacing: 4 },
+  body: { fontFamily: 'NunitoSans_500Medium', fontSize: 14, lineHeight: 20 },
+  hint: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18 },
+  input: { height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'NunitoSans_600SemiBold', fontSize: 18, letterSpacing: 4 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

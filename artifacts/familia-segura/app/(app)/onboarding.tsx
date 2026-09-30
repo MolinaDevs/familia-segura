@@ -7,7 +7,7 @@ import { openLegal } from '@/lib/legal';
 import { useQueryClient } from '@tanstack/react-query';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import * as Haptics from 'expo-haptics';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
 
@@ -93,7 +93,7 @@ export default function Onboarding() {
       >
         <View style={styles.header}>
           <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-            <Feather name="user-plus" size={32} color={colors.primaryForeground} />
+            <Icon name="user-plus" size={32} color={colors.primaryForeground} />
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>Entrar com convite</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Use o código que o titular da família gerou em Família → Responsáveis.</Text>
@@ -113,7 +113,7 @@ export default function Onboarding() {
           <Pressable onPress={() => setConsentAccepted((a) => !a)} accessibilityRole="checkbox" accessibilityState={{ checked: consentAccepted }}
             style={[styles.consentRow, { borderColor: consentAccepted ? colors.primary : colors.border, backgroundColor: colors.card }]}>
             <View style={[styles.checkbox, { borderColor: consentAccepted ? colors.primary : colors.mutedForeground, backgroundColor: consentAccepted ? colors.primary : 'transparent' }]}>
-              {consentAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
+              {consentAccepted && <Icon name="check" size={14} color={colors.primaryForeground} />}
             </View>
             <Text style={[styles.consentText, { color: colors.foreground }]}>
               Declaro ser responsável pelas crianças desta família e li a Política de Privacidade.
@@ -121,7 +121,7 @@ export default function Onboarding() {
           </Pressable>
           {submitError && (
             <View style={[styles.errorContainer, { backgroundColor: colors.dangerSoft, borderColor: colors.destructive }]}>
-              <Feather name="alert-circle" size={16} color={colors.destructive} />
+              <Icon name="alert-circle" size={16} color={colors.destructive} />
               <Text style={[styles.errorText, { color: colors.destructive }]}>{submitError}</Text>
             </View>
           )}
@@ -148,7 +148,7 @@ export default function Onboarding() {
     >
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Feather name={step === 1 ? 'users' : 'smile'} size={32} color={colors.primaryForeground} />
+          <Icon name={step === 1 ? 'users' : 'smile'} size={32} color={colors.primaryForeground} />
         </View>
         <Text style={[styles.title, { color: colors.foreground }]}>
           {step === 1 ? 'Bem-vindo ao Família Segura' : 'Quem vamos proteger?'}
@@ -167,13 +167,13 @@ export default function Onboarding() {
                 style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
                 value={familyName}
                 onChangeText={setFamilyName}
-                placeholder="Ex: Família Silva"
+                placeholder="Ex.: Família Andrade"
                 placeholderTextColor={colors.mutedForeground}
                 testID="onboarding-family-name"
               />
             </View>
             <View style={styles.inputGroup}>
-              <Text style={[styles.label, { color: colors.foreground }]}>Seu nome (Responsável)</Text>
+              <Text style={[styles.label, { color: colors.foreground }]}>Como você quer ser chamado</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.foreground }]}
                 value={guardianName}
@@ -184,7 +184,7 @@ export default function Onboarding() {
               />
             </View>
             <Pressable onPress={() => setInviteMode(true)} style={({ pressed }) => [styles.inviteLink, pressed && styles.pressed]} testID="onboarding-have-invite">
-              <Feather name="user-plus" size={16} color={colors.primary} />
+              <Icon name="user-plus" size={16} color={colors.primary} />
               <Text style={[styles.inviteText, { color: colors.primary }]}>Tenho um convite de outro responsável</Text>
             </Pressable>
           </>
@@ -221,7 +221,7 @@ export default function Onboarding() {
               accessibilityState={{ checked: consentAccepted }}
             >
               <View style={[styles.checkbox, { borderColor: consentAccepted ? colors.primary : colors.mutedForeground, backgroundColor: consentAccepted ? colors.primary : 'transparent' }]}>
-                {consentAccepted && <Feather name="check" size={14} color={colors.primaryForeground} />}
+                {consentAccepted && <Icon name="check" size={14} color={colors.primaryForeground} />}
               </View>
               <Text style={[styles.consentText, { color: colors.foreground }]}>
                 Declaro ser pai, mãe ou responsável legal por esta criança e autorizo, em nome dela, o tratamento dos dados necessários ao controle parental (tempo de uso por app, apps instalados, estado da proteção dos aparelhos), conforme o art. 14 da LGPD e a Política de Privacidade, e aceito os Termos de Uso. Posso exportar ou apagar tudo quando quiser.
@@ -240,7 +240,7 @@ export default function Onboarding() {
 
         {submitError && (
           <View style={[styles.errorContainer, { backgroundColor: colors.dangerSoft, borderColor: colors.destructive }]}>
-            <Feather name="alert-circle" size={16} color={colors.destructive} />
+            <Icon name="alert-circle" size={16} color={colors.destructive} />
             <Text style={[styles.errorText, { color: colors.destructive }]}>{submitError}</Text>
           </View>
         )}
@@ -278,26 +278,26 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { alignItems: 'center', marginBottom: 40 },
   iconContainer: { width: 72, height: 72, borderRadius: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 24 },
-  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 26, marginBottom: 8, textAlign: 'center', letterSpacing: -0.5 },
-  subtitle: { fontFamily: 'Nunito_500Medium', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 300 },
+  title: { fontFamily: 'Montserrat_700Bold', fontSize: 26, marginBottom: 8, textAlign: 'center', letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'NunitoSans_500Medium', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 300 },
   form: { flex: 1, gap: 20, maxWidth: 520, width: '100%', alignSelf: 'center' },
   inputGroup: { gap: 8 },
-  label: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
-  input: { height: 56, borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, fontFamily: 'Nunito_500Medium', fontSize: 15 },
+  label: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
+  input: { height: 56, borderWidth: 1, borderRadius: 16, paddingHorizontal: 16, fontFamily: 'NunitoSans_500Medium', fontSize: 15 },
   consentRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 14, borderWidth: 1, borderRadius: 16, padding: 18, marginTop: 4 },
   checkbox: { width: 24, height: 24, borderRadius: 8, borderWidth: 2, alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 },
-  consentText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 13, lineHeight: 20 },
+  consentText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 13, lineHeight: 20 },
   
   errorContainer: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 16, borderRadius: 16, borderWidth: 1 },
-  errorText: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 13, lineHeight: 18 },
+  errorText: { flex: 1, fontFamily: 'NunitoSans_600SemiBold', fontSize: 13, lineHeight: 18 },
   
   footer: { flexDirection: 'row', gap: 12, marginTop: 40, maxWidth: 520, width: '100%', alignSelf: 'center' },
   button: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  buttonText: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
+  buttonText: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
   backButton: { height: 56, paddingHorizontal: 24, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  backButtonText: { fontFamily: 'Nunito_600SemiBold', fontSize: 16 },
+  backButtonText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 16 },
   
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
   inviteLink: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 12 },
-  inviteText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
+  inviteText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
 });

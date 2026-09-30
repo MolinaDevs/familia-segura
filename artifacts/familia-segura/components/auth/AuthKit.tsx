@@ -1,15 +1,15 @@
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import React, { useState, type PropsWithChildren, type ReactNode } from 'react';
 import {
   ActivityIndicator, Platform, Pressable, StyleSheet, Text, TextInput, View, type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { KeyboardAwareScrollViewCompat } from '@/components/KeyboardAwareScrollViewCompat';
-import { BrandMark, SquishyMark } from '@/components/brand/Logo';
-import { SkyBackground } from '@/components/brand/SkyBackground';
+import { BreathingEmblem, Logo } from '@/components/brand/Logo';
+import { BrandBackground } from '@/components/brand/BrandBackground';
 import { useColors } from '@/hooks/useColors';
 
-type IconName = React.ComponentProps<typeof Feather>['name'];
+type IconName = React.ComponentProps<typeof Icon>['name'];
 
 // No navegador, o foco já aparece na borda lavanda do campo; o contorno padrão ficaria duplicado.
 const WEB_NO_OUTLINE = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;
@@ -21,7 +21,7 @@ export function AuthShell({ children, onBack, backLabel = 'Voltar' }: PropsWithC
   const top = Platform.OS === 'web' ? Math.max(insets.top, 24) : insets.top + 8;
   const bottom = Platform.OS === 'web' ? Math.max(insets.bottom, 24) : insets.bottom + 24;
   return (
-    <SkyBackground>
+    <BrandBackground>
       <KeyboardAwareScrollViewCompat
         style={styles.flex}
         contentContainerStyle={[styles.content, { paddingTop: top, paddingBottom: bottom }]}
@@ -32,33 +32,32 @@ export function AuthShell({ children, onBack, backLabel = 'Voltar' }: PropsWithC
         <View style={styles.topBar}>
           {onBack ? (
             <Pressable accessibilityRole="button" accessibilityLabel={backLabel} onPress={onBack} hitSlop={10} testID="auth-back"
-              style={({ pressed }) => [styles.back, { backgroundColor: colors.card, borderColor: colors.border }, pressed && styles.squish]}>
-              <Feather name="arrow-left" size={20} color={colors.foreground} />
+              style={({ pressed }) => [styles.back, { backgroundColor: colors.card, borderColor: colors.border }, pressed && styles.pressed]}>
+              <Icon name="arrow-left" size={20} color={colors.foreground} />
             </Pressable>
           ) : <View style={styles.back} />}
           <View style={styles.brand} accessible accessibilityLabel="Família Segura">
-            <BrandMark size={28} />
-            <Text style={[styles.brandWord, { color: colors.foreground }]}>Família Segura</Text>
+            <Logo size={30} />
           </View>
           <View style={styles.back} />
         </View>
         {children}
       </KeyboardAwareScrollViewCompat>
-    </SkyBackground>
+    </BrandBackground>
   );
 }
 
-/** Cabeçalho alinhado à esquerda: a marca aperta (squish), título em Fredoka, apoio em Nunito. */
+/** Cabeçalho alinhado à esquerda: emblema do logo, título em Montserrat, apoio em Nunito Sans. */
 export function AuthHeader({ title, subtitle, icon }: { title: string; subtitle?: string; icon?: IconName }) {
   const colors = useColors();
   return (
     <View style={styles.header}>
       {icon ? (
         <View style={[styles.headerIcon, { backgroundColor: colors.secondary }]}>
-          <Feather name={icon} size={26} color={colors.primary} />
+          <Icon name={icon} size={26} color={colors.primary} />
         </View>
       ) : (
-        <SquishyMark size={76} style={styles.headerMark} />
+        <BreathingEmblem size={84} style={styles.headerMark} />
       )}
       <Text accessibilityRole="header" style={[styles.title, { color: colors.foreground }]}>{title}</Text>
       {subtitle ? <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text> : null}
@@ -71,7 +70,7 @@ export function AuthCard({ children }: PropsWithChildren) {
   const colors = useColors();
   return (
     <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, shadowColor: colors.shadow }]}>
-      <View style={[styles.seam, { backgroundColor: colors.grapeLite }]} />
+      <View style={[styles.seam, { backgroundColor: colors.orange }]} />
       {children}
     </View>
   );
@@ -92,7 +91,7 @@ export function AuthField({
         {right}
       </View>
       <View style={[styles.inputWrap, { backgroundColor: colors.background, borderColor, borderWidth: focused || error ? 2 : 1 }]}>
-        {icon ? <Feather name={icon} size={18} color={focused ? colors.primary : colors.mutedForeground} /> : null}
+        {icon ? <Icon name={icon} size={18} color={focused ? colors.primary : colors.mutedForeground} /> : null}
         <TextInput
           {...input}
           secureTextEntry={secure && !visible}
@@ -105,13 +104,13 @@ export function AuthField({
         {secure ? (
           <Pressable accessibilityRole="button" accessibilityLabel={visible ? 'Ocultar senha' : 'Mostrar senha'} hitSlop={10}
             onPress={() => setVisible((v) => !v)} style={styles.eye}>
-            <Feather name={visible ? 'eye-off' : 'eye'} size={18} color={colors.mutedForeground} />
+            <Icon name={visible ? 'eye-off' : 'eye'} size={18} color={colors.mutedForeground} />
           </Pressable>
         ) : null}
       </View>
       {error ? (
         <View style={styles.errorRow} accessibilityLiveRegion="polite">
-          <Feather name="alert-circle" size={13} color={colors.destructive} />
+          <Icon name="alert-circle" size={13} color={colors.destructive} />
           <Text style={[styles.fieldError, { color: colors.destructive }]}>{error}</Text>
         </View>
       ) : helper ? <Text style={[styles.helper, { color: colors.mutedForeground }]}>{helper}</Text> : null}
@@ -119,7 +118,7 @@ export function AuthField({
   );
 }
 
-/** Botão principal com o "squish" da marca ao apertar. */
+/** Botão principal: afunda levemente ao apertar. */
 export function AuthButton({ label, onPress, loading, disabled, variant = 'primary', testID }: {
   label: string; onPress: () => void; loading?: boolean; disabled?: boolean; variant?: 'primary' | 'quiet' | 'outline'; testID?: string;
 }) {
@@ -138,7 +137,7 @@ export function AuthButton({ label, onPress, loading, disabled, variant = 'prima
         primary ? { backgroundColor: colors.primary } : { backgroundColor: variant === 'outline' ? colors.card : 'transparent' },
         variant === 'outline' && { borderWidth: 1, borderColor: colors.input },
         inactive && !loading && styles.disabled,
-        pressed && styles.squish,
+        pressed && styles.pressed,
       ]}
     >
       {loading ? <ActivityIndicator color={primary ? colors.primaryForeground : colors.primary} /> : (
@@ -153,7 +152,7 @@ export function FormMessage({ tone, children }: PropsWithChildren<{ tone: 'error
   const error = tone === 'error';
   return (
     <View accessibilityLiveRegion="polite" style={[styles.message, { backgroundColor: error ? colors.dangerSoft : colors.successSoft }]}>
-      <Feather name={error ? 'alert-circle' : 'check-circle'} size={16} color={error ? colors.destructive : colors.success} />
+      <Icon name={error ? 'alert-circle' : 'check-circle'} size={16} color={error ? colors.destructive : colors.success} />
       <Text style={[styles.messageText, { color: error ? colors.destructive : colors.success }]}>{children}</Text>
     </View>
   );
@@ -187,7 +186,7 @@ export function TrustNote() {
   const colors = useColors();
   return (
     <View style={styles.trust}>
-      <Feather name="lock" size={13} color={colors.mutedForeground} />
+      <Icon name="lock" size={13} color={colors.mutedForeground} />
       <Text style={[styles.trustText, { color: colors.mutedForeground }]}>
         Conexão protegida. Seus dados e os da criança seguem a LGPD e o ECA Digital.
       </Text>
@@ -201,47 +200,46 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', minHeight: 48 },
   back: { width: 44, height: 44, borderRadius: 16, borderWidth: 1, borderColor: 'transparent', alignItems: 'center', justifyContent: 'center' },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  brandWord: { fontFamily: 'Fredoka_600SemiBold', fontSize: 17, letterSpacing: -0.2 },
 
   header: { marginTop: 20, marginBottom: 22 },
   headerMark: { marginBottom: 14, alignSelf: 'flex-start' },
   headerIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 30, lineHeight: 36, letterSpacing: -0.6 },
-  subtitle: { fontFamily: 'Nunito_500Medium', fontSize: 16, lineHeight: 23, marginTop: 8, maxWidth: 380 },
+  title: { fontFamily: 'Montserrat_700Bold', fontSize: 26, lineHeight: 32, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'NunitoSans_500Medium', fontSize: 16, lineHeight: 23, marginTop: 8, maxWidth: 380 },
 
   card: {
-    borderRadius: 28, borderWidth: 1, padding: 20, paddingTop: 24, gap: 18, overflow: 'hidden',
+    borderRadius: 24, borderWidth: 1, padding: 20, paddingTop: 24, gap: 18, overflow: 'hidden',
     shadowOpacity: 0.1, shadowRadius: 24, shadowOffset: { width: 0, height: 10 }, elevation: 2,
   },
   seam: { position: 'absolute', top: 0, left: 28, right: 28, height: 3, borderBottomLeftRadius: 3, borderBottomRightRadius: 3 },
 
   field: { gap: 8 },
   labelRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  label: { fontFamily: 'Nunito_700Bold', fontSize: 14 },
+  label: { fontFamily: 'NunitoSans_700Bold', fontSize: 14 },
   inputWrap: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 54, borderRadius: 16, paddingHorizontal: 14 },
-  input: { flex: 1, minHeight: 50, fontFamily: 'Nunito_600SemiBold', fontSize: 16, paddingVertical: 0 },
+  input: { flex: 1, minHeight: 50, fontFamily: 'NunitoSans_600SemiBold', fontSize: 16, paddingVertical: 0 },
   eye: { width: 32, height: 32, alignItems: 'center', justifyContent: 'center' },
   errorRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  fieldError: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 12.5, lineHeight: 17 },
-  helper: { fontFamily: 'Nunito_500Medium', fontSize: 12.5, lineHeight: 17 },
+  fieldError: { flex: 1, fontFamily: 'NunitoSans_600SemiBold', fontSize: 12.5, lineHeight: 17 },
+  helper: { fontFamily: 'NunitoSans_500Medium', fontSize: 12.5, lineHeight: 17 },
 
   button: { minHeight: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 18 },
-  buttonText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 16, letterSpacing: 0.2 },
+  buttonText: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 16, letterSpacing: 0.2 },
   disabled: { opacity: 0.45 },
-  // O squish da marca: achata e alarga ao apertar.
-  squish: { transform: [{ scaleX: 1.02 }, { scaleY: 0.96 }] },
+  // Toque: o botão afunda de leve (confirmação física, sem exagero).
+  pressed: { transform: [{ scale: 0.98 }], opacity: 0.92 },
 
   message: { flexDirection: 'row', alignItems: 'flex-start', gap: 10, borderRadius: 16, padding: 14 },
-  messageText: { flex: 1, fontFamily: 'Nunito_600SemiBold', fontSize: 13.5, lineHeight: 19 },
+  messageText: { flex: 1, fontFamily: 'NunitoSans_600SemiBold', fontSize: 13.5, lineHeight: 19 },
 
   divider: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   line: { flex: 1, height: 1 },
-  dividerText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  dividerText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 13 },
 
   switchRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 6, marginTop: 24, flexWrap: 'wrap' },
-  switchText: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
-  switchLink: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15 },
+  switchText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
+  switchLink: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 15 },
 
   trust: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 6, marginTop: 'auto', paddingTop: 24 },
-  trustText: { fontFamily: 'Nunito_500Medium', fontSize: 12, lineHeight: 17, textAlign: 'center', maxWidth: 320 },
+  trustText: { fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 17, textAlign: 'center', maxWidth: 320 },
 });

@@ -226,8 +226,8 @@ export default function SignUpPage() {
 }
 
 const styles = StyleSheet.create({
-  code: { fontFamily: 'Fredoka_600SemiBold', fontSize: 26, letterSpacing: 10 },
+  code: { fontFamily: 'Montserrat_700Bold', fontSize: 26, letterSpacing: 10 },
   strength: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 },
   strengthBar: { flex: 1, height: 5, borderRadius: 3 },
-  strengthText: { fontFamily: 'Nunito_700Bold', fontSize: 12, minWidth: 44, textAlign: 'right' },
+  strengthText: { fontFamily: 'NunitoSans_700Bold', fontSize: 12, minWidth: 44, textAlign: 'right' },
 });

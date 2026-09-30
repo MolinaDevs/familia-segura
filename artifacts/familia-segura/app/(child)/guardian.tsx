@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { Alert } from '@/lib/alert';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { reloadAppAsync } from 'expo';
 import { goBack } from '@/lib/navigation';
@@ -100,7 +100,7 @@ export default function GuardianAreaScreen() {
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 32 }]}>
       <View style={styles.nav}>
         <Pressable testID="guardian-back" onPress={() => goBack('/(child)')} hitSlop={10}>
-          <Feather name="arrow-left" size={23} color={colors.foreground} />
+          <Icon name="arrow-left" size={23} color={colors.foreground} />
         </Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Área do responsável</Text>
         <View style={{ width: 23 }} />
@@ -110,7 +110,7 @@ export default function GuardianAreaScreen() {
 
       {hasPin && !unlocked && (
         <View style={styles.pinBox}>
-          <Feather name="lock" size={28} color={colors.primary} />
+          <Icon name="lock" size={28} color={colors.primary} />
           <Text style={[styles.title, { color: colors.foreground }]}>Digite o PIN do responsável</Text>
           <Text style={[styles.detail, { color: colors.mutedForeground }]}>Só quem tem o PIN pode mudar a proteção deste aparelho.</Text>
           <TextInput
@@ -134,7 +134,7 @@ export default function GuardianAreaScreen() {
         <View style={{ gap: 12 }}>
           {!hasPin && (
             <View style={[styles.warning, { backgroundColor: colors.muted }]}>
-              <Feather name="alert-triangle" size={18} color={colors.accent} />
+              <Icon name="alert-triangle" size={18} color={colors.accent} />
               <Text style={[styles.detail, { color: colors.foreground, flex: 1 }]}>
                 Sua família ainda não definiu um PIN. Defina no app do responsável (Configurações) para proteger esta área e impedir a desinstalação. Qualquer ação aqui é avisada aos responsáveis.
               </Text>
@@ -156,15 +156,15 @@ export default function GuardianAreaScreen() {
     </ScrollView>
   );
 
-  function Option({ icon, title, detail, onPress, destructive }: { icon: React.ComponentProps<typeof Feather>['name']; title: string; detail: string; onPress: () => void; destructive?: boolean }) {
+  function Option({ icon, title, detail, onPress, destructive }: { icon: React.ComponentProps<typeof Icon>['name']; title: string; detail: string; onPress: () => void; destructive?: boolean }) {
     return (
       <Pressable onPress={onPress} style={({ pressed }) => [styles.option, { backgroundColor: colors.card, borderColor: colors.border }, pressed && { opacity: 0.8 }]}>
-        <Feather name={icon} size={20} color={destructive ? colors.destructive : colors.primary} />
+        <Icon name={icon} size={20} color={destructive ? colors.destructive : colors.primary} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.optionTitle, { color: destructive ? colors.destructive : colors.foreground }]}>{title}</Text>
           <Text style={[styles.detail, { color: colors.mutedForeground }]}>{detail}</Text>
         </View>
-        <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+        <Icon name="chevron-right" size={18} color={colors.mutedForeground} />
       </Pressable>
     );
   }
@@ -173,15 +173,15 @@ export default function GuardianAreaScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20 },
   nav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 },
-  navTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  navTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   pinBox: { alignItems: 'center', gap: 12, marginTop: 24 },
-  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 20, textAlign: 'center' },
-  detail: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 19 },
-  pinInput: { width: 220, height: 60, borderWidth: 1, borderRadius: 16, textAlign: 'center', fontFamily: 'Fredoka_600SemiBold', fontSize: 26, letterSpacing: 8 },
-  error: { fontFamily: 'Nunito_500Medium', fontSize: 13, textAlign: 'center' },
+  title: { fontFamily: 'Montserrat_700Bold', fontSize: 20, textAlign: 'center' },
+  detail: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 19 },
+  pinInput: { width: 220, height: 60, borderWidth: 1, borderRadius: 16, textAlign: 'center', fontFamily: 'Montserrat_700Bold', fontSize: 26, letterSpacing: 8 },
+  error: { fontFamily: 'NunitoSans_500Medium', fontSize: 13, textAlign: 'center' },
   primary: { width: 220, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  primaryText: { color: '#fff', fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  primaryText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   warning: { flexDirection: 'row', gap: 10, padding: 14, borderRadius: 14, alignItems: 'flex-start' },
   option: { flexDirection: 'row', alignItems: 'center', gap: 14, borderWidth: 1, borderRadius: 18, padding: 16 },
-  optionTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 15, marginBottom: 2 },
+  optionTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15, marginBottom: 2 },
 });

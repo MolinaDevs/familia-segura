@@ -96,6 +96,6 @@ export default function MembersScreen() {
 
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 8 },
-  detail: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 19, marginTop: 8 },
-  code: { fontFamily: 'Fredoka_600SemiBold', fontSize: 30, letterSpacing: 3 },
+  detail: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 19, marginTop: 8 },
+  code: { fontFamily: 'Montserrat_700Bold', fontSize: 30, letterSpacing: 3 },
 });

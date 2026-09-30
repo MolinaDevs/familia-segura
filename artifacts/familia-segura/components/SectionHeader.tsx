@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 
@@ -11,7 +11,7 @@ export function SectionHeader({ title, action, onPress }: { title: string; actio
         <Pressable onPress={onPress} hitSlop={8} style={({ pressed }) => pressed && styles.pressed}>
           <View style={styles.action}>
             <Text style={[styles.actionText, { color: colors.primary }]}>{action}</Text>
-            <Feather name="chevron-right" size={15} color={colors.primary} />
+            <Icon name="chevron-right" size={15} color={colors.primary} />
           </View>
         </Pressable>
       ) : null}
@@ -21,8 +21,8 @@ export function SectionHeader({ title, action, onPress }: { title: string; actio
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  title: { fontFamily: 'Nunito_700Bold', fontSize: 18, letterSpacing: -0.3 },
+  title: { fontFamily: 'NunitoSans_700Bold', fontSize: 18, letterSpacing: -0.3 },
   action: { flexDirection: 'row', alignItems: 'center', gap: 2 },
-  actionText: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
+  actionText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 13 },
   pressed: { opacity: 0.65 },
 });

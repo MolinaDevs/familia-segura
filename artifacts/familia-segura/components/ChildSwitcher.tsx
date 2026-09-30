@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useFamily } from '@/context/AppContext';
@@ -24,7 +24,7 @@ export function ChildSwitcher({ value, onChange, allowAll }: { value?: string | 
       {allowAll && (
         <Pressable accessibilityRole="button" accessibilityState={{ selected: selected === null }} onPress={() => pick(null)}
           style={[styles.chip, { borderColor: selected === null ? colors.primary : colors.border, backgroundColor: selected === null ? colors.secondary : colors.card }]}>
-          <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Feather name="users" size={13} color={colors.primaryForeground} /></View>
+          <View style={[styles.avatar, { backgroundColor: colors.primary }]}><Icon name="users" size={13} color={colors.primaryForeground} /></View>
           <Text style={[styles.label, { color: colors.foreground }]}>Todos</Text>
         </Pressable>
       )}
@@ -44,7 +44,7 @@ export function ChildSwitcher({ value, onChange, allowAll }: { value?: string | 
       {canAdd && (
         <Pressable accessibilityRole="button" accessibilityLabel="Adicionar criança" onPress={() => router.push('/(app)/child-edit')}
           style={[styles.chip, styles.add, { borderColor: colors.border }]}>
-          <Feather name="plus" size={16} color={colors.primary} />
+          <Icon name="plus" size={16} color={colors.primary} />
         </Pressable>
       )}
     </ScrollView>
@@ -57,6 +57,6 @@ const styles = StyleSheet.create({
   chip: { flexDirection: 'row', alignItems: 'center', gap: 8, borderWidth: 1, borderRadius: 99, paddingLeft: 5, paddingRight: 14, paddingVertical: 5, minHeight: 40 },
   add: { paddingHorizontal: 12, borderStyle: 'dashed' },
   avatar: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
-  initial: { color: '#FFFFFF', fontFamily: 'Nunito_700Bold', fontSize: 13 },
-  label: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
+  initial: { color: '#FFFFFF', fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
+  label: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
 });

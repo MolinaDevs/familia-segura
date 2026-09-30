@@ -243,10 +243,10 @@ importers:
       '@clerk/types':
         specifier: ^4.101.20
         version: 4.101.20(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@expo-google-fonts/fredoka':
-        specifier: ^0.4.1
-        version: 0.4.1
-      '@expo-google-fonts/nunito':
+      '@expo-google-fonts/montserrat':
+        specifier: ^0.4.2
+        version: 0.4.2
+      '@expo-google-fonts/nunito-sans':
         specifier: ^0.4.2
         version: 0.4.2
       '@noble/hashes':
@@ -279,6 +279,9 @@ importers:
       expo-task-manager:
         specifier: 57.0.19
         version: 57.0.19(expo@57.0.24)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))
+      phosphor-react-native:
+        specifier: ^3.0.6
+        version: 3.0.6(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
       react-native-device-activity:
         specifier: 0.6.1
         version: 0.6.1(expo@57.0.24)(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
@@ -1157,14 +1160,14 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@expo-google-fonts/fredoka@0.4.1':
-    resolution: {integrity: sha512-px3uHDidG1RI7mMAjfKQktK9yZoVn/Uvqgp1G/Zkd6ZN9flXFxhUoPDRZdcCj2knFvkKmlvOx96SD3j4fxq7ig==}
-
   '@expo-google-fonts/material-symbols@0.4.48':
     resolution: {integrity: sha512-aZztj44PyA/sj3TXSwwpLJwqMlTUJ49okbZJYURzEcuERxMQB0KbX7RrLBi8WJnuWz5HFOLlTRxORrJfNnUPNQ==}
 
-  '@expo-google-fonts/nunito@0.4.2':
-    resolution: {integrity: sha512-1KCWphw/I2ugqfs9iRHUCkPTnomNgGPtF4AvqVquoEKxr0EL+mcLNLgeixsslbaSFevRR6/KJAE3sc8g0VaY0Q==}
+  '@expo-google-fonts/montserrat@0.4.2':
+    resolution: {integrity: sha512-Xyq7rKJhhZOE1Xk4wKSSVoUeOkFmQEMhtZ3pdFrgYckGZMs115Apmld1AI8Ju+yrl5GzDdfRCCqRr33dvEDYUA==}
+
+  '@expo-google-fonts/nunito-sans@0.4.2':
+    resolution: {integrity: sha512-e4+jUhgXNC6Zahf3MQwiiUimjWPp/Noe5v7CxBDbvXED+E7p7/egDaXKTbLwSBJku/mP3N+vNdJwk5xKAjkQmg==}
 
   '@expo/cli@57.0.26':
     resolution: {integrity: sha512-vm769xuEyHMToi3uY66JLzRA2GGK+3WzdH71HNn67FuVhry82dKTvMUoeHYtHiindyeieiWfEvHT8Kr1VyEVPQ==}
@@ -5213,6 +5216,13 @@ packages:
   pgpass@1.0.5:
     resolution: {integrity: sha512-FdW9r/jQZhSeohs1Z3sI1yxFQNFvMcnmfuj4WBMUTxOrAyLMaTcE1aAMBiTlbMNaXvBCQuVi0R7hd8udDSP7ug==}
 
+  phosphor-react-native@3.0.6:
+    resolution: {integrity: sha512-mIhv+hBbDWz3yLbTOq/esVUkrMoKzEvLIcSeZo3YTdT+sbOBxzxKg5WZN3wpqt3pkkhKf0wVpOyZ3d9mNBNRhg==}
+    peerDependencies:
+      react: '*'
+      react-native: '*'
+      react-native-svg: '*'
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -7114,11 +7124,11 @@ snapshots:
   '@esbuild/win32-x64@0.28.2':
     optional: true
 
-  '@expo-google-fonts/fredoka@0.4.1': {}
-
   '@expo-google-fonts/material-symbols@0.4.48': {}
 
-  '@expo-google-fonts/nunito@0.4.2': {}
+  '@expo-google-fonts/montserrat@0.4.2': {}
+
+  '@expo-google-fonts/nunito-sans@0.4.2': {}
 
   '@expo/cli@57.0.26(@expo/metro-runtime@57.0.16)(expo-constants@57.0.19)(expo-font@57.0.4)(expo-router@57.0.22)(expo@57.0.24)(react-dom@19.2.3(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)(typescript@6.0.3)':
     dependencies:
@@ -12081,6 +12091,12 @@ snapshots:
   pgpass@1.0.5:
     dependencies:
       split2: 4.2.0
+
+  phosphor-react-native@3.0.6(react-native-svg@15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3))(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3):
+    dependencies:
+      react: 19.2.3
+      react-native: 0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3)
+      react-native-svg: 15.15.4(react-native@0.86.3(@babel/core@7.29.7)(@types/react@19.2.18)(react@19.2.3))(react@19.2.3)
 
   picocolors@1.1.1: {}
 

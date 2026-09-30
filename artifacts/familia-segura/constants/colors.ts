@@ -2,128 +2,132 @@
  * Tokens de cor do app (claro e escuro). `useColors()` escolhe a paleta pelo tema do aparelho.
  * Não use cores fixas nas telas: acrescente um token aqui.
  *
- * Sistema "Algodão & Mochi" (docs/DESIGN.md): verde de bebê é a casa, lilás é ação, rosa é assinatura.
- * Regra: pastel é superfície, nunca texto. Todo par de texto abaixo foi medido (WCAG AA ≥ 4,5:1).
+ * Sistema "Azul Confiança" (docs/DESIGN.md), tirado do logo: azul-marinho do escudo = confiança e ação,
+ * laranja-pêssego da família = acolhimento, creme do fundo do logo = a casa.
+ * Regra: tom claro é superfície, nunca texto. Todo par de texto abaixo foi medido (WCAG AA ≥ 4,5:1).
  */
 
 const light = {
-  text: '#2E2545',
-  tint: '#6D3FD1',
+  text: '#142B4D',
+  tint: '#1C5A96',
 
-  background: '#EFF8F2',
-  foreground: '#2E2545',
+  // Creme do fundo do logo (o emblema em PNG usa exatamente este tom).
+  background: '#FCF8F0',
+  foreground: '#142B4D',
 
-  card: '#FAFDFB',
-  cardForeground: '#2E2545',
+  card: '#FFFFFF',
+  cardForeground: '#142B4D',
 
-  // Lavanda: ação (botão, link, foco, item ativo).
-  primary: '#6D3FD1',
+  // Azul do escudo: ação (botão, link, foco, item ativo).
+  primary: '#1C5A96',
   primaryForeground: '#FFFFFF',
 
-  secondary: '#F2ECFB',
-  secondaryForeground: '#5A2FC0',
+  secondary: '#E7F1FA',
+  secondaryForeground: '#174A7E',
 
-  muted: '#E7F0EA',
-  mutedForeground: '#675C80',
+  muted: '#F3EDE2',
+  mutedForeground: '#56657A',
 
-  // Rosa: assinatura da marca (selo, destaque, linha de limite nos gráficos).
-  accent: '#C2185B',
+  // Laranja da família: assinatura (selo, destaque, linha de limite). Versão escura para texto.
+  accent: '#A14912',
   accentForeground: '#FFFFFF',
 
-  destructive: '#C32B41',
+  destructive: '#B8322F',
   destructiveForeground: '#FFFFFF',
 
-  border: '#D8E7DD',
-  input: '#C9DACF',
+  border: '#E9E1D3',
+  input: '#D8CDBB',
 
-  success: '#0F7A66',
-  successSoft: '#DDF3EC',
-  warning: '#87610A',
-  warningSoft: '#FFF4D6',
-  dangerSoft: '#FBE4E8',
+  success: '#1D7A52',
+  successSoft: '#E0F2E8',
+  warning: '#855700',
+  warningSoft: '#FFF1D6',
+  dangerSoft: '#FBE5E2',
 
-  chartGrid: '#D8E7DD',
-  chartBar: '#6D3FD1',
-  chartBarMuted: '#CDBDFB',
-  chartLimit: '#C2185B',
-  chartHeatLow: '#EAF4EE',
-  chartHeatHigh: '#4B2A99',
+  chartGrid: '#E9E1D3',
+  chartBar: '#1C5A96',
+  chartBarMuted: '#B9D5EE',
+  chartLimit: '#E8843F',
+  chartHeatLow: '#EEF4FA',
+  chartHeatHigh: '#15457A',
 
-  // Superfícies da marca (nunca texto).
-  mochi: '#FF8FA9',
-  mint: '#7FD8C3',
-  butter: '#FFD97D',
-  grapeLite: '#CDBDFB',
-  skyTop: '#EFF8F2',
-  skyMid: '#E6F4EB',
-  skyBottom: '#F0ECFA',
-  shadow: '#4B7A5E',
-
-  // Marca (mascote): contorno, corpo e brilho mudam com o tema para o contorno não sumir no escuro.
-  markInk: '#2E2545',
-  markBody: '#DCCEFD',
-  markShine: '#FAFDFB',
+  // Superfícies da marca (fundo de ícone, bolha, selo) — nunca texto.
+  navy: '#15457A',
+  orange: '#F6A46E',
+  blueSoft: '#E3EFFA',
+  peachSoft: '#FDEBDD',
+  mintSoft: '#E0F2E8',
+  sunSoft: '#FFF1D2',
+  // Fundo: creme do logo, com um sopro de azul só no pé.
+  bgTop: '#FDFAF4',
+  bgMid: '#FCF8F0',
+  bgBottom: '#EEF4FA',
+  shadow: '#1C3A5E',
+  // O emblema tem fundo creme: no escuro ele fica sobre uma placa creme.
+  emblemPlate: 'transparent',
+  // Vitrine onde o emblema aparece grande: mesmo creme do fundo do emblema (ele se funde).
+  stage: '#FCF8F0',
 };
 
 const dark: typeof light = {
-  text: '#EDE8F7',
-  tint: '#B9A2FB',
+  text: '#EAF1F9',
+  tint: '#7DB6EC',
 
-  background: '#16121F',
-  foreground: '#EDE8F7',
+  background: '#0C1A2E',
+  foreground: '#EAF1F9',
 
-  card: '#201A2C',
-  cardForeground: '#EDE8F7',
+  card: '#13243D',
+  cardForeground: '#EAF1F9',
 
-  primary: '#B9A2FB',
-  primaryForeground: '#1B1030',
+  primary: '#7DB6EC',
+  primaryForeground: '#0A1B30',
 
-  secondary: '#2A2140',
-  secondaryForeground: '#D9CCFD',
+  secondary: '#18335A',
+  secondaryForeground: '#CFE3F7',
 
-  muted: '#241E32',
-  mutedForeground: '#A99FBF',
+  muted: '#172B47',
+  mutedForeground: '#9FB1C8',
 
-  accent: '#FF8FA9',
-  accentForeground: '#2A0A14',
+  accent: '#F6A46E',
+  accentForeground: '#2B1405',
 
-  destructive: '#F58A9C',
-  destructiveForeground: '#2A0A10',
+  destructive: '#F08A83',
+  destructiveForeground: '#2A0A08',
 
-  border: '#30283F',
-  input: '#3B3150',
+  border: '#223A5C',
+  input: '#2C4870',
 
-  success: '#7FD8C3',
-  successSoft: '#15302A',
-  warning: '#FFD97D',
-  warningSoft: '#33290F',
-  dangerSoft: '#3A1620',
+  success: '#72D3A4',
+  successSoft: '#12302A',
+  warning: '#F5C46A',
+  warningSoft: '#33280F',
+  dangerSoft: '#3A1A1C',
 
-  chartGrid: '#30283F',
-  chartBar: '#B9A2FB',
-  chartBarMuted: '#3E3160',
-  chartLimit: '#FF8FA9',
-  chartHeatLow: '#221C2F',
-  chartHeatHigh: '#CDBDFB',
+  chartGrid: '#223A5C',
+  chartBar: '#7DB6EC',
+  chartBarMuted: '#24466E',
+  chartLimit: '#F6A46E',
+  chartHeatLow: '#132640',
+  chartHeatHigh: '#9CCBF3',
 
-  mochi: '#FF8FA9',
-  mint: '#7FD8C3',
-  butter: '#FFD97D',
-  grapeLite: '#CDBDFB',
-  skyTop: '#16121F',
-  skyMid: '#171722',
-  skyBottom: '#1D1630',
+  navy: '#9CCBF3',
+  orange: '#F6A46E',
+  blueSoft: '#1B3A63',
+  peachSoft: '#3A2618',
+  mintSoft: '#12302A',
+  sunSoft: '#33290F',
+  bgTop: '#0C1A2E',
+  bgMid: '#0D1C31',
+  bgBottom: '#12233D',
   shadow: '#000000',
-
-  markInk: '#EDE8F7',
-  markBody: '#4A3A78',
-  markShine: '#CDBDFB',
+  emblemPlate: '#FCF8F0',
+  stage: '#13243D',
 };
 
 const colors = {
   light,
   dark,
-  radius: 24,
+  radius: 20,
 };
 
 export type Palette = typeof light;

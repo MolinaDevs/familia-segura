@@ -1,97 +1,89 @@
-# Design System: Família Segura — "Algodão & Mochi"
+# Design System: Família Segura — "Azul Confiança"
 
-Herdado do conceito da loja Sensorial Squishy Kids (Squitch) e adaptado a um app de controle parental.
-Os valores vivem em `artifacts/familia-segura/constants/colors.ts` (tokens) e nos componentes
-`components/brand/*`, `components/auth/AuthKit.tsx` e `components/ui.tsx`. Se este documento divergir do
-código, o código é a verdade — e este documento deve ser corrigido.
+Tirado do logo oficial (`artifacts/familia-segura/assets/brand/logo-original.png`): escudo azul-marinho, casa
+conectada e uma família abraçada em azul e laranja, sobre fundo creme. Os valores vivem em
+`artifacts/familia-segura/constants/colors.ts` e nos componentes `components/brand/*`, `components/Icon.tsx`,
+`components/auth/AuthKit.tsx` e `components/ui.tsx`. Se este documento divergir do código, o código é a
+verdade — e este documento deve ser corrigido.
 
 ## 1. Atmosfera
 
-Macio, confiável e sem vigilância. Um app que os pais abrem para resolver algo em segundos e que a criança
-também vê — então nada de "painel de espionagem" escuro e frio. Densidade de app do dia a dia (4), variação
-moderada com títulos à esquerda (6), movimento fluido e curto (5): **o squish** é a única assinatura de
-movimento.
+Confiável, acolhedor e transparente. Os pais abrem o app para resolver algo em segundos; a criança também
+o vê, então nada de visual de vigilância. O azul-marinho do escudo passa segurança; o laranja da família
+passa calor humano; o creme do fundo é a casa. Densidade de app do dia a dia, títulos à esquerda,
+movimento curto e calmo.
 
 ## 2. Paleta e papéis
 
-> **Pastel é superfície. Nunca texto.** Cada acento tem uma forma clara (fundo, bolha, ícone) e uma forma
-> profunda, a única que carrega texto, ícone de ação ou borda de foco.
+> **Tom claro é superfície. Nunca texto.** Todo par de texto foi medido: WCAG AA (≥ 4,5:1) contra o cartão e
+> contra as três paradas do fundo, nos dois temas.
 
 | Nome | Claro | Escuro | Papel |
 |---|---|---|---|
-| Céu (topo → 62% → pé) | `#EFF8F2 → #E6F4EB → #F0ECFA` | `#16121F → #171722 → #1D1630` | Fundo. Verde de bebê é a casa; lilás é só nuance no pé |
-| Algodão | `#FAFDFB` | `#201A2C` | Cartões, formulários, barra de abas |
-| Tinta | `#2E2545` | `#EDE8F7` | Texto principal |
-| Tinta 2 | `#675C80` | `#A99FBF` | Texto de apoio |
-| **Lavanda (ação)** | `#6D3FD1` | `#B9A2FB` | Botão principal, link, foco, item ativo, gráfico |
-| Lavanda clara | `#CDBDFB` / `#F2ECFB` | `#CDBDFB` / `#2A2140` | Costura, bolhas, avisos neutros |
-| **Mochi (assinatura)** | `#C2185B` (texto) / `#FF8FA9` (superfície) | `#FF8FA9` | Selo, bochechas do mascote, linha de limite |
-| Menta | `#0F7A66` (texto) / `#7FD8C3` | `#7FD8C3` | Sucesso, broto do mascote |
-| Manteiga | `#87610A` (texto) / `#FFD97D` | `#FFD97D` | Atenção |
-| Perigo | `#C32B41` | `#F58A9C` | Erro, bloqueio |
+| Creme (fundo) | `#FDFAF4 → #FCF8F0 → #EEF4FA` | `#0C1A2E → #0D1C31 → #12233D` | Fundo. O creme é o do logo; o azul entra só no pé |
+| Cartão | `#FFFFFF` | `#13243D` | Cartões, formulários, barra de abas |
+| Tinta | `#142B4D` | `#EAF1F9` | Texto principal |
+| Tinta 2 | `#56657A` | `#9FB1C8` | Texto de apoio |
+| **Azul do escudo (ação)** | `#1C5A96` | `#7DB6EC` | Botão principal, link, foco, item ativo, gráficos |
+| Marinho | `#15457A` | `#9CCBF3` | Letreiro "FAMÍLIA SEGURA", ícones em bolha |
+| **Laranja da família (assinatura)** | `#A14912` (texto) / `#F6A46E` (superfície) | `#F6A46E` | Selo, costura do formulário, linha de limite |
+| Bolhas | azul `#E3EFFA`, pêssego `#FDEBDD`, menta `#E0F2E8`, sol `#FFF1D2` | tons escuros equivalentes | Fundo de ícone |
+| Sucesso / Atenção / Perigo | `#1D7A52` / `#855700` / `#B8322F` | `#72D3A4` / `#F5C46A` / `#F08A83` | Estados |
 
-**Divisão de trabalho:** lavanda é ação, rosa é assinatura. Se os dois disputarem o mesmo papel, a cor vira
-ruído. O selo rosa (`eyebrow`) aparece no máximo uma vez por tela.
-
-**Contraste medido, não presumido:** todos os pares de texto acima passam WCAG AA (≥ 4,5:1) contra o
-cartão e contra as três paradas do fundo, nos dois temas (menor valor: menta sobre o pé do céu, 4,53:1).
-Cor nova só entra depois de medir.
+**Divisão de trabalho:** azul é ação, laranja é assinatura. O selo laranja aparece no máximo uma vez por tela.
 
 ## 3. Tipografia
 
-- **Títulos e marca:** Fredoka 600 (500 em títulos de estado vazio). Arredondada e cheia, como a marca.
-- **Texto e interface:** Nunito 400–800. Arredondada e legível em tamanho pequeno.
-- **Banida:** Inter e fontes genéricas do sistema. Nada de serifa.
-- Escala: título de tela 30/36, título de seção 19, corpo 15–16 com entrelinha 1,45–1,5, rótulos 13–14,
-  selo 11 em caixa alta com espaçamento 1,6–2,6.
+- **Títulos e letreiro:** Montserrat 700/800 — a mesma geometria em caixa alta do logo.
+- **Texto e interface:** Nunito Sans 400–800 — neutra, amigável e legível em tamanho pequeno.
+- **Banida:** Inter, fontes genéricas do sistema e serifas.
+- Escala: título de tela 27/33, título de seção 19, corpo 15–16 (entrelinha ~1,5), rótulos 13–14, selo
+  10,5–11,5 em caixa alta com espaçamento.
 
 ## 4. Marca
 
-**O escudo squishy** (`assets/brand/mark.svg`, `components/brand/Logo.tsx`, `res/drawable/fs_brand_mark.xml`):
-um escudo sem quinas (proteção), rosto sereno com olhos fechados e bochechas (cuidado, não vigilância) e um
-broto (a criança crescendo). Os três arquivos são o mesmo desenho: ao mudar um, mude os três.
+- **Emblema** (`assets/brand/emblem.png`, componentes `Emblem`, `BreathingEmblem` e `Logo`): o escudo com a
+  casa e a família, recortado do logo, com fundo creme `#FCF8F0`. No tema claro ele se funde ao fundo; no
+  escuro fica sobre uma placa creme arredondada (como um ícone de app). A vitrine das boas-vindas usa o
+  mesmo creme para o emblema não mostrar "quadrado".
+- **Assinatura:** emblema + "FAMÍLIA SEGURA" em Montserrat 800 marinho; linha de apoio "CONTROLE PARENTAL ·
+  IPHONE E ANDROID".
+- **Ícones do app:** emblema sobre creme (loja/iOS), adaptativo Android com fundo `#FCF8F0` e o emblema na zona
+  segura; splash creme nos dois temas; tela de pausa nativa com `fs_brand_emblem.png`.
+- **Fonte do logo:** o arquivo enviado tem 512 px. Para a loja, trocar por uma versão vetorial (SVG/PDF) ou
+  ≥ 2048 px e regenerar `emblem.png` e os ícones.
 
-- Contorno, corpo e brilho vêm de `markInk`/`markBody`/`markShine`: no escuro o contorno fica claro.
-- Versões: colorida, `mark-mono-ink.svg`, `mark-mono-cloud.svg`; assinaturas `logo-horizontal` e `logo-full`
-  (com "CONTROLE PARENTAL" em mochi).
-- Ícone do app: marca sobre o céu; ícone adaptativo Android com fundo `#E6F4EB` e a marca na zona segura.
-- Respiro mínimo: a altura do broto. Nunca esticar em um eixo — o squish é animação, não licença para
-  deformar a marca parada.
+## 5. Ícones
 
-## 5. Componentes
+`components/Icon.tsx` (Phosphor). Padrão **duotone** (traço + preenchimento suave), como o escudo em dois
+azuis; setas, fechar e marcar em **bold**; abas: **fill** quando ativa, **regular** quando não. Os nomes são
+os mesmos que o app e o catálogo do servidor já usam — nome desconhecido cai num ícone genérico de app.
+Ícone de conteúdo vai numa bolha colorida (44 px, raio 14) com o ícone em marinho.
 
-- **Botão principal:** lavanda cheio, raio 16, altura ≥ 54, texto Nunito 800. Ao apertar: squish
-  (`scaleX 1.02, scaleY 0.96`). Sem brilho externo.
-- **Botão secundário:** contorno (`outline`) sobre algodão, ou "quieto" (só texto lavanda).
-- **Cartão:** algodão, raio 24 (formulários e vitrines 28–36), borda 1 px, sombra verde translúcida. Usar só
-  quando a elevação diz algo; listas de valor usam divisórias.
-- **Campo:** rótulo em cima; ícone à esquerda; foco = borda lavanda de 2 px (sem o contorno padrão do
-  navegador); erro em vermelho embaixo, com ícone; dica opcional embaixo; senha com mostrar/ocultar.
-- **Costura:** fio lavanda na borda superior do formulário. Marca uma abertura, não é moldura.
-- **Chips e selos:** pílula (raio 999).
-- **Interruptor:** `Toggle` — trilho lavanda, botão algodão.
-- **Carregamento:** a tela da marca (`BrandLoading`) com a barra deslizante; nada de spinner genérico em
-  tela cheia. Spinner só dentro de botão ocupado.
-- **Tela de pausa (Android nativo):** mesma paleta e mascote, cartão algodão, ação lavanda.
+## 6. Componentes
 
-## 6. Layout
+- **Botão principal:** azul cheio, raio 14–16, altura ≥ 54, Nunito Sans 800. Ao apertar: afunda de leve
+  (`scale 0.98`).
+- **Secundário:** contorno sobre cartão, ou só texto azul.
+- **Cartão:** branco, raio 20–24, borda 1 px, sombra azul-marinho translúcida. Listas de valor usam divisórias.
+- **Campo:** rótulo em cima, ícone à esquerda, foco = borda azul 2 px (sem contorno padrão do navegador), erro
+  embaixo com ícone, dica opcional, senha com mostrar/ocultar.
+- **Costura:** fio laranja no topo do formulário — marca uma abertura, não é moldura.
+- **Chips e selos:** pílula. **Interruptor:** `Toggle` (trilho azul, botão branco).
+- **Estado vazio:** ícone em bolha azul, título em Montserrat, orientação do que fazer.
+- **Carregamento:** `BrandLoading` (emblema que respira + letreiro + barra deslizante). Spinner só dentro de botão.
 
-- Coluna única no celular; conteúdo limitado a 480 px (conta) e 560–760 px (app). Margem lateral 20.
-- Títulos alinhados à esquerda. A única composição centralizada é a tela de abertura (marca + nome).
-- Boas-vindas: vitrine com o mascote e os "combinados" reais do produto (não ilustração genérica), título,
-  dois diferenciais em lista e as ações por último.
-- Nada de três cartões iguais lado a lado.
+## 7. Texto (copywriting)
 
-## 7. Movimento
+- Fale com os pais em frases curtas e verbos concretos: "Limite o tempo de cada app", "Aprove os downloads".
+- Com a criança, explique o porquê e o próximo passo, sem bronca: "Seu tempo de hoje em Roblox acabou.
+  Amanhã recomeça — ou peça mais pelo Família Segura."
+- Transparência é o diferencial: repita que a criança vê as mesmas regras.
+- Proibido: jargão ("dispositivo vinculado"), clichês ("eleve", "revolucione", "sem esforço"), emojis, "role
+  para explorar".
 
-- **O squish:** achata e alarga, assenta com mola. Na marca, em loop lento (a cada ~2 s); em botões e
-  cartões, no toque.
-- Entrada em cascata que **move, não revela**: `translateY` sem `opacity: 0` — animação que não roda (aba em
-  segundo plano) não pode esconder conteúdo.
+## 8. Movimento
+
+- O emblema **respira** (sobe 3% e volta, ~3 s) na abertura e nos cabeçalhos de conta.
+- Entrada em cascata que **move, não revela** (`translateY` sem `opacity: 0`).
 - Tudo desliga com "reduzir movimento". Só `transform` e `opacity`.
-
-## 8. Proibido
-
-Emojis; Inter; preto puro; brilho neon; texto em tom pastel; gradiente em texto; três cartões iguais em
-linha; spinner genérico em tela cheia; nomes genéricos ("João da Silva", "Acme"); números redondos
-inventados; clichês ("eleve", "revolucione", "sem esforço"); "role para explorar", setas pulando.

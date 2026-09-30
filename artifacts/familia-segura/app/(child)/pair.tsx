@@ -5,7 +5,7 @@ import { useRouter } from 'expo-router';
 import { usePairDevice } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 import * as Haptics from 'expo-haptics';
@@ -63,16 +63,16 @@ export default function PairDeviceScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top }]}>
       <Pressable onPress={() => goBack('/')} style={styles.backButton}>
-        <Feather name="x" size={24} color={colors.foreground} />
+        <Icon name="x" size={24} color={colors.foreground} />
       </Pressable>
 
       <View style={styles.header}>
         <View style={[styles.iconContainer, { backgroundColor: colors.primary }]}>
-          <Feather name="link" size={32} color={colors.primaryForeground} />
+          <Icon name="link" size={32} color={colors.primaryForeground} />
         </View>
-        <Text style={[styles.title, { color: colors.foreground }]}>Vincular Dispositivo</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>Conectar ao responsável</Text>
         <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-          Peça ao seu responsável para gerar um código no app do responsável e digite-o aqui.
+          No app do responsável, toque em Família → + Parear. Digite aqui o código que aparecer.
         </Text>
       </View>
       
@@ -110,11 +110,11 @@ const styles = StyleSheet.create({
   backButton: { marginTop: 10, alignSelf: 'flex-start' },
   header: { marginTop: 40, marginBottom: 40, alignItems: 'center' },
   iconContainer: { width: 64, height: 64, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 26, marginBottom: 8, textAlign: 'center' },
-  subtitle: { fontFamily: 'Nunito_400Regular', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 280 },
+  title: { fontFamily: 'Montserrat_700Bold', fontSize: 26, marginBottom: 8, textAlign: 'center' },
+  subtitle: { fontFamily: 'NunitoSans_400Regular', fontSize: 15, textAlign: 'center', lineHeight: 22, maxWidth: 280 },
   form: { flex: 1, gap: 16, alignItems: 'center' },
-  input: { height: 72, width: '100%', borderWidth: 2, borderRadius: 20, textAlign: 'center', fontFamily: 'Fredoka_600SemiBold', fontSize: 28, letterSpacing: 4 },
+  input: { height: 72, width: '100%', borderWidth: 2, borderRadius: 20, textAlign: 'center', fontFamily: 'Montserrat_700Bold', fontSize: 28, letterSpacing: 4 },
   button: { height: 56, width: '100%', borderRadius: 18, alignItems: 'center', justifyContent: 'center', marginTop: 16 },
-  buttonText: { color: '#fff', fontFamily: 'Nunito_600SemiBold', fontSize: 17 },
+  buttonText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 17 },
   pressed: { opacity: 0.8, transform: [{ scale: 0.98 }] },
 });

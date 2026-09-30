@@ -6,14 +6,14 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
-  Nunito_400Regular,
-  Nunito_500Medium,
-  Nunito_600SemiBold,
-  Nunito_700Bold,
-  Nunito_800ExtraBold,
+  NunitoSans_400Regular,
+  NunitoSans_500Medium,
+  NunitoSans_600SemiBold,
+  NunitoSans_700Bold,
+  NunitoSans_800ExtraBold,
   useFonts,
-} from '@expo-google-fonts/nunito';
-import { Fredoka_500Medium, Fredoka_600SemiBold } from '@expo-google-fonts/fredoka';
+} from '@expo-google-fonts/nunito-sans';
+import { Montserrat_600SemiBold, Montserrat_700Bold, Montserrat_800ExtraBold } from '@expo-google-fonts/montserrat';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { AppProvider } from '@/context/AppContext';
@@ -65,7 +65,7 @@ function StartupScreen({ missingConfiguration = false }: { missingConfiguration?
           onPress={() => void reloadAppAsync()}
           style={({ pressed }) => ({ paddingHorizontal: 18, paddingVertical: 12, opacity: pressed ? 0.65 : 1 })}
         >
-          <Text style={{ color: colors.primary, fontFamily: 'Nunito_800ExtraBold', fontSize: 15 }}>Tentar novamente</Text>
+          <Text style={{ color: colors.primary, fontFamily: 'NunitoSans_800ExtraBold', fontSize: 15 }}>Tentar novamente</Text>
         </Pressable>
       ) : undefined}
     />
@@ -98,15 +98,16 @@ export default function RootLayout() {
   useEffect(() => {
     AsyncStorage.getItem('childMode').then((v) => setChildMode(v === 'true')).catch(() => setChildMode(false));
   }, []);
-  // Tipografia da marca: Nunito no texto, Fredoka nos títulos e na marca (docs/DESIGN.md).
+  // Tipografia da marca: Nunito Sans no texto, Montserrat nos títulos (o letreiro do logo) — docs/DESIGN.md.
   const [fontsLoaded, fontError] = useFonts({
-    Nunito_400Regular,
-    Nunito_500Medium,
-    Nunito_600SemiBold,
-    Nunito_700Bold,
-    Nunito_800ExtraBold,
-    Fredoka_500Medium,
-    Fredoka_600SemiBold,
+    NunitoSans_400Regular,
+    NunitoSans_500Medium,
+    NunitoSans_600SemiBold,
+    NunitoSans_700Bold,
+    NunitoSans_800ExtraBold,
+    Montserrat_600SemiBold,
+    Montserrat_700Bold,
+    Montserrat_800ExtraBold,
   });
 
   useEffect(() => {

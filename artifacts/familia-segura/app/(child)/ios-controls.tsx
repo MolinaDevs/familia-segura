@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { getGetChildOverviewQueryKey, useGetChildOverview } from '@workspace/api-client-react';
@@ -72,14 +72,14 @@ export default function IOSControlsScreen() {
   return (
     <ScrollView style={{ backgroundColor: colors.background }} contentContainerStyle={[styles.content, { paddingTop: Platform.OS === 'web' ? 67 : insets.top + 12, paddingBottom: Platform.OS === 'web' ? 34 : insets.bottom + 32 }]}>
       <View style={styles.nav}>
-        <Pressable testID="ios-controls-back" onPress={() => goBack('/(child)/guardian')} hitSlop={10}><Feather name="arrow-left" size={23} color={colors.foreground} /></Pressable>
+        <Pressable testID="ios-controls-back" onPress={() => goBack('/(child)/guardian')} hitSlop={10}><Icon name="arrow-left" size={23} color={colors.foreground} /></Pressable>
         <Text style={[styles.navTitle, { color: colors.foreground }]}>Controle no iPhone</Text>
         <View style={{ width: 23 }} />
       </View>
 
       <View style={[styles.statusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={[styles.statusIcon, { backgroundColor: state === 'approved' ? colors.secondary : colors.muted }]}>
-          <Feather name={state === 'approved' ? 'shield' : 'alert-circle'} size={24} color={state === 'approved' ? colors.secondaryForeground : colors.mutedForeground} />
+          <Icon name={state === 'approved' ? 'shield' : 'alert-circle'} size={24} color={state === 'approved' ? colors.secondaryForeground : colors.mutedForeground} />
         </View>
         <View style={{ flex: 1 }}>
           <Text style={[styles.statusTitle, { color: colors.foreground }]}>{copy.title}</Text>
@@ -128,7 +128,7 @@ export default function IOSControlsScreen() {
       )}
 
       <View style={[styles.note, { backgroundColor: colors.secondary }]}>
-        <Feather name="lock" size={18} color={colors.secondaryForeground} />
+        <Icon name="lock" size={18} color={colors.secondaryForeground} />
         <Text style={[styles.noteText, { color: colors.secondaryForeground }]}>O Família Segura recebe somente eventos e totais permitidos pela Apple. A lista de apps instalada não é enviada ao servidor.</Text>
       </View>
     </ScrollView>
@@ -138,20 +138,20 @@ export default function IOSControlsScreen() {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: 20 },
   nav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 26 },
-  navTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
+  navTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
   statusCard: { flexDirection: 'row', gap: 13, alignItems: 'center', borderWidth: 1, borderRadius: 20, padding: 16 },
   statusIcon: { width: 46, height: 46, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  statusTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
-  statusDetail: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
+  statusTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
+  statusDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
   primaryButton: { height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 18 },
-  primaryButtonText: { color: '#fff', fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
-  summary: { fontFamily: 'Nunito_500Medium', fontSize: 12, lineHeight: 18, marginVertical: 18 },
+  primaryButtonText: { color: '#fff', fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
+  summary: { fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 18, marginVertical: 18 },
   ruleCard: { borderWidth: 1, borderRadius: 20, padding: 16, marginTop: 12 },
-  ruleTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
-  ruleDetail: { fontFamily: 'Nunito_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
+  ruleTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
+  ruleDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, lineHeight: 18, marginTop: 4 },
   pickerWrap: { height: 310, borderWidth: 1, borderRadius: 16, overflow: 'hidden', marginTop: 14 },
   picker: { width: '100%', flex: 1 },
   note: { flexDirection: 'row', gap: 10, borderRadius: 18, padding: 15, marginTop: 22 },
-  noteText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 12, lineHeight: 18 },
+  noteText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 12, lineHeight: 18 },
   pressed: { opacity: 0.75 },
 });

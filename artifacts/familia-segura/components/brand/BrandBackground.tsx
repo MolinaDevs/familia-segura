@@ -4,17 +4,17 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useColors } from '@/hooks/useColors';
 
 /**
- * Fundo da marca: verde de bebê do topo até 62% e o lilás só no pé.
- * O verde é o tom da casa; o lilás é nuance, não segunda cor (docs/DESIGN.md).
+ * Fundo da marca: o creme do logo, com um sopro de azul só no pé (docs/DESIGN.md).
+ * O creme é a casa; o azul é nuance, não segunda cor.
  */
-export function SkyBackground({ children, style }: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
+export function BrandBackground({ children, style }: PropsWithChildren<{ style?: StyleProp<ViewStyle> }>) {
   const colors = useColors();
   return (
-    <View style={[styles.fill, { backgroundColor: colors.skyMid }, style]}>
+    <View style={[styles.fill, { backgroundColor: colors.bgMid }, style]}>
       <LinearGradient
         pointerEvents="none"
-        colors={[colors.skyTop, colors.skyMid, colors.skyBottom]}
-        locations={[0, 0.62, 1]}
+        colors={[colors.bgTop, colors.bgMid, colors.bgBottom]}
+        locations={[0, 0.6, 1]}
         style={StyleSheet.absoluteFill}
       />
       {children}

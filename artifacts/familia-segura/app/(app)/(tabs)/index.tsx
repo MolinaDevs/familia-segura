@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -18,6 +18,12 @@ const EVENT_LABEL: Record<string, string> = {
   uninstall_attempt: 'Tentativa de desinstalar',
   pin_failed: 'PIN errado no aparelho',
 };
+
+/** Saudação pela hora do dia (o app é aberto de manhã cedo e na hora de dormir). */
+function greeting() {
+  const hour = new Date().getHours();
+  return hour < 12 ? 'Bom dia!' : hour < 18 ? 'Boa tarde!' : 'Boa noite!';
+}
 
 export default function HomeScreen() {
   const colors = useColors();
@@ -66,7 +72,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <Screen tabs eyebrow={today} title="Olá, família." onRefresh={refetch}
+    <Screen tabs eyebrow={today} title={greeting()} onRefresh={refetch}
       right={undefined}>
       <View style={{ height: 16 }} />
       <ChildSwitcher />
@@ -136,7 +142,7 @@ export default function HomeScreen() {
 
       {data.devices.length === 0 ? (
         <Card style={{ gap: 12, marginTop: 20 }}>
-          <View style={[styles.setupIcon, { backgroundColor: colors.secondary }]}><Feather name="smartphone" size={26} color={colors.secondaryForeground} /></View>
+          <View style={[styles.setupIcon, { backgroundColor: colors.secondary }]}><Icon name="smartphone" size={26} color={colors.secondaryForeground} /></View>
           <Text style={[styles.setupTitle, { color: colors.foreground }]}>Espaço de {data.childName}</Text>
           <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>Conecte o aparelho de {data.childName} para acompanhar o uso e aplicar as proteções. Funciona com iPhone e Android, independente do seu celular.</Text>
           {canEdit && <Button label="Parear aparelho" icon="link" onPress={() => router.push('/(app)/pair-device')} testID="home-pair-device" />}
@@ -178,7 +184,7 @@ export default function HomeScreen() {
           <SectionTitle action="Ajustar" onAction={() => router.push('/(app)/(tabs)/routine')}>Rotina</SectionTitle>
           {activeRoutine ? (
             <Card style={styles.appRow}>
-              <Feather name={(activeRoutine.icon || 'moon') as React.ComponentProps<typeof Feather>['name']} size={22} color={colors.primary} />
+              <Icon name={(activeRoutine.icon || 'moon') as React.ComponentProps<typeof Icon>['name']} size={22} color={colors.primary} />
               <View style={{ flex: 1 }}>
                 <Text style={[styles.reqTitle, { color: colors.foreground }]}>{activeRoutine.title}</Text>
                 <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>{activeRoutine.start} às {activeRoutine.end}</Text>
@@ -192,20 +198,20 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  cardTitle: { fontFamily: 'Nunito_700Bold', fontSize: 16, marginBottom: 4 },
-  reqTitle: { fontFamily: 'Nunito_600SemiBold', fontSize: 15 },
-  reqMsg: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 19, marginTop: 4 },
+  cardTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 16, marginBottom: 4 },
+  reqTitle: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 15 },
+  reqMsg: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 19, marginTop: 4 },
   actions: { flexDirection: 'row', gap: 10, marginTop: 14 },
   setupIcon: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  setupTitle: { fontFamily: 'Fredoka_600SemiBold', fontSize: 20 },
+  setupTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 20 },
   hero: { borderRadius: 26, padding: 22, marginTop: 8 },
-  heroEyebrow: { fontFamily: 'Nunito_700Bold', fontSize: 11, letterSpacing: 1.4, opacity: 0.8 },
+  heroEyebrow: { fontFamily: 'NunitoSans_700Bold', fontSize: 11, letterSpacing: 1.4, opacity: 0.8 },
   heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: 20 },
-  heroLabel: { fontFamily: 'Nunito_600SemiBold', fontSize: 12, opacity: 0.8 },
-  heroValue: { fontFamily: 'Fredoka_600SemiBold', fontSize: 38, letterSpacing: -1.4, marginTop: 4 },
+  heroLabel: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 12, opacity: 0.8 },
+  heroValue: { fontFamily: 'Montserrat_700Bold', fontSize: 38, letterSpacing: -1.4, marginTop: 4 },
   circle: { width: 68, height: 68, borderRadius: 34, borderWidth: 3, alignItems: 'center', justifyContent: 'center', opacity: 0.95 },
-  circleValue: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
-  circleLabel: { fontFamily: 'Nunito_500Medium', fontSize: 10, opacity: 0.8 },
+  circleValue: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
+  circleLabel: { fontFamily: 'NunitoSans_500Medium', fontSize: 10, opacity: 0.8 },
   heroTrack: { height: 10, borderRadius: 10, overflow: 'hidden', marginTop: 20 },
   heroProgress: { height: '100%', borderRadius: 10 },
   appRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },

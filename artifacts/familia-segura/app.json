@@ -64,7 +64,7 @@
       "versionCode": 1,
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#E6F4EB"
+        "backgroundColor": "#FCF8F0"
       },
       "blockedPermissions": [
         "android.permission.ACCESS_FINE_LOCATION",
@@ -91,12 +91,12 @@
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 150,
+          "imageWidth": 170,
           "resizeMode": "contain",
-          "backgroundColor": "#EFF8F2",
+          "backgroundColor": "#FCF8F0",
           "dark": {
-            "image": "./assets/images/splash-icon-dark.png",
-            "backgroundColor": "#16121F"
+            "image": "./assets/images/splash-icon.png",
+            "backgroundColor": "#FCF8F0"
           }
         }
       ],
@@ -118,7 +118,7 @@
       [
         "expo-notifications",
         {
-          "color": "#6D3FD1",
+          "color": "#1C5A96",
           "defaultChannel": "alertas"
         }
       ],
@@ -128,6 +128,6 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "description": "Controle parental para iPhone e Android: limites, rotinas, bloqueio de instalar e apagar apps e relatórios, com transparência para a criança."
+    "description": "Controle parental para iPhone e Android: limite o tempo de cada app, pause tudo na hora de dormir e aprove os downloads, com transparência para a criança."
   }
 }

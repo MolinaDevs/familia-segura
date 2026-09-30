@@ -292,5 +292,5 @@ export default function ForgotPasswordPage() {
 }
 
 const styles = StyleSheet.create({
-  code: { fontFamily: 'Fredoka_600SemiBold', fontSize: 26, letterSpacing: 10 },
+  code: { fontFamily: 'Montserrat_700Bold', fontSize: 26, letterSpacing: 10 },
 });

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, type ReactNode } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, Text, View } from 'react-native';
 import { useColors } from '@/hooks/useColors';
-import { SquishyMark } from './Logo';
-import { SkyBackground } from './SkyBackground';
+import { BreathingEmblem } from './Logo';
+import { BrandBackground } from './BrandBackground';
 
-/** Barra de progresso indeterminada: uma "gota" lavanda deslizando num trilho (no lugar do spinner). */
+/** Barra de progresso indeterminada: um trecho azul deslizando num trilho (no lugar do spinner). */
 function SlideBar() {
   const colors = useColors();
   const x = useRef(new Animated.Value(0)).current;
@@ -27,7 +27,7 @@ function SlideBar() {
 }
 
 /**
- * Tela de abertura da marca (depois do splash nativo): mascote que aperta, nome e carregamento.
+ * Tela de abertura da marca (depois do splash nativo): emblema que respira, letreiro e carregamento.
  * `title`/`detail` trocam o texto quando a espera demora ou falta configuração; `action` mostra um botão.
  */
 export function BrandLoading({ title, detail, action, showProgress = true }: {
@@ -35,11 +35,11 @@ export function BrandLoading({ title, detail, action, showProgress = true }: {
 }) {
   const colors = useColors();
   return (
-    <SkyBackground>
+    <BrandBackground>
       <View style={styles.center}>
-        <SquishyMark size={112} />
-        <Text style={[styles.word, { color: colors.foreground }]}>Família Segura</Text>
-        <Text style={[styles.tagline, { color: colors.accent }]}>CONTROLE PARENTAL</Text>
+        <BreathingEmblem size={150} />
+        <Text style={[styles.word, { color: colors.navy }]}>{'FAMÍLIA\nSEGURA'}</Text>
+        <Text style={[styles.tagline, { color: colors.mutedForeground }]}>CONTROLE PARENTAL · IPHONE E ANDROID</Text>
         <View style={styles.status}>
           {showProgress ? <SlideBar /> : null}
           {title ? <Text accessibilityLiveRegion="polite" style={[styles.title, { color: colors.foreground }]}>{title}</Text> : null}
@@ -47,17 +47,17 @@ export function BrandLoading({ title, detail, action, showProgress = true }: {
           {action}
         </View>
       </View>
-    </SkyBackground>
+    </BrandBackground>
   );
 }
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  word: { fontFamily: 'Fredoka_600SemiBold', fontSize: 30, letterSpacing: -0.6, marginTop: 18 },
-  tagline: { fontFamily: 'Nunito_800ExtraBold', fontSize: 11, letterSpacing: 2.6, marginTop: 6 },
+  word: { fontFamily: 'Montserrat_800ExtraBold', fontSize: 30, lineHeight: 33, letterSpacing: 0.6, textAlign: 'center', marginTop: 20 },
+  tagline: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 11, letterSpacing: 1.8, marginTop: 10 },
   status: { alignItems: 'center', gap: 10, marginTop: 36, minHeight: 90, maxWidth: 320 },
   track: { width: 160, height: 6, borderRadius: 3, overflow: 'hidden' },
   thumb: { width: 64, height: 6, borderRadius: 3 },
-  title: { fontFamily: 'Nunito_700Bold', fontSize: 15, textAlign: 'center', marginTop: 6 },
-  detail: { fontFamily: 'Nunito_500Medium', fontSize: 13, lineHeight: 19, textAlign: 'center' },
+  title: { fontFamily: 'NunitoSans_700Bold', fontSize: 15, textAlign: 'center', marginTop: 6 },
+  detail: { fontFamily: 'NunitoSans_500Medium', fontSize: 13, lineHeight: 19, textAlign: 'center' },
 });

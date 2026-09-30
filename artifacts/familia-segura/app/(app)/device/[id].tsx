@@ -152,9 +152,9 @@ export default function DeviceScreen() {
 }
 
 const styles = StyleSheet.create({
-  issue: { fontFamily: 'Nunito_500Medium', fontSize: 14 },
-  hint: { fontFamily: 'Nunito_400Regular', fontSize: 12, marginTop: 6 },
+  issue: { fontFamily: 'NunitoSans_500Medium', fontSize: 14 },
+  hint: { fontFamily: 'NunitoSans_400Regular', fontSize: 12, marginTop: 6 },
   inline: { flexDirection: 'row', gap: 10, alignItems: 'center' },
-  input: { flex: 1, height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, fontFamily: 'Nunito_500Medium', fontSize: 15 },
+  input: { flex: 1, height: 50, borderWidth: 1, borderRadius: 14, paddingHorizontal: 14, fontFamily: 'NunitoSans_500Medium', fontSize: 15 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
 });

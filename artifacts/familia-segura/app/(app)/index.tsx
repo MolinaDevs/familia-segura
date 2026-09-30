@@ -50,9 +50,9 @@ export default function AppGateway() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },
-  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 21, textAlign: 'center' },
-  message: { fontFamily: 'Nunito_400Regular', fontSize: 14, lineHeight: 21, textAlign: 'center', maxWidth: 320 },
+  title: { fontFamily: 'Montserrat_700Bold', fontSize: 21, textAlign: 'center' },
+  message: { fontFamily: 'NunitoSans_400Regular', fontSize: 14, lineHeight: 21, textAlign: 'center', maxWidth: 320 },
   retry: { height: 48, minWidth: 180, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
-  retryText: { fontFamily: 'Nunito_600SemiBold', fontSize: 14 },
+  retryText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
   pressed: { opacity: 0.72 },
 });

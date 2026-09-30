@@ -76,14 +76,14 @@ export default function AppsScreen() {
 }
 
 const styles = StyleSheet.create({
-  protTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15, marginBottom: 2 },
-  protItem: { fontFamily: 'Nunito_500Medium', fontSize: 13 },
+  protTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 15, marginBottom: 2 },
+  protItem: { fontFamily: 'NunitoSans_500Medium', fontSize: 13 },
   top: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  name: { fontFamily: 'Nunito_700Bold', fontSize: 16 },
-  category: { fontFamily: 'Nunito_500Medium', fontSize: 13, marginTop: 2 },
+  name: { fontFamily: 'NunitoSans_700Bold', fontSize: 16 },
+  category: { fontFamily: 'NunitoSans_500Medium', fontSize: 13, marginTop: 2 },
   usageLine: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 18, marginBottom: 8 },
-  usage: { fontFamily: 'Nunito_600SemiBold', fontSize: 13 },
-  limit: { fontFamily: 'Nunito_500Medium', fontSize: 13 },
+  usage: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 13 },
+  limit: { fontFamily: 'NunitoSans_500Medium', fontSize: 13 },
   track: { height: 8, borderRadius: 8, overflow: 'hidden' },
   progress: { height: '100%', borderRadius: 8 },
 });

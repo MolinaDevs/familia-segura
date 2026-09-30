@@ -133,6 +133,6 @@ export default function FamilyScreen() {
 
 const styles = StyleSheet.create({
   avatar: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center' },
-  initial: { color: '#FFFFFF', fontFamily: 'Nunito_700Bold', fontSize: 13 },
-  empty: { fontFamily: 'Nunito_400Regular', fontSize: 13, textAlign: 'center', paddingVertical: 14 },
+  initial: { color: '#FFFFFF', fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
+  empty: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, textAlign: 'center', paddingVertical: 14 },
 });

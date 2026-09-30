@@ -1,4 +1,4 @@
-import { Feather } from '@expo/vector-icons';
+import { Icon } from '@/components/Icon';
 import { router } from 'expo-router';
 import React, { type PropsWithChildren, type ReactNode } from 'react';
 import {
@@ -7,10 +7,10 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useColors } from '@/hooks/useColors';
-import { SkyBackground } from '@/components/brand/SkyBackground';
+import { BrandBackground } from '@/components/brand/BrandBackground';
 
 import { goBack } from '@/lib/navigation';
-type IconName = React.ComponentProps<typeof Feather>['name'];
+type IconName = React.ComponentProps<typeof Icon>['name'];
 
 /** Tela padrão: rolagem, margens seguras, título e (opcional) botão de voltar. */
 export function Screen({
@@ -22,7 +22,7 @@ export function Screen({
   const colors = useColors();
   const insets = useSafeAreaInsets();
   return (
-    <SkyBackground>
+    <BrandBackground>
     <ScrollView
       style={{ backgroundColor: 'transparent' }}
       contentContainerStyle={[styles.content, {
@@ -38,7 +38,7 @@ export function Screen({
           {back ? (
             <Pressable accessibilityRole="button" accessibilityLabel="Voltar" onPress={() => goBack()} hitSlop={10}
               style={[styles.backBtn, { borderColor: colors.border, backgroundColor: colors.card }]}>
-              <Feather name="arrow-left" size={20} color={colors.foreground} />
+              <Icon name="arrow-left" size={20} color={colors.foreground} />
             </Pressable>
           ) : <View />}
           {right}
@@ -49,7 +49,7 @@ export function Screen({
       {subtitle ? <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{subtitle}</Text> : null}
       {children}
     </ScrollView>
-    </SkyBackground>
+    </BrandBackground>
   );
 }
 
@@ -89,7 +89,7 @@ export function Button({
     >
       {loading ? <ActivityIndicator color={palette.fg} /> : (
         <>
-          {icon ? <Feather name={icon} size={17} color={palette.fg} /> : null}
+          {icon ? <Icon name={icon} size={17} color={palette.fg} /> : null}
           <Text style={[styles.buttonText, { color: palette.fg }]}>{label}</Text>
         </>
       )}
@@ -123,14 +123,14 @@ export function Row({
     <>
       {icon ? (
         <View style={[styles.rowIcon, { backgroundColor: colors.secondary }]}>
-          <Feather name={icon} size={18} color={destructive ? colors.destructive : iconColor ?? colors.primary} />
+          <Icon name={icon} size={18} color={destructive ? colors.destructive : iconColor ?? colors.primary} />
         </View>
       ) : null}
       <View style={{ flex: 1 }}>
         <Text style={[styles.rowTitle, { color: destructive ? colors.destructive : colors.foreground }]}>{title}</Text>
         {detail ? <Text style={[styles.rowDetail, { color: colors.mutedForeground }]}>{detail}</Text> : null}
       </View>
-      {right ?? (onPress ? <Feather name="chevron-right" size={18} color={colors.mutedForeground} /> : null)}
+      {right ?? (onPress ? <Icon name="chevron-right" size={18} color={colors.mutedForeground} /> : null)}
     </>
   );
   if (!onPress) return <View testID={testID} style={styles.row}>{content}</View>;
@@ -158,7 +158,9 @@ export function EmptyState({ icon, title, detail, action }: { icon: IconName; ti
   const colors = useColors();
   return (
     <View style={[styles.empty, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <Feather name={icon} size={28} color={colors.mutedForeground} />
+      <View style={[styles.emptyIcon, { backgroundColor: colors.secondary }]}>
+        <Icon name={icon} size={28} color={colors.primary} />
+      </View>
       <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{title}</Text>
       {detail ? <Text style={[styles.emptyDetail, { color: colors.mutedForeground }]}>{detail}</Text> : null}
       {action}
@@ -176,7 +178,7 @@ export function Notice({ icon = 'info', tone = 'neutral', children }: PropsWithC
   }[tone];
   return (
     <View style={[styles.notice, { backgroundColor: palette.bg }]}>
-      <Feather name={icon} size={18} color={palette.fg} />
+      <Icon name={icon} size={18} color={palette.fg} />
       <Text style={[styles.noticeText, { color: palette.fg }]}>{children}</Text>
     </View>
   );
@@ -207,27 +209,28 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, width: '100%', maxWidth: 760, alignSelf: 'center' },
   nav: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
   backBtn: { width: 44, height: 44, borderRadius: 14, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
-  eyebrow: { fontFamily: 'Nunito_800ExtraBold', fontSize: 11.5, letterSpacing: 1.8, marginBottom: 6, textTransform: 'uppercase' },
-  title: { fontFamily: 'Fredoka_600SemiBold', fontSize: 30, lineHeight: 36, letterSpacing: -0.6 },
-  subtitle: { fontFamily: 'Nunito_500Medium', fontSize: 15, lineHeight: 22, marginTop: 8 },
+  eyebrow: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 11.5, letterSpacing: 1.8, marginBottom: 6, textTransform: 'uppercase' },
+  title: { fontFamily: 'Montserrat_700Bold', fontSize: 27, lineHeight: 33, letterSpacing: -0.5 },
+  subtitle: { fontFamily: 'NunitoSans_500Medium', fontSize: 15, lineHeight: 22, marginTop: 8 },
   card: { borderRadius: 24, borderWidth: 1, padding: 18, shadowOpacity: 0.07, shadowRadius: 18, shadowOffset: { width: 0, height: 8 }, elevation: 1 },
   button: { minHeight: 50, borderRadius: 16, borderWidth: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 16 },
-  buttonText: { fontFamily: 'Nunito_800ExtraBold', fontSize: 15 },
+  buttonText: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 15 },
   chip: { borderWidth: 1, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, minHeight: 36, justifyContent: 'center' },
-  chipText: { fontFamily: 'Nunito_700Bold', fontSize: 13 },
+  chipText: { fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, minHeight: 56 },
   rowIcon: { width: 40, height: 40, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
-  rowTitle: { fontFamily: 'Nunito_700Bold', fontSize: 15 },
-  rowDetail: { fontFamily: 'Nunito_400Regular', fontSize: 13, lineHeight: 18, marginTop: 2 },
+  rowTitle: { fontFamily: 'NunitoSans_700Bold', fontSize: 15 },
+  rowDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 18, marginTop: 2 },
   divider: { height: 1 },
   sectionRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 28, marginBottom: 12 },
-  sectionTitle: { fontFamily: 'Fredoka_600SemiBold', fontSize: 19, letterSpacing: -0.3 },
-  sectionAction: { fontFamily: 'Nunito_800ExtraBold', fontSize: 13 },
+  sectionTitle: { fontFamily: 'Montserrat_700Bold', fontSize: 19, letterSpacing: -0.3 },
+  sectionAction: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 13 },
   empty: { borderRadius: 24, borderWidth: 1, padding: 24, alignItems: 'center', gap: 8 },
-  emptyTitle: { fontFamily: 'Fredoka_500Medium', fontSize: 17, textAlign: 'center' },
-  emptyDetail: { fontFamily: 'Nunito_400Regular', fontSize: 14, lineHeight: 20, textAlign: 'center' },
+  emptyIcon: { width: 60, height: 60, borderRadius: 20, alignItems: 'center', justifyContent: 'center', marginBottom: 4 },
+  emptyTitle: { fontFamily: 'Montserrat_600SemiBold', fontSize: 17, textAlign: 'center' },
+  emptyDetail: { fontFamily: 'NunitoSans_400Regular', fontSize: 14, lineHeight: 20, textAlign: 'center' },
   notice: { flexDirection: 'row', gap: 10, padding: 14, borderRadius: 16, alignItems: 'flex-start' },
-  noticeText: { flex: 1, fontFamily: 'Nunito_500Medium', fontSize: 13, lineHeight: 19 },
-  // O squish da marca: ao apertar, achata e alarga um pouco (docs/DESIGN.md → Movimento).
-  pressed: { transform: [{ scaleX: 1.015 }, { scaleY: 0.97 }] },
+  noticeText: { flex: 1, fontFamily: 'NunitoSans_500Medium', fontSize: 13, lineHeight: 19 },
+  // Toque: afunda de leve (docs/DESIGN.md → Movimento).
+  pressed: { transform: [{ scale: 0.985 }], opacity: 0.92 },
 });
