@@ -6,10 +6,12 @@ import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-nativ
 import { useColors } from '@/hooks/useColors';
 import { BrandLoading } from '@/components/brand/BrandLoading';
 import { registerGuardianPush } from '@/services/push';
+import { useNotificationRouting } from '@/hooks/useNotificationRouting';
 
 export default function AppLayout() {
   const { isSignedIn, getToken, isLoaded } = useAuth();
   const colors = useColors();
+  useNotificationRouting(Boolean(isLoaded && isSignedIn));
   
   useEffect(() => {
     setAuthTokenGetter(Platform.OS === 'web' && !DEV_AUTH ? null : () => getToken());

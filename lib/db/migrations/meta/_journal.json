@@ -50,6 +50,13 @@
       "when": 1790784431053,
       "tag": "0006_pausar_agora",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790785192708,
+      "tag": "0007_resumo_semanal",
+      "breakpoints": true
     }
   ]
 }

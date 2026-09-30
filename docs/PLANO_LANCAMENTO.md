@@ -147,3 +147,13 @@ por categoria. Localização fica de fora de propósito (privacidade e posiciona
 - App: cartão "Pausar os apps de {nome}" no painel, com "Liberar agora"; a tela da criança mostra a pausa.
 - Correção achada no teste: ordem das crianças instável quando criadas no mesmo instante (desempate por nome).
 - Testes: 61 (novos: pausa grátis, chega ao aparelho, até liberar, observador, outra família, expiração).
+
+### Fase 3 — Resumo semanal (Premium) ✓
+
+- `lib/weeklySummary.ts`: semana de cada criança × semana anterior e app mais usado, enviado aos
+  responsáveis no domingo a partir das 19h (fuso da família), só Premium, uma vez por semana
+  (`families.weekly_summary_sent_on`, migração 0007). Roda a cada 15 min.
+- Toque nas notificações agora abre a tela certa (antes todas abriam o painel): alertas de proteção e apps
+  novos → aparelho; resumo → Relatórios; pedido de tempo → painel.
+- Relatórios mostram, no grátis, o que o Premium acrescenta ali.
+- Testes: 63 (novos: cálculo do resumo; envio só domingo à noite, só Premium, uma vez).

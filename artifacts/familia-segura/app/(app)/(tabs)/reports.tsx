@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { getGetUsageReportQueryKey, useGetUsageReport } from '@workspace/api-client-react';
 import { ChildSwitcher } from '@/components/ChildSwitcher';
@@ -41,11 +41,16 @@ export default function ReportsScreen() {
       <View style={styles.periods}>
         {PERIODS.map((p) => <Chip key={p.days} label={p.label} selected={days === p.days} onPress={() => setDays(p.days)} />)}
       </View>
+      {data.limits?.plan === 'free' && !needsPremium ? (
+        <Pressable accessibilityRole="button" onPress={() => router.push('/(app)/subscription')} style={{ marginBottom: 12 }}>
+          <Notice icon="star">No Premium: resumo da semana no celular todo domingo e 12 meses de histórico.</Notice>
+        </Pressable>
+      ) : null}
 
       {report.isLoading && <ActivityIndicator color={colors.primary} style={{ marginTop: 32 }} />}
 
       {needsPremium && (
-        <EmptyState icon="bar-chart-2" title="Histórico longo é Premium" detail="No plano gratuito você vê os últimos 7 dias."
+        <EmptyState icon="bar-chart-2" title="Histórico longo é Premium" detail="No plano grátis você vê os últimos 7 dias. O Premium guarda 12 meses e manda o resumo da semana no seu celular."
           action={<Button label="Ver planos" onPress={() => router.push('/(app)/subscription')} style={{ marginTop: 8, alignSelf: 'stretch' }} />} />
       )}
 

@@ -1,0 +1,1 @@
+ALTER TABLE "families" ADD COLUMN "weekly_summary_sent_on" date;

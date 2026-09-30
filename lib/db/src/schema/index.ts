@@ -28,6 +28,8 @@ export const familiesTable = pgTable("families", {
   blockAppRemoval: boolean("block_app_removal").notNull().default(true),
   /** iOS: filtro de conteúdo adulto da Apple ("adult") ou desligado ("off"). */
   webFilter: text("web_filter").notNull().default("adult"),
+  /** Último domingo (data local) em que o resumo semanal foi enviado — evita mandar duas vezes. */
+  weeklySummarySentOn: date("weekly_summary_sent_on"),
 });
 
 /** Papéis: owner (titular), guardian (co-responsável), viewer (só leitura). */

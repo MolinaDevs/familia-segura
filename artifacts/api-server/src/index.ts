@@ -3,6 +3,7 @@ import app from "./app";
 import { logger } from "./lib/logger";
 import { scheduleRetention } from "./lib/retention";
 import { scheduleUnlockExpiry } from "./lib/unlockExpiry";
+import { scheduleWeeklySummaries } from "./lib/weeklySummary";
 
 const rawPort = process.env["PORT"];
 
@@ -27,4 +28,5 @@ app.listen(port, (err) => {
   logger.info({ port }, "Server listening");
   scheduleRetention();
   scheduleUnlockExpiry();
+  scheduleWeeklySummaries();
 });
