@@ -196,6 +196,8 @@ router.post("/child/events", requireDevice, async (req: AuthedRequest, res): Pro
   const input = ReportDeviceEventsBody.safeParse(req.body);
   if (!input.success) { fail(res, 400, input.error.message); return; }
   const device = req.device!;
+  // Aparelho adulterado não inunda o banco nem a família: 30 envios / 10 min (o app manda em lote).
+  if (!(await consumeRateLimit(`events:${device.id}`, 30, 10 * 60 * 1000))) { fail(res, 429, "Muitos eventos. Tente mais tarde.", "RATE_LIMITED"); return; }
   const now = Date.now();
   await db.insert(deviceEventsTable).values(input.data.events.map((event) => ({
     familyId: device.familyId, deviceId: device.id, childId: device.childId, type: event.type, detail: event.detail,
@@ -203,11 +205,14 @@ router.post("/child/events", requireDevice, async (req: AuthedRequest, res): Pro
     occurredAt: event.occurredAt && Math.abs(event.occurredAt.getTime() - now) < 7 * 86_400_000 ? event.occurredAt : new Date(now),
   })));
   const alert = input.data.events.find((event) => ALERT_EVENTS[event.type]);
-  if (alert) {
+  // Alerta aos pais: no máximo 3 por 15 min por aparelho (os eventos continuam todos registrados).
+  if (alert && (await consumeRateLimit(`alert:${device.id}`, 3, 15 * 60 * 1000))) {
     const ctx = await deviceContext(device.id);
+    // O texto que vem do aparelho não é confiável: vai curto e sempre depois de um título do servidor.
+    const detail = alert.detail?.replace(/\s+/g, " ").trim().slice(0, 80);
     await notifyGuardians(device.familyId, {
       title: `${ALERT_EVENTS[alert.type]} — ${ctx?.childName ?? "aparelho"}`,
-      body: alert.detail ?? `Aparelho "${device.name}"`,
+      body: detail ? `Aparelho "${device.name}": ${detail}` : `Aparelho "${device.name}"`,
       data: { type: "tamper", deviceId: device.id },
     });
   }

@@ -39,12 +39,34 @@ export async function deviceAuthHeaders(): Promise<Record<string, string> | null
   return token ? { Authorization: `Bearer ${token}` } : null;
 }
 
+/**
+ * O verificador do PIN nunca vai para o AsyncStorage (legível com root/backup e sujeito a força bruta offline):
+ * fica no armazenamento seguro do sistema (Keystore/Keychain). O cache comum guarda só as regras.
+ */
+const PIN_VERIFIER_KEY = 'pinVerifier';
+
+async function storeOverview(overview: ChildOverview) {
+  const { pinVerifier } = overview.policy;
+  if (pinVerifier) await SecureStore.setItemAsync(PIN_VERIFIER_KEY, JSON.stringify(pinVerifier)).catch(() => undefined);
+  else await SecureStore.deleteItemAsync(PIN_VERIFIER_KEY).catch(() => undefined);
+  const safe: ChildOverview = { ...overview, policy: { ...overview.policy, pinVerifier: null } };
+  await AsyncStorage.setItem(cacheKey(overview.deviceId), JSON.stringify(safe)).catch(() => undefined);
+}
+
 export async function loadCachedOverview(): Promise<ChildOverview | null> {
   const deviceId = Platform.OS === 'web' ? null : await SecureStore.getItemAsync('deviceId');
   if (!deviceId) return null;
   try {
     const raw = await AsyncStorage.getItem(cacheKey(deviceId));
-    return raw ? (JSON.parse(raw) as ChildOverview) : null;
+    if (!raw) return null;
+    const cached = JSON.parse(raw) as ChildOverview;
+    // Cache de versões antigas ainda com o verificador: migra para o armazenamento seguro e limpa.
+    if (cached.policy.pinVerifier) {
+      await storeOverview(cached);
+      return cached;
+    }
+    const stored = await SecureStore.getItemAsync(PIN_VERIFIER_KEY).catch(() => null);
+    return { ...cached, policy: { ...cached.policy, pinVerifier: stored ? JSON.parse(stored) : null } };
   } catch {
     return null;
   }
@@ -71,7 +93,7 @@ export async function clearChildDevice() {
   }
   await AsyncStorage.multiRemove([CHILD_MODE_KEY, INVENTORY_KEY]).catch(() => undefined);
   if (deviceId) await AsyncStorage.removeItem(cacheKey(deviceId)).catch(() => undefined);
-  await Promise.all(['deviceId', 'childId', 'deviceToken'].map((key) => SecureStore.deleteItemAsync(key).catch(() => undefined)));
+  await Promise.all(['deviceId', 'childId', 'deviceToken', PIN_VERIFIER_KEY, 'pinAttempts'].map((key) => SecureStore.deleteItemAsync(key).catch(() => undefined)));
 }
 
 const INVENTORY_KEY = '@familia-segura/inventory-sent';
@@ -212,7 +234,7 @@ async function doSync(): Promise<SyncResult> {
     return { status: 'offline', overview: cached };
   }
 
-  await AsyncStorage.setItem(cacheKey(overview.deviceId), JSON.stringify(overview)).catch(() => undefined);
+  await storeOverview(overview);
   try {
     if (Platform.OS === 'android' && isAndroidNative()) await syncAndroid(overview, headers);
     else if (Platform.OS === 'ios') await syncIos(overview, headers);

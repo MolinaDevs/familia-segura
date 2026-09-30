@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import { rateLimit } from "express-rate-limit";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
@@ -38,11 +39,26 @@ app.use((_req, res, next) => {
   res.set("X-Content-Type-Options", "nosniff");
   res.set("Referrer-Policy", "no-referrer");
   res.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+  // A API só devolve JSON e as páginas legais (HTML estático sem script): nada de iframe, script ou recurso externo.
+  res.set("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; form-action 'none'");
+  res.set("X-Frame-Options", "DENY");
+  res.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(), usb=()");
+  res.set("Cross-Origin-Opener-Policy", "same-origin");
+  res.set("Cross-Origin-Resource-Policy", "same-site");
   next();
 });
-// Inventário Android (até 600 apps) passa do limite padrão de 100 KB.
+// Contra inundação: 600 requisições por 5 min por IP — folgado para famílias atrás do mesmo roteador
+// (aparelhos sincronizam 1x/min) e firme contra abuso. Rotas sensíveis têm limites próprios e mais baixos.
+app.use("/api", rateLimit({
+  windowMs: 5 * 60_000,
+  limit: Number(process.env.RATE_LIMIT_GLOBAL ?? 600),
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+  skip: (req) => req.path === "/healthz",
+  message: { error: "Muitas requisições. Aguarde alguns minutos.", code: "RATE_LIMITED" },
+}));
+// Inventário Android (até 600 apps) passa do limite padrão de 100 KB. A API só aceita JSON.
 app.use(express.json({ limit: "512kb" }));
-app.use(express.urlencoded({ extended: true }));
 app.use(
   clerkMiddleware((req) => ({
     publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", process.env.CLERK_PUBLISHABLE_KEY),

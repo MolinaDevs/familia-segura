@@ -1,10 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 import { scryptAsync } from '@noble/hashes/scrypt';
 import { bytesToHex } from '@noble/hashes/utils';
 import { verifyGuardianPin, type PinVerifier } from '@workspace/api-client-react';
 import { deviceAuthHeaders, loadCachedOverview } from '@/services/childSync';
 
-const ATTEMPTS_KEY = '@familia-segura/pin-attempts';
+/** Contador no armazenamento seguro: a criança não consegue zerá-lo editando os dados do app. */
+const ATTEMPTS_KEY = 'pinAttempts';
+const LEGACY_ATTEMPTS_KEY = '@familia-segura/pin-attempts';
 const MAX_OFFLINE_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
 
@@ -22,7 +25,8 @@ export async function verifyPinOffline(pin: string, verifier: PinVerifier): Prom
 
 async function offlineAttempts(): Promise<number[]> {
   try {
-    const raw = await AsyncStorage.getItem(ATTEMPTS_KEY);
+    await AsyncStorage.removeItem(LEGACY_ATTEMPTS_KEY).catch(() => undefined);
+    const raw = await SecureStore.getItemAsync(ATTEMPTS_KEY);
     const list = raw ? (JSON.parse(raw) as number[]) : [];
     return list.filter((at) => Date.now() - at < WINDOW_MS);
   } catch {
@@ -52,6 +56,6 @@ export async function checkGuardianPin(pin: string): Promise<PinCheck> {
   const attempts = await offlineAttempts();
   if (attempts.length >= MAX_OFFLINE_ATTEMPTS) return { valid: false, offline: true, lockedUntil: attempts[0] + WINDOW_MS };
   const valid = await verifyPinOffline(pin, verifier);
-  if (!valid) await AsyncStorage.setItem(ATTEMPTS_KEY, JSON.stringify([...attempts, Date.now()])).catch(() => undefined);
+  if (!valid) await SecureStore.setItemAsync(ATTEMPTS_KEY, JSON.stringify([...attempts, Date.now()])).catch(() => undefined);
   return { valid, offline: true };
 }

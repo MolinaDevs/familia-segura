@@ -13,7 +13,7 @@ import {
 } from "@workspace/api-zod";
 import { EDITORS, fail, findMembership, requireAuth, requireMember, type AuthedRequest } from "../lib/auth";
 import { audit } from "../lib/audit";
-import { hashPin, newReadableCode, normalizeCode, sha256 } from "../lib/codes";
+import { hashPin, isWeakPin, newReadableCode, normalizeCode, sha256 } from "../lib/codes";
 import { familyPlan, PLAN_LIMITS } from "../lib/limits";
 import { consumeRateLimit } from "../lib/rateLimit";
 import { lockFamily } from "../lib/tx";
@@ -95,8 +95,8 @@ router.patch("/family/settings", requireMember(...EDITORS), async (req: AuthedRe
 router.put("/family/guardian-pin", requireMember(...EDITORS), async (req: AuthedRequest, res): Promise<void> => {
   const input = SetGuardianPinBody.safeParse(req.body);
   if (!input.success) { fail(res, 400, "O PIN deve ter de 4 a 8 números"); return; }
-  if (/^(\d)\1+$/.test(input.data.pin) || "0123456789".includes(input.data.pin) || "9876543210".includes(input.data.pin)) {
-    fail(res, 400, "Escolha um PIN menos previsível", "WEAK_PIN"); return;
+  if (isWeakPin(input.data.pin)) {
+    fail(res, 400, "Esse PIN é fácil de adivinhar. Evite sequências, números repetidos e anos.", "WEAK_PIN"); return;
   }
   const { salt, hash } = await hashPin(input.data.pin);
   await db.update(familiesTable).set({ guardianPinHash: hash, guardianPinSalt: salt, guardianPinUpdatedAt: new Date() })

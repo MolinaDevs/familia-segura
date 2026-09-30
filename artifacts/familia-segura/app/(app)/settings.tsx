@@ -9,6 +9,7 @@ import { useSubscription } from '@/context/SubscriptionContext';
 import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 import { openLegal } from '@/lib/legal';
+import { isWeakPin, WEAK_PIN_MESSAGE } from '@/lib/pin';
 import { registerGuardianPush } from '@/services/push';
 
 const LEASES = [
@@ -32,6 +33,7 @@ export default function SettingsScreen() {
   const save = (patch: FamilySettingsUpdate) => updateSettings.mutate({ data: patch }, { onSuccess: () => refetch(), onError: (e) => showApiError(e) });
 
   const savePin = () => {
+    if (isWeakPin(pin)) { Alert.alert('PIN fácil demais', WEAK_PIN_MESSAGE); return; }
     if (pin !== pinConfirm) { Alert.alert('PIN diferente', 'Digite o mesmo PIN nos dois campos.'); return; }
     setPin.mutate({ data: { pin } }, {
       onSuccess: () => {
