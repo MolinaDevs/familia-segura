@@ -227,8 +227,11 @@ router.delete("/family/members/:memberId", requireMember(), async (req: AuthedRe
   const leavingSelf = target.userId === m.userId;
   if (target.role === "owner") { fail(res, 403, "O titular não pode sair; exclua a família ou transfira a titularidade pelo suporte", "OWNER_IMMUTABLE"); return; }
   if (!leavingSelf && m.role !== "owner") { fail(res, 403, "Somente o titular remove responsáveis", "ROLE_FORBIDDEN"); return; }
-  await db.delete(membershipsTable).where(eq(membershipsTable.id, target.id));
-  await db.delete(pushTokensTable).where(eq(pushTokensTable.userId, target.userId));
+  // Tudo ou nada: sem participação e sem tokens (quem saiu não recebe mais avisos da família).
+  await db.transaction(async (tx) => {
+    await tx.delete(membershipsTable).where(eq(membershipsTable.id, target.id));
+    await tx.delete(pushTokensTable).where(eq(pushTokensTable.userId, target.userId));
+  });
   await audit(m.familyId, m.userId, "member.removed", leavingSelf ? `${target.displayName} saiu da família` : `${target.displayName} foi removido da família`);
   res.sendStatus(204);
 });

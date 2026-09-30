@@ -13,7 +13,15 @@ import type { NextFunction, Request, Response } from "express";
 const PREMIUM_ENTITLEMENT = process.env.REVENUECAT_PREMIUM_ENTITLEMENT ?? "premium";
 const REVENUECAT_API = process.env.REVENUECAT_API_URL ?? "https://api.revenuecat.com";
 const ACTIVE_CACHE_MS = 5 * 60 * 1000;
+/**
+ * Resposta "sem Premium" também fica em cache (curto): sem isso cada sincronização de aparelho do plano grátis
+ * (1x/min) virava uma chamada à RevenueCat — estouro do limite da API e lentidão em todas as rotas.
+ * 60 s é o atraso máximo para uma compra nova valer no servidor.
+ */
+const INACTIVE_CACHE_MS = 60 * 1000;
 const FAILURE_GRACE_MS = 72 * 60 * 60 * 1000;
+const REQUEST_TIMEOUT_MS = 5_000;
+const MAX_CACHE_ENTRIES = 50_000;
 
 type AuthedRequest = Request & { userId?: string };
 type CachedEntitlement = {
@@ -31,6 +39,22 @@ type ActiveEntitlementsResponse = {
 };
 
 const accessCache = new Map<string, CachedEntitlement>();
+/** Consultas simultâneas do mesmo usuário (várias rotas/aparelhos ao mesmo tempo) viram uma só chamada. */
+const inFlight = new Map<string, Promise<boolean>>();
+
+function remember(userId: string, entry: CachedEntitlement) {
+  if (accessCache.size >= MAX_CACHE_ENTRIES && !accessCache.has(userId)) {
+    const oldest = accessCache.keys().next().value;
+    if (oldest !== undefined) accessCache.delete(oldest);
+  }
+  accessCache.set(userId, entry);
+}
+
+/** Testes: começa sem cache. */
+export function clearEntitlementCache() {
+  accessCache.clear();
+  inFlight.clear();
+}
 
 export function premiumBypassEnabled(): boolean {
   return process.env.PREMIUM_BYPASS === "true" && process.env.NODE_ENV !== "production";
@@ -46,7 +70,11 @@ function deny(res: Response) {
 async function fetchActiveEntitlements(projectId: string, secretKey: string, userId: string) {
   return fetch(
     `${REVENUECAT_API}/v2/projects/${encodeURIComponent(projectId)}/customers/${encodeURIComponent(userId)}/active_entitlements`,
-    { method: "GET", headers: { Authorization: `Bearer ${secretKey}`, Accept: "application/json" } },
+    {
+      method: "GET",
+      headers: { Authorization: `Bearer ${secretKey}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    },
   );
 }
 
@@ -60,11 +88,21 @@ export async function hasPremium(userId: string): Promise<boolean> {
   const now = Date.now();
   const cached = accessCache.get(userId);
   if (cached?.active && now - cached.checkedAt < ACTIVE_CACHE_MS && now < cached.validUntil) return true;
+  if (cached && !cached.active && now - cached.checkedAt < INACTIVE_CACHE_MS) return false;
 
+  const pending = inFlight.get(userId);
+  if (pending) return pending;
+  const check = checkEntitlement(projectId, secretKey, userId, cached).finally(() => inFlight.delete(userId));
+  inFlight.set(userId, check);
+  return check;
+}
+
+async function checkEntitlement(projectId: string, secretKey: string, userId: string, cached: CachedEntitlement | undefined) {
+  const now = Date.now();
   try {
     const response = await fetchActiveEntitlements(projectId, secretKey, userId);
     if (response.status === 404) {
-      accessCache.set(userId, { active: false, checkedAt: now, validUntil: now });
+      remember(userId, { active: false, checkedAt: now, validUntil: now });
       return false;
     }
     if (!response.ok) throw new Error(`RevenueCat entitlement check failed (${response.status})`);
@@ -73,12 +111,12 @@ export async function hasPremium(userId: string): Promise<boolean> {
       (item) => item.lookup_key === PREMIUM_ENTITLEMENT || item.entitlement_id === PREMIUM_ENTITLEMENT,
     );
     if (!entitlement) {
-      accessCache.set(userId, { active: false, checkedAt: now, validUntil: now });
+      remember(userId, { active: false, checkedAt: now, validUntil: now });
       return false;
     }
     const storeExpiry = entitlement.expires_at ?? Number.POSITIVE_INFINITY;
     const validUntil = Math.min(now + FAILURE_GRACE_MS, storeExpiry);
-    accessCache.set(userId, { active: true, checkedAt: now, validUntil });
+    remember(userId, { active: true, checkedAt: now, validUntil });
     return true;
   } catch (error) {
     if (cached?.active && now < cached.validUntil && now - cached.checkedAt < FAILURE_GRACE_MS) return true;

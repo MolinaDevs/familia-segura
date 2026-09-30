@@ -1,0 +1,20 @@
+CREATE INDEX "app_rules_family_idx" ON "app_rules" USING btree ("family_id");--> statement-breakpoint
+CREATE INDEX "audit_events_family_created_idx" ON "audit_events" USING btree ("family_id","created_at");--> statement-breakpoint
+CREATE INDEX "audit_events_created_idx" ON "audit_events" USING btree ("created_at");--> statement-breakpoint
+CREATE INDEX "consents_family_idx" ON "consents" USING btree ("family_id");--> statement-breakpoint
+CREATE INDEX "consents_user_idx" ON "consents" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "device_apps_family_status_idx" ON "device_apps" USING btree ("family_id","status");--> statement-breakpoint
+CREATE INDEX "device_events_device_idx" ON "device_events" USING btree ("device_id");--> statement-breakpoint
+CREATE INDEX "device_events_child_idx" ON "device_events" USING btree ("child_id");--> statement-breakpoint
+CREATE INDEX "device_events_occurred_idx" ON "device_events" USING btree ("occurred_at");--> statement-breakpoint
+CREATE INDEX "device_rule_bindings_rule_idx" ON "device_rule_bindings" USING btree ("rule_id");--> statement-breakpoint
+CREATE INDEX "family_invites_family_idx" ON "family_invites" USING btree ("family_id");--> statement-breakpoint
+CREATE INDEX "pairing_codes_child_idx" ON "pairing_codes" USING btree ("child_id");--> statement-breakpoint
+CREATE INDEX "push_tokens_user_idx" ON "push_tokens" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "routines_family_idx" ON "routines" USING btree ("family_id");--> statement-breakpoint
+CREATE INDEX "routines_child_idx" ON "routines" USING btree ("child_id");--> statement-breakpoint
+CREATE INDEX "temporary_grants_family_day_idx" ON "temporary_grants" USING btree ("family_id","valid_on");--> statement-breakpoint
+CREATE INDEX "time_requests_family_created_idx" ON "time_requests" USING btree ("family_id","created_at");--> statement-breakpoint
+CREATE INDEX "time_requests_child_status_idx" ON "time_requests" USING btree ("child_id","status");--> statement-breakpoint
+CREATE INDEX "usage_daily_family_day_idx" ON "usage_daily" USING btree ("family_id","day");--> statement-breakpoint
+CREATE INDEX "usage_hourly_family_day_idx" ON "usage_hourly" USING btree ("family_id","day");

@@ -5,3 +5,11 @@ import type { db } from "@workspace/db";
 export async function lockFamily(tx: Pick<typeof db, "execute">, familyId: string) {
   await tx.execute(sql`select id from families where id = ${familyId} for update`);
 }
+
+/**
+ * Trava a linha do aparelho: sincronizações simultâneas do mesmo aparelho (app + tarefa em segundo plano)
+ * rodam uma de cada vez — sem uso contado em dobro nem conflito de chave no inventário.
+ */
+export async function lockDevice(tx: Pick<typeof db, "execute">, deviceId: string) {
+  await tx.execute(sql`select id from devices where id = ${deviceId} for update`);
+}

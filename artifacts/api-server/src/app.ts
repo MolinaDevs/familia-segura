@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import express, { type Express } from "express";
 import cors from "cors";
 import { rateLimit } from "express-rate-limit";
@@ -13,6 +14,14 @@ const app: Express = express();
 app.use(
   pinoHttp({
     logger,
+    // Id por requisição, devolvido em X-Request-Id: o suporte acha o erro no log a partir do que o app mostra.
+    genReqId: (req, res) => {
+      const incoming = req.headers["x-request-id"];
+      const id = typeof incoming === "string" && /^[\w-]{8,64}$/.test(incoming) ? incoming : randomUUID();
+      res.setHeader("X-Request-Id", id);
+      return id;
+    },
+    customLogLevel: (_req, res, err) => (err || res.statusCode >= 500 ? "error" : res.statusCode >= 400 ? "warn" : "info"),
     serializers: {
       req(req) {
         return {
@@ -54,7 +63,7 @@ app.use("/api", rateLimit({
   limit: Number(process.env.RATE_LIMIT_GLOBAL ?? 600),
   standardHeaders: "draft-8",
   legacyHeaders: false,
-  skip: (req) => req.path === "/healthz",
+  skip: (req) => req.path === "/healthz" || req.path === "/readyz",
   message: { error: "Muitas requisições. Aguarde alguns minutos.", code: "RATE_LIMITED" },
 }));
 // Inventário Android (até 600 apps) passa do limite padrão de 100 KB. A API só aceita JSON.
@@ -66,6 +75,11 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Rota inexistente: JSON como o resto da API (o padrão do Express é uma página HTML).
+app.use((_req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
 
 // Erros não tratados viram JSON (sem stack para o cliente); o detalhe fica no log.
 app.use((err: unknown, req: express.Request, res: express.Response, _next: express.NextFunction) => {

@@ -3,6 +3,7 @@ import { appRulesTable, childrenTable, db, familiesTable, usageDailyTable } from
 import { familyPlan, PLAN_LIMITS } from "./limits";
 import { logger } from "./logger";
 import { notifyGuardians } from "./push";
+import { every, singleFlight } from "./jobs";
 import { localDate, localHour } from "./time";
 
 /** Domingo, a partir das 19h no fuso da família: fecha a semana antes da nova começar. */
@@ -100,7 +101,6 @@ export async function sendWeeklySummaries(now: Date = new Date()) {
 }
 
 export function scheduleWeeklySummaries() {
-  setInterval(() => {
-    sendWeeklySummaries().catch((err) => logger.error({ err }, "Falha ao enviar resumos semanais"));
-  }, 15 * 60_000).unref();
+  every(15 * 60_000, singleFlight(() =>
+    sendWeeklySummaries().catch((err) => logger.error({ err }, "Falha ao enviar resumos semanais"))));
 }

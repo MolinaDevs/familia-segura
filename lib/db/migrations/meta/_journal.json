@@ -57,6 +57,13 @@
       "when": 1790785192708,
       "tag": "0007_resumo_semanal",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790796202357,
+      "tag": "0008_indices_desempenho",
+      "breakpoints": true
     }
   ]
 }

@@ -53,7 +53,7 @@ const pages: Record<string, LegalPage> = {
       },
       {
         title: "Retenção",
-        body: "Dados de uso por hora e por dia são mantidos por até 12 meses para os relatórios e depois apagados. Os demais dados permanecem enquanto a família existir. Ao excluir a família, os dados são removidos do serviço, ressalvadas cópias técnicas temporárias de segurança.",
+        body: "Dados de uso por hora e por dia, eventos dos aparelhos, pedidos de tempo e o histórico de atividades são mantidos por até 12 meses e depois apagados automaticamente. Cadastro da família, crianças, aparelhos, regras e rotinas permanecem enquanto a família existir. Ao excluir a família, os dados são removidos do serviço, ressalvadas cópias técnicas temporárias de segurança.",
       },
       {
         title: "Segurança",

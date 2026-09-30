@@ -12,6 +12,7 @@ import { fail, requireDevice, type AuthedRequest } from "../lib/auth";
 import { verifyPin } from "../lib/codes";
 import { notifyGuardians } from "../lib/push";
 import { consumeRateLimit } from "../lib/rateLimit";
+import { lockDevice } from "../lib/tx";
 import { addDays, localDate, localHour } from "../lib/time";
 import { childOverview } from "../lib/views";
 
@@ -60,6 +61,7 @@ router.post("/child/usage", requireDevice, async (req: AuthedRequest, res): Prom
   if (samples.size === 0) { res.sendStatus(204); return; }
 
   await db.transaction(async (tx) => {
+    await lockDevice(tx, device.id);
     const existing = await tx.select({ appId: usageDailyTable.appId, minutes: usageDailyTable.minutes }).from(usageDailyTable)
       .where(and(eq(usageDailyTable.deviceId, device.id), eq(usageDailyTable.day, day), inArray(usageDailyTable.appId, [...samples.keys()])));
     const previous = new Map(existing.map((row) => [row.appId, row.minutes]));
@@ -132,47 +134,58 @@ router.post("/child/installed-apps", requireDevice, async (req: AuthedRequest, r
   const newlyPending: string[] = [];
 
   await db.transaction(async (tx) => {
+    await lockDevice(tx, device.id);
     const existing = await tx.select().from(deviceAppsTable).where(eq(deviceAppsTable.deviceId, device.id));
     const initialInventory = existing.length === 0;
     const byPackage = new Map(existing.map((app) => [app.packageName, app]));
     const reported = new Set<string>();
+    // Instalado durante uma liberação do responsável: já entra aprovado.
+    const unlocked = Boolean(device.installUnlockUntil && device.installUnlockUntil.getTime() > now.getTime());
+    const quarantine = !initialInventory && Boolean(ctx?.quarantine) && !unlocked;
+    const inserts: (typeof deviceAppsTable.$inferInsert)[] = [];
+    const events: (typeof deviceEventsTable.$inferInsert)[] = [];
+    const unchanged: string[] = [];
 
     for (const app of input.data.apps) {
       if (reported.has(app.packageName)) continue;
       reported.add(app.packageName);
       const known = byPackage.get(app.packageName);
-      // Instalado durante uma liberação do responsável: já entra aprovado.
-      const unlocked = Boolean(device.installUnlockUntil && device.installUnlockUntil.getTime() > now.getTime());
-      const quarantine = !initialInventory && Boolean(ctx?.quarantine) && !unlocked;
       if (!known) {
         const status = quarantine ? "pending" : "approved";
-        await tx.insert(deviceAppsTable).values({
+        inserts.push({
           familyId: device.familyId, deviceId: device.id, packageName: app.packageName, label: app.label, status,
           installedAt: app.installedAt ?? (initialInventory ? null : now),
         });
         if (!initialInventory) {
-          await tx.insert(deviceEventsTable).values({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "app_installed", detail: app.label });
+          events.push({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "app_installed", detail: app.label });
           if (status === "pending") newlyPending.push(app.label);
         }
+      } else if (known.removedAt === null && known.label === app.label) {
+        unchanged.push(known.id);
       } else {
         const reinstalled = known.removedAt !== null;
         const status = reinstalled && quarantine && known.status !== "blocked" ? "pending" : known.status;
         await tx.update(deviceAppsTable).set({ label: app.label, lastSeenAt: now, removedAt: null, status, ...(reinstalled ? { installedAt: now } : {}) })
           .where(eq(deviceAppsTable.id, known.id));
         if (reinstalled) {
-          await tx.insert(deviceEventsTable).values({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "app_installed", detail: app.label });
+          events.push({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "app_installed", detail: app.label });
           if (status === "pending") newlyPending.push(app.label);
         }
       }
     }
 
+    // Em lote: o inventário tem até 600 apps e quase nada muda entre uma sincronização e outra.
+    if (inserts.length > 0) await tx.insert(deviceAppsTable).values(inserts);
+    if (unchanged.length > 0) await tx.update(deviceAppsTable).set({ lastSeenAt: now }).where(inArray(deviceAppsTable.id, unchanged));
+
     if (input.data.snapshot) {
-      for (const app of existing) {
-        if (reported.has(app.packageName) || app.removedAt) continue;
-        await tx.update(deviceAppsTable).set({ removedAt: now }).where(eq(deviceAppsTable.id, app.id));
-        await tx.insert(deviceEventsTable).values({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "app_removed", detail: app.label });
+      const gone = existing.filter((app) => !reported.has(app.packageName) && !app.removedAt);
+      if (gone.length > 0) {
+        await tx.update(deviceAppsTable).set({ removedAt: now }).where(inArray(deviceAppsTable.id, gone.map((app) => app.id)));
+        events.push(...gone.map((app) => ({ familyId: device.familyId, deviceId: device.id, childId: device.childId, type: "app_removed", detail: app.label })));
       }
     }
+    if (events.length > 0) await tx.insert(deviceEventsTable).values(events);
   });
 
   if (newlyPending.length > 0) {

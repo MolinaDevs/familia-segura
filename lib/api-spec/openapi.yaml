@@ -28,6 +28,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /readyz:
+    get:
+      operationId: readinessCheck
+      tags: [health]
+      description: Pronto para tráfego (o banco responde). 503 enquanto o banco estiver indisponível.
+      responses:
+        "200":
+          description: Ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+        "503":
+          description: Banco indisponível
   /catalog/apps:
     get:
       operationId: listCatalogApps

@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "@workspace/db";
 import { logger } from "./logger";
 import { notifyDevicesPolicyChanged } from "./push";
+import { every, singleFlight } from "./jobs";
 
 /**
  * Liberações de instalação vencidas: limpa o prazo e manda push silencioso para o aparelho
@@ -28,8 +29,8 @@ export async function expirePauses(now: Date = new Date()) {
 }
 
 export function scheduleUnlockExpiry() {
-  setInterval(() => {
-    expireInstallUnlocks().catch((err) => logger.error({ err }, "Falha ao encerrar liberações de instalação"));
-    expirePauses().catch((err) => logger.error({ err }, "Falha ao encerrar pausas"));
-  }, 60_000).unref();
+  every(60_000, singleFlight(async () => {
+    await expireInstallUnlocks().catch((err) => logger.error({ err }, "Falha ao encerrar liberações de instalação"));
+    await expirePauses().catch((err) => logger.error({ err }, "Falha ao encerrar pausas"));
+  }));
 }

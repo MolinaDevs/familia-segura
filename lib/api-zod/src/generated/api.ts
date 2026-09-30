@@ -13,6 +13,14 @@ export const HealthCheckResponse = zod.object({
 })
 
 
+/**
+ * Pronto para tráfego (o banco responde). 503 enquanto o banco estiver indisponível.
+ */
+export const ReadinessCheckResponse = zod.object({
+  "status": zod.string()
+})
+
+
 export const ListCatalogAppsResponseItem = zod.object({
   "id": zod.string(),
   "name": zod.string(),

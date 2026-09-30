@@ -12,18 +12,32 @@ export type PushMessage = {
   _contentAvailable?: boolean;
 };
 
-type Transport = (messages: PushMessage[]) => Promise<void>;
+/** Resultado por mensagem, na mesma ordem (formato dos "tickets" da Expo). */
+export type PushTicket = { status: "ok" | "error"; details?: { error?: string } };
+type Transport = (messages: PushMessage[]) => Promise<PushTicket[] | void>;
+
+const SEND_TIMEOUT_MS = 8_000;
 
 const expoTransport: Transport = async (messages) => {
+  const tickets: PushTicket[] = [];
   for (let i = 0; i < messages.length; i += 100) {
     const batch = messages.slice(i, i + 100);
+    // Com prazo: a Expo lenta não pode segurar a resposta da API (os envios acontecem dentro das rotas).
     const response = await fetch("https://exp.host/--/api/v2/push/send", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(batch),
+      signal: AbortSignal.timeout(SEND_TIMEOUT_MS),
     });
-    if (!response.ok) logger.warn({ status: response.status }, "Falha ao enviar push");
+    if (!response.ok) {
+      logger.warn({ status: response.status }, "Falha ao enviar push");
+      tickets.push(...batch.map(() => ({ status: "error" as const })));
+      continue;
+    }
+    const payload = (await response.json().catch(() => null)) as { data?: PushTicket[] } | null;
+    tickets.push(...(payload?.data ?? batch.map(() => ({ status: "ok" as const }))));
   }
+  return tickets;
 };
 
 let transport: Transport | null = process.env.NODE_ENV === "test" || process.env.PUSH_DISABLED === "true" ? null : expoTransport;
@@ -36,10 +50,23 @@ export function setPushTransport(next: Transport | null) {
 async function send(messages: PushMessage[]) {
   if (!transport || messages.length === 0) return;
   try {
-    await transport(messages);
+    const tickets = await transport(messages);
+    if (tickets) await forgetUnregistered(messages, tickets);
   } catch (error) {
     logger.warn({ err: error }, "Erro no envio de push");
   }
+}
+
+/**
+ * App desinstalado ou token trocado: a Expo responde DeviceNotRegistered. O token é apagado para não
+ * acumular envios inúteis (e a Expo/Apple não penalizarem o remetente).
+ */
+async function forgetUnregistered(messages: PushMessage[], tickets: PushTicket[]) {
+  const dead = messages.filter((_, i) => tickets[i]?.status === "error" && tickets[i]?.details?.error === "DeviceNotRegistered").map((m) => m.to);
+  if (dead.length === 0) return;
+  await db.delete(pushTokensTable).where(inArray(pushTokensTable.token, dead));
+  await db.update(devicesTable).set({ pushToken: null }).where(inArray(devicesTable.pushToken, dead));
+  logger.info({ removed: dead.length }, "Tokens de push inválidos removidos");
 }
 
 /** Avisa responsáveis (titular e co-responsáveis; observadores só se includeViewers). */

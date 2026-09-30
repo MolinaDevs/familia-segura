@@ -49,7 +49,7 @@ export const invitesTable = pgTable("family_invites", {
   usedAt: timestamp("used_at", { withTimezone: true }),
   usedBy: uuid("used_by").references(() => usersTable.id, { onDelete: "set null" }),
   createdAt: created(),
-});
+}, (t) => [index("family_invites_family_idx").on(t.familyId)]);
 
 export const childrenTable = pgTable("children", {
   id: id(), familyId: uuid("family_id").notNull().references(() => familiesTable.id, { onDelete: "cascade" }),
@@ -81,7 +81,7 @@ export const pairingCodesTable = pgTable("pairing_codes", {
   childId: uuid("child_id").notNull().references(() => childrenTable.id, { onDelete: "cascade" }),
   codeHash: text("code_hash").notNull(), expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   usedAt: timestamp("used_at", { withTimezone: true }), createdAt: created(),
-}, (t) => [index("pairing_codes_hash_idx").on(t.codeHash)]);
+}, (t) => [index("pairing_codes_hash_idx").on(t.codeHash), index("pairing_codes_child_idx").on(t.childId)]);
 
 /**
  * Catálogo de apps. Linhas com family_id nulo são globais (curadas);
@@ -107,7 +107,7 @@ export const appRulesTable = pgTable("app_rules", {
   /** Legado: substituído por usage_daily. Mantido para bancos antigos. */
   usageTodayMinutes: integer("usage_today_minutes").notNull().default(0),
   dailyLimitMinutes: integer("daily_limit_minutes").notNull().default(60), status: text("status").notNull().default("allowed"),
-}, (t) => [uniqueIndex("app_rules_child_app_unique").on(t.childId, t.appId)]);
+}, (t) => [uniqueIndex("app_rules_child_app_unique").on(t.childId, t.appId), index("app_rules_family_idx").on(t.familyId)]);
 
 export const routinesTable = pgTable("routines", {
   id: id(), familyId: uuid("family_id").notNull().references(() => familiesTable.id, { onDelete: "cascade" }),
@@ -116,7 +116,7 @@ export const routinesTable = pgTable("routines", {
   startTime: text("start_time").notNull(), endTime: text("end_time").notNull(), enabled: boolean("enabled").notNull().default(true), icon: text("icon").notNull(),
   /** Android: trava a tela sempre que a criança acender o aparelho durante a rotina (hora de dormir). */
   lockScreen: boolean("lock_screen").notNull().default(false),
-});
+}, (t) => [index("routines_family_idx").on(t.familyId), index("routines_child_idx").on(t.childId)]);
 
 export const timeRequestsTable = pgTable("time_requests", {
   id: id(), familyId: uuid("family_id").notNull().references(() => familiesTable.id, { onDelete: "cascade" }),
@@ -129,7 +129,7 @@ export const timeRequestsTable = pgTable("time_requests", {
   resolvedBy: uuid("resolved_by").references(() => usersTable.id, { onDelete: "set null" }),
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
   createdAt: created(),
-});
+}, (t) => [index("time_requests_family_created_idx").on(t.familyId, t.createdAt), index("time_requests_child_status_idx").on(t.childId, t.status)]);
 
 /** Tempo extra válido só no dia indicado (fuso da família). Não altera o limite diário. */
 export const temporaryGrantsTable = pgTable("temporary_grants", {
@@ -140,7 +140,7 @@ export const temporaryGrantsTable = pgTable("temporary_grants", {
   timeRequestId: uuid("time_request_id").references(() => timeRequestsTable.id, { onDelete: "set null" }),
   createdBy: uuid("created_by").references(() => usersTable.id, { onDelete: "set null" }),
   createdAt: created(),
-}, (t) => [index("temporary_grants_child_day_idx").on(t.childId, t.validOn)]);
+}, (t) => [index("temporary_grants_child_day_idx").on(t.childId, t.validOn), index("temporary_grants_family_day_idx").on(t.familyId, t.validOn)]);
 
 /** Uso acumulado do dia por aparelho e app (maior valor informado pelo aparelho). */
 export const usageDailyTable = pgTable("usage_daily", {
@@ -151,7 +151,7 @@ export const usageDailyTable = pgTable("usage_daily", {
   minutes: integer("minutes").notNull().default(0),
   precision: text("precision").notNull().default("exact"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [primaryKey({ columns: [t.deviceId, t.appId, t.day] }), index("usage_daily_child_day_idx").on(t.childId, t.day)]);
+}, (t) => [primaryKey({ columns: [t.deviceId, t.appId, t.day] }), index("usage_daily_child_day_idx").on(t.childId, t.day), index("usage_daily_family_day_idx").on(t.familyId, t.day)]);
 
 /** Distribuição por hora: cada sincronização soma o incremento na hora local informada. */
 export const usageHourlyTable = pgTable("usage_hourly", {
@@ -160,7 +160,7 @@ export const usageHourlyTable = pgTable("usage_hourly", {
   deviceId: uuid("device_id").notNull().references(() => devicesTable.id, { onDelete: "cascade" }),
   appId: text("app_id").notNull(), day: date("day").notNull(), hour: integer("hour").notNull(),
   minutes: integer("minutes").notNull().default(0),
-}, (t) => [primaryKey({ columns: [t.deviceId, t.appId, t.day, t.hour] }), index("usage_hourly_child_day_idx").on(t.childId, t.day)]);
+}, (t) => [primaryKey({ columns: [t.deviceId, t.appId, t.day, t.hour] }), index("usage_hourly_child_day_idx").on(t.childId, t.day), index("usage_hourly_family_day_idx").on(t.familyId, t.day)]);
 
 /** Inventário de apps instalados (Android) e decisão do responsável. */
 export const deviceAppsTable = pgTable("device_apps", {
@@ -173,14 +173,14 @@ export const deviceAppsTable = pgTable("device_apps", {
   removedAt: timestamp("removed_at", { withTimezone: true }),
   firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).notNull().defaultNow(),
   lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [uniqueIndex("device_apps_unique").on(t.deviceId, t.packageName)]);
+}, (t) => [uniqueIndex("device_apps_unique").on(t.deviceId, t.packageName), index("device_apps_family_status_idx").on(t.familyId, t.status)]);
 
 /** iOS: quais regras já têm app/categoria associados no aparelho (o token fica no aparelho). */
 export const deviceRuleBindingsTable = pgTable("device_rule_bindings", {
   deviceId: uuid("device_id").notNull().references(() => devicesTable.id, { onDelete: "cascade" }),
   ruleId: uuid("rule_id").notNull().references(() => appRulesTable.id, { onDelete: "cascade" }),
   boundAt: timestamp("bound_at", { withTimezone: true }).notNull().defaultNow(),
-}, (t) => [primaryKey({ columns: [t.deviceId, t.ruleId] })]);
+}, (t) => [primaryKey({ columns: [t.deviceId, t.ruleId] }), index("device_rule_bindings_rule_idx").on(t.ruleId)]);
 
 /** Eventos do aparelho: proteção alterada, tentativa de adulteração, app instalado/removido, bloqueios. */
 export const deviceEventsTable = pgTable("device_events", {
@@ -190,13 +190,16 @@ export const deviceEventsTable = pgTable("device_events", {
   type: text("type").notNull(), detail: text("detail"),
   occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: created(),
-}, (t) => [index("device_events_family_idx").on(t.familyId, t.occurredAt)]);
+}, (t) => [
+  index("device_events_family_idx").on(t.familyId, t.occurredAt), index("device_events_device_idx").on(t.deviceId),
+  index("device_events_child_idx").on(t.childId), index("device_events_occurred_idx").on(t.occurredAt),
+]);
 
 export const pushTokensTable = pgTable("push_tokens", {
   id: id(), userId: uuid("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   token: text("token").notNull().unique(), platform: text("platform").notNull(),
   createdAt: created(),
-});
+}, (t) => [index("push_tokens_user_idx").on(t.userId)]);
 
 /** Rate limit persistente (sobrevive a reinícios e vale para várias instâncias). */
 export const rateLimitsTable = pgTable("rate_limits", {
@@ -209,12 +212,12 @@ export const auditEventsTable = pgTable("audit_events", {
   id: id(), familyId: uuid("family_id").notNull().references(() => familiesTable.id, { onDelete: "cascade" }),
   userId: uuid("user_id").references(() => usersTable.id, { onDelete: "set null" }), action: text("action").notNull(),
   summary: text("summary").notNull(), metadata: jsonb("metadata"), createdAt: created(),
-});
+}, (t) => [index("audit_events_family_created_idx").on(t.familyId, t.createdAt), index("audit_events_created_idx").on(t.createdAt)]);
 export const consentsTable = pgTable("consents", {
   id: id(), familyId: uuid("family_id").notNull().references(() => familiesTable.id, { onDelete: "cascade" }),
   userId: uuid("user_id").notNull().references(() => usersTable.id, { onDelete: "cascade" }),
   consentType: text("consent_type").notNull(), acceptedAt: timestamp("accepted_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("consents_family_idx").on(t.familyId), index("consents_user_idx").on(t.userId)]);
 
 export const insertUserSchema = createInsertSchema(usersTable);
 export const insertFamilySchema = createInsertSchema(familiesTable);

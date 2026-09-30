@@ -68,6 +68,8 @@ export function requireMember(...roles: Role[]) {
 
 export const EDITORS: Role[] = ["owner", "guardian"];
 
+const LAST_SEEN_RESOLUTION_MS = 60_000;
+
 /** Autenticação do aparelho da criança por token revogável (nunca pelo id da criança). */
 export async function deviceFromRequest(req: Request): Promise<Device | undefined> {
   const header = req.header("authorization");
@@ -77,7 +79,12 @@ export async function deviceFromRequest(req: Request): Promise<Device | undefine
   const [device] = await db.select().from(devicesTable)
     .where(and(eq(devicesTable.deviceTokenHash, sha256(token)), eq(devicesTable.status, "active")));
   if (!device) return undefined;
-  await db.update(devicesTable).set({ lastSeenAt: new Date() }).where(eq(devicesTable.id, device.id));
+  // "Visto por último" com resolução de 1 min: poupa uma escrita por requisição (cada sincronização faz várias).
+  if (Date.now() - device.lastSeenAt.getTime() >= LAST_SEEN_RESOLUTION_MS) {
+    const now = new Date();
+    await db.update(devicesTable).set({ lastSeenAt: now }).where(eq(devicesTable.id, device.id));
+    device.lastSeenAt = now;
+  }
   return device;
 }
 
