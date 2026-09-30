@@ -1,4 +1,5 @@
 import { Icon, iconName } from '@/components/Icon';
+import { routineMoment } from '@/lib/routineTime';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -32,7 +33,8 @@ export default function HomeScreen() {
   const updateDeviceApp = useUpdateDeviceApp();
   const attentionApps = useMemo(() => data.apps.filter((app) => app.status !== 'permitido' || (app.effectiveLimit > 0 && app.usageToday >= app.effectiveLimit * 0.8)).slice(0, 3), [data.apps]);
   const today = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
-  const activeRoutine = data.routines.find((routine) => routine.enabled);
+  // Rotina valendo agora ou a próxima (não só a primeira da lista).
+  const moment = routineMoment(data.routines.map((r) => ({ ...r, startTime: r.start, endTime: r.end })));
   const pendingRequests = data.timeRequests.filter((r) => r.status === 'pending');
   const deviceName = (id: string) => data.allDevices.find((d) => d.id === id)?.name ?? 'aparelho';
   const childName = (deviceId: string) => {
@@ -182,12 +184,17 @@ export default function HomeScreen() {
           </View>
 
           <SectionTitle action="Ajustar" onAction={() => router.push('/(app)/(tabs)/routine')}>Rotina</SectionTitle>
-          {activeRoutine ? (
+          {moment ? (
             <Card style={styles.appRow}>
-              <Icon name={iconName(activeRoutine.icon, 'moon')} size={22} color={colors.primary} />
+              <Icon name={iconName(moment.routine.icon, 'moon')} size={22} color={colors.primary} />
               <View style={{ flex: 1 }}>
-                <Text style={[styles.reqTitle, { color: colors.foreground }]}>{activeRoutine.title}</Text>
-                <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>{activeRoutine.start} às {activeRoutine.end}</Text>
+                <Text style={[styles.reqTitle, { color: colors.foreground }]}>
+                  {moment.state === 'active' ? `Agora: ${moment.routine.title}` : `Próxima: ${moment.routine.title}`}
+                </Text>
+                <Text style={[styles.reqMsg, { color: colors.mutedForeground }]}>
+                  {moment.state === 'active' ? `Apps em pausa até ${moment.until}` : `Começa ${moment.startsIn}`}
+                  {moment.routine.lockScreen ? ' · tela travada no Android' : ''}
+                </Text>
               </View>
             </Card>
           ) : <Notice icon="moon">Nenhuma pausa programada para {data.childName}.</Notice>}
