@@ -13,9 +13,8 @@ import { useColors } from '@/hooks/useColors';
 import { textOn } from '@/lib/contrast';
 import { showApiError } from '@/lib/apiErrors';
 import { openLegal } from '@/lib/legal';
+import { isStale } from '@/lib/deviceContact';
 
-/** Mesmo critério da Home: "sem contato" só após 3 h (sincronização em segundo plano leva ~15 min). */
-const isStale = (lastSeenAt: string | Date) => Date.now() - new Date(lastSeenAt).getTime() > 3 * 3600_000;
 
 const STATE_TEXT: Record<string, string> = {
   active: 'Protegido', partial: 'Proteção incompleta', disabled: 'Proteção desligada', unavailable: 'Sem suporte', unknown: 'Aguardando',

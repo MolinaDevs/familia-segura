@@ -11,6 +11,7 @@ import { useColors } from '@/hooks/useColors';
 import { showApiError } from '@/lib/apiErrors';
 
 import { goBack } from '@/lib/navigation';
+import { isStale, shortDate } from '@/lib/deviceContact';
 const STATE: Record<string, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
   active: { label: 'Proteção ativa', tone: 'success' },
   partial: { label: 'Proteção incompleta', tone: 'warning' },
@@ -51,9 +52,17 @@ export default function DeviceScreen() {
   return (
     <Screen back title={device.name} subtitle={`${device.platform === 'ios' ? 'iPhone/iPad' : 'Android'} de ${child?.displayName ?? ''}${device.model ? ` · ${device.model}` : ''}`}>
       <View style={{ height: 16 }} />
-      <Notice icon={state.tone === 'success' ? 'shield' : 'alert-triangle'} tone={state.tone}>
-        {state.label}{Date.now() - new Date(device.lastSeenAt).getTime() > 3 * 3600_000 ? ` · sem contato desde ${new Date(device.lastSeenAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ''}
-      </Notice>
+      {isStale(device.lastSeenAt) && device.protectionState !== 'disabled' ? (
+        // Sem contato, "ativa" é só a última notícia: não dá para mostrar em verde.
+        <Notice icon="wifi-off" tone="warning">
+          Sem contato desde {shortDate(device.lastSeenAt)}. Última informação: {state.label.toLowerCase()}. O aparelho pode estar
+          desligado, sem internet ou com o Família Segura fechado — confira com a criança.
+        </Notice>
+      ) : (
+        <Notice icon={state.tone === 'success' ? 'shield' : 'alert-triangle'} tone={state.tone}>
+          {state.label}{isStale(device.lastSeenAt) ? ` · sem contato desde ${shortDate(device.lastSeenAt)}` : ''}
+        </Notice>
+      )}
       {device.protectionIssues.length > 0 && (
         <Card style={{ marginTop: 12, gap: 4 }}>
           {device.protectionIssues.map((issue) => <Text key={issue} style={[styles.issue, { color: colors.foreground }]}>• {issue}</Text>)}
@@ -66,7 +75,7 @@ export default function DeviceScreen() {
         <Divider />
         <Row icon="battery" title="Bateria" detail={device.batteryLevel != null ? `${device.batteryLevel}%` : 'Não informado'} />
         <Divider />
-        <Row icon="cpu" title="Sistema" detail={`${device.platform === 'ios' ? 'iOS' : 'Android'} ${device.osVersion ?? ''} · app ${device.appVersion ?? '—'}`} />
+        <Row icon="cpu" title="Sistema" detail={`${device.platform === 'ios' ? 'iOS' : 'Android'} ${device.osVersion ?? ''}${device.appVersion ? ` · Família Segura ${device.appVersion}` : ''}`.trim()} />
       </Card>
 
       {canEdit && (

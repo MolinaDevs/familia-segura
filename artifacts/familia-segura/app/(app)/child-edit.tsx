@@ -46,7 +46,9 @@ export default function ChildEditScreen() {
   const archiveChild = useArchiveChild();
 
   const ageNumber = parseInt(age, 10);
-  const valid = name.trim().length > 0 && ageNumber >= 1 && ageNumber <= 19;
+  const ageOk = ageNumber >= 1 && ageNumber <= 19;
+  const ageInvalid = age.length > 0 && !ageOk;
+  const valid = name.trim().length > 0 && ageOk;
   const birthYear = new Date().getFullYear() - (Number.isFinite(ageNumber) ? ageNumber : 0);
   const band = useMemo(() => bandFor(birthYear), [birthYear]);
   const preset = AGE_PRESETS[band];
@@ -94,7 +96,9 @@ export default function ChildEditScreen() {
 
       <SectionTitle>Idade</SectionTitle>
       <TextInput value={age} onChangeText={(v) => setAge(v.replace(/\D/g, '').slice(0, 2))} keyboardType="number-pad" placeholder="Ex.: 10"
-        placeholderTextColor={colors.mutedForeground} style={[styles.input, { borderColor: colors.border, backgroundColor: colors.card, color: colors.foreground }]} />
+        accessibilityLabel="Idade"
+        placeholderTextColor={colors.mutedForeground} style={[styles.input, { borderColor: ageInvalid ? colors.destructive : colors.border, backgroundColor: colors.card, color: colors.foreground }]} />
+      {ageInvalid ? <Text style={[styles.fieldError, { color: colors.destructive }]}>Use a idade em anos, de 1 a 19.</Text> : null}
 
       <SectionTitle>Cor nos gráficos</SectionTitle>
       <View style={styles.colors}>
@@ -133,6 +137,7 @@ export default function ChildEditScreen() {
 }
 
 const styles = StyleSheet.create({
+  fieldError: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 12.5, marginTop: 6 },
   input: { height: 52, borderWidth: 1, borderRadius: 14, paddingHorizontal: 16, fontFamily: 'NunitoSans_500Medium', fontSize: 16 },
   colors: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   swatchWrap: { borderWidth: 2, borderRadius: 22, padding: 3 },

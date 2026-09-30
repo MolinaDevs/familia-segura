@@ -1,5 +1,6 @@
 import { Icon, iconName } from '@/components/Icon';
 import { routineMoment } from '@/lib/routineTime';
+import { isStale, shortDate } from '@/lib/deviceContact';
 import { router } from 'expo-router';
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -43,13 +44,11 @@ export default function HomeScreen() {
   };
   // Um alerta por aparelho, com o problema mais grave. "Sem contato" só após 3 h (a sincronização em
   // segundo plano do sistema pode levar ~15 min, e o celular desligado à noite é normal).
-  const STALE_MS = 3 * 3600_000;
-  const shortDate = (iso: string | Date) => new Date(iso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   type DeviceAlert = { d: (typeof data.allDevices)[number]; tone: 'danger' | 'warning'; icon: 'shield-off' | 'wifi-off' | 'alert-triangle'; text: string };
   const deviceAlerts = data.allDevices.flatMap((d): DeviceAlert[] => {
     const childLabel = data.children.find((c) => c.id === d.childId)?.displayName ?? '';
     const tamper = data.recentEvents.find((e) => e.deviceId === d.id && EVENT_LABEL[e.type] && Date.now() - new Date(e.occurredAt).getTime() < 48 * 3600_000);
-    const stale = Date.now() - new Date(d.lastSeenAt).getTime() > STALE_MS;
+    const stale = isStale(d.lastSeenAt);
     if (d.protectionState === 'disabled') return [{ d, tone: 'danger', icon: 'shield-off', text: `${d.name} (${childLabel}): proteção desligada${stale ? ` · sem contato desde ${shortDate(d.lastSeenAt)}` : ''}` }];
     if (tamper) return [{ d, tone: 'danger', icon: 'shield-off', text: `${d.name} (${childLabel}): ${EVENT_LABEL[tamper.type].toLowerCase()} · ${shortDate(tamper.occurredAt)}` }];
     if (stale) return [{ d, tone: 'warning', icon: 'wifi-off', text: `${d.name} (${childLabel}): sem contato desde ${shortDate(d.lastSeenAt)}` }];
