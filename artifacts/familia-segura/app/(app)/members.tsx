@@ -7,6 +7,7 @@ import { useCreateInvite, useRemoveMember, useUpdateMember, type FamilyMember } 
 import { Button, Card, Chip, Divider, Notice, Row, Screen, SectionTitle } from '@/components/ui';
 import { useFamily } from '@/context/AppContext';
 import { useColors } from '@/hooks/useColors';
+import { signOutCompletely } from '@/lib/session';
 import { showApiError } from '@/lib/apiErrors';
 
 import { goBack } from '@/lib/navigation';
@@ -38,7 +39,7 @@ export default function MembersScreen() {
     if (member.isCurrentUser && member.role !== 'owner') {
       Alert.alert('Sair da família?', 'Você deixará de acompanhar as crianças desta família.', [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Sair', style: 'destructive', onPress: () => removeMember.mutate({ memberId: member.id }, { onSuccess: () => void signOut(), onError: (e) => showApiError(e) }) },
+        { text: 'Sair', style: 'destructive', onPress: () => removeMember.mutate({ memberId: member.id }, { onSuccess: () => void signOutCompletely(signOut), onError: (e) => showApiError(e) }) },
       ]);
       return;
     }

@@ -113,4 +113,15 @@ describe("backend (revisão 2026-09-30)", () => {
     expect(await hasPremium("gratis")).toBe(false);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
+
+  it("F2: sair da conta remove o token de push só do próprio usuário", async () => {
+    await createFamily();
+    await api().post("/api/family/push-tokens").set(asGuardian(OWNER)).send({ token: "ExponentPushToken[meu]", platform: "ios" }).expect(204);
+    // Outro usuário não apaga o token alheio.
+    await api().delete("/api/family/push-tokens").set(asGuardian("user_intruso")).send({ token: "ExponentPushToken[meu]" }).expect(204);
+    expect((await db.execute(sql`select count(*)::int as n from push_tokens`)).rows[0]).toEqual({ n: 1 });
+    await api().delete("/api/family/push-tokens").set(asGuardian(OWNER)).send({ token: "ExponentPushToken[meu]" }).expect(204);
+    expect((await db.execute(sql`select count(*)::int as n from push_tokens`)).rows[0]).toEqual({ n: 0 });
+    await api().delete("/api/family/push-tokens").send({ token: "ExponentPushToken[meu]" }).expect(401);
+  });
 });

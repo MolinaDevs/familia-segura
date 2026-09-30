@@ -7,7 +7,7 @@ import {
 import {
   AcceptInviteBody, AcceptInviteResponse, ArchiveChildParams, CreateChildBody, CreateChildResponse, CreateFamilyBody,
   CreateFamilyResponse, CreateInviteBody, CreateInviteResponse, ExportFamilyDataResponse, GetFamilyOverviewResponse,
-  ListAuditEventsResponse, RegisterGuardianPushTokenBody, RemoveMemberParams, SetGuardianPinBody, UpdateChildBody,
+  ListAuditEventsResponse, RegisterGuardianPushTokenBody, RemoveMemberParams, UnregisterGuardianPushTokenBody, SetGuardianPinBody, UpdateChildBody,
   UpdateChildParams, UpdateChildResponse, UpdateFamilySettingsBody, UpdateFamilySettingsResponse, UpdateMemberBody,
   UpdateMemberParams, UpdateMemberResponse,
 } from "@workspace/api-zod";
@@ -241,6 +241,15 @@ router.post("/family/push-tokens", requireMember(), async (req: AuthedRequest, r
   if (!input.success) { fail(res, 400, input.error.message); return; }
   await db.insert(pushTokensTable).values({ userId: req.member!.userId, token: input.data.token, platform: input.data.platform })
     .onConflictDoUpdate({ target: pushTokensTable.token, set: { userId: req.member!.userId, platform: input.data.platform } });
+  res.sendStatus(204);
+});
+
+/** Saída da conta: o token deixa de receber avisos. Só apaga token do próprio usuário. */
+router.delete("/family/push-tokens", requireAuth, async (req: AuthedRequest, res): Promise<void> => {
+  const input = UnregisterGuardianPushTokenBody.safeParse(req.body);
+  if (!input.success) { fail(res, 400, input.error.message); return; }
+  const [user] = await db.select({ id: usersTable.id }).from(usersTable).where(eq(usersTable.clerkUserId, req.userId!));
+  if (user) await db.delete(pushTokensTable).where(and(eq(pushTokensTable.token, input.data.token), eq(pushTokensTable.userId, user.id)));
   res.sendStatus(204);
 });
 

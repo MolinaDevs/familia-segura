@@ -7,7 +7,7 @@ import { BrandLoading } from '@/components/brand/BrandLoading';
 export default function AppGateway() {
   const colors = useColors();
   const { data, isLoading, error, refetch, isFetching } = useGetFamilyOverview({
-    query: { queryKey: getGetFamilyOverviewQueryKey(), staleTime: 30_000, retry: 1 },
+    query: { queryKey: getGetFamilyOverviewQueryKey(), staleTime: 30_000 },
   });
 
   if (isLoading) {

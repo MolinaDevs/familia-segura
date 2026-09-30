@@ -84,6 +84,7 @@ export * from './pinVerifyResult';
 export * from './privacySummary';
 export * from './pushTokenInput';
 export * from './pushTokenInputPlatform';
+export * from './pushTokenRemoval';
 export * from './routine';
 export * from './routineInput';
 export * from './routineUpdate';

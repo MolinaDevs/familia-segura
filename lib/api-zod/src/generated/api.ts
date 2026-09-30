@@ -1116,6 +1116,21 @@ export const RegisterGuardianPushTokenBody = zod.object({
 export const RegisterGuardianPushTokenResponse = zod.void()
 
 
+/**
+ * Ao sair da conta, o aparelho deixa de receber os avisos da família.
+ */
+export const unregisterGuardianPushTokenBodyTokenMin = 10;
+export const unregisterGuardianPushTokenBodyTokenMax = 300;
+
+
+
+export const UnregisterGuardianPushTokenBody = zod.object({
+  "token": zod.string().min(unregisterGuardianPushTokenBodyTokenMin).max(unregisterGuardianPushTokenBodyTokenMax)
+})
+
+export const UnregisterGuardianPushTokenResponse = zod.void()
+
+
 export const getUsageReportQueryDaysDefault = 7;
 export const getUsageReportQueryDaysMax = 365;
 

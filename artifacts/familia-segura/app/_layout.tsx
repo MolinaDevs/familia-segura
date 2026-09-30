@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Platform, Pressable, Text } from 'react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createQueryClient } from '@/lib/queryClient';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -28,6 +29,7 @@ import { reloadAppAsync } from 'expo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useColors } from '@/hooks/useColors';
 import { BrandLoading } from '@/components/brand/BrandLoading';
+import { signOutCompletely } from '@/lib/session';
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 void SplashScreen.preventAutoHideAsync().catch(() => undefined);
@@ -72,8 +74,24 @@ function StartupScreen({ missingConfiguration = false }: { missingConfiguration?
   );
 }
 
+/**
+ * Aparelho da criança não guarda a conta do responsável (quem pareou estando logado): na abertura em modo
+ * criança a sessão é encerrada e o aparelho para de receber os avisos da família. Aqui não há troca de árvore
+ * por identidade, então sair não reinicia a navegação.
+ */
+function ChildSessionCleanup() {
+  const { isLoaded, isSignedIn, signOut, getToken } = useAuth();
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || DEV_AUTH) return;
+    void getToken()
+      .then((token) => signOutCompletely(signOut, token))
+      .catch(() => undefined);
+  }, [isLoaded, isSignedIn, signOut, getToken]);
+  return null;
+}
+
 function SessionQueries({ children }: React.PropsWithChildren) {
-  const [queryClient] = useState(() => new QueryClient());
+  const [queryClient] = useState(createQueryClient);
   return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
 }
 
@@ -155,7 +173,10 @@ export default function RootLayout() {
             proxyUrl={proxyUrl}
           >
             {childMode ? (
-              <SessionQueries key="child-device">{appTree}</SessionQueries>
+              <SessionQueries key="child-device">
+                <ChildSessionCleanup />
+                {appTree}
+              </SessionQueries>
             ) : (
               <>
                 <ClerkLoading><StartupScreen /></ClerkLoading>

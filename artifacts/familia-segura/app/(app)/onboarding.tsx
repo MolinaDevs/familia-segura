@@ -22,6 +22,17 @@ function ageError(value: string) {
   return null;
 }
 
+/** Mesmos limites do contrato da API (FamilyInput / InviteAcceptInput). */
+const nameOk = (value: string, min = 2) => value.trim().length >= min;
+const tooShort = (value: string, min = 2) => (value.length > 0 && !nameOk(value, min) ? `Use pelo menos ${min} letras.` : undefined);
+
+/** Sem status = sem resposta do servidor (rede); 429 = limite de tentativas. */
+function networkOr(status: number | undefined, message: string) {
+  if (!status) return 'Sem conexão com o servidor. Confira a internet e tente de novo — nada foi salvo pela metade.';
+  if (status === 429) return 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.';
+  return message;
+}
+
 function StepDots({ step, total }: { step: number; total: number }) {
   const colors = useColors();
   return (
@@ -73,7 +84,7 @@ export default function Onboarding() {
 
   const handleNext = async () => {
     if (step === 1) {
-      if (!familyName || !guardianName) return;
+      if (!nameOk(familyName) || !nameOk(guardianName)) return;
       setStep(2);
     } else {
       if (!childName.trim() || !childAge || ageError(childAge) || !consentAccepted) return;
@@ -100,8 +111,10 @@ export default function Onboarding() {
         // Família nova: boas-vindas em 4 telas antes do painel (o guia "Primeiros passos" continua lá).
         router.replace('/(app)/welcome-tour');
       } catch (err: unknown) {
-        console.error(err);
-        setSubmitError('Não deu para criar a família agora. Confira a internet e tente de novo — nada foi salvo pela metade.');
+        const status = (err as { status?: number }).status;
+        setSubmitError(status === 409
+          ? 'Esta conta já participa de uma família. Feche e abra o app para entrar nela.'
+          : networkOr(status, 'Algum dado não foi aceito. Confira os nomes e a idade e tente de novo.'));
         void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         setLoading(false);
       }
@@ -109,7 +122,7 @@ export default function Onboarding() {
   };
 
   const joinWithInvite = async () => {
-    if (!inviteCode || !guardianName || !consentAccepted) return;
+    if (inviteCode.replace(/[^A-Z0-9]/g, '').length < 6 || !nameOk(guardianName) || !consentAccepted) return;
     setLoading(true);
     setSubmitError(null);
     try {
@@ -119,14 +132,15 @@ export default function Onboarding() {
       router.replace('/(app)');
     } catch (err: unknown) {
       const status = (err as { status?: number }).status;
-      setSubmitError(status === 409 ? 'Não deu para entrar: a família já está no limite de responsáveis, ou você já participa de outra família.' : 'Esse convite não funcionou. Ele pode ter expirado: peça um novo a quem criou a família.');
+      setSubmitError(status === 409 ? 'Não deu para entrar: a família já está no limite de responsáveis, ou você já participa de outra família.'
+        : networkOr(status, 'Esse convite não funcionou. Ele pode ter expirado: peça um novo a quem criou a família.'));
       setLoading(false);
     }
   };
 
   const ageProblem = ageError(childAge);
   const canContinue = step === 1
-    ? Boolean(familyName.trim() && guardianName.trim())
+    ? nameOk(familyName) && nameOk(guardianName)
     : Boolean(childName.trim() && childAge && !ageProblem && consentAccepted);
 
   if (inviteMode) {
@@ -142,8 +156,9 @@ export default function Onboarding() {
             label="Código do convite"
             icon="key"
             value={inviteCode}
-            onChangeText={(t) => { setInviteCode(t.toUpperCase()); setSubmitError(null); }}
+            onChangeText={(t) => { setInviteCode(t.toUpperCase().replace(/[^A-Z0-9-]/g, '')); setSubmitError(null); }}
             autoCapitalize="characters"
+            maxLength={20}
             autoCorrect={false}
             placeholder="ABCDE23456"
             style={styles.code}
@@ -156,13 +171,15 @@ export default function Onboarding() {
             onChangeText={setGuardianName}
             placeholder="Ex.: Marina"
             autoCapitalize="words"
+            maxLength={80}
+            error={tooShort(guardianName)}
           />
           <Consent checked={consentAccepted} onToggle={() => setConsentAccepted((a) => !a)}>
             Sou responsável pelas crianças desta família e li a Política de Privacidade.
           </Consent>
           {submitError ? <FormMessage tone="error">{submitError}</FormMessage> : null}
           <AuthButton label="Entrar na família" onPress={() => void joinWithInvite()} loading={loading}
-            disabled={!inviteCode.trim() || !guardianName.trim() || !consentAccepted} testID="onboarding-join" />
+            disabled={inviteCode.replace(/[^A-Z0-9]/g, '').length < 6 || !nameOk(guardianName) || !consentAccepted} testID="onboarding-join" />
         </AuthCard>
       </AuthShell>
     );
@@ -188,6 +205,8 @@ export default function Onboarding() {
               onChangeText={setFamilyName}
               placeholder="Ex.: Família Andrade"
               autoCapitalize="words"
+              maxLength={80}
+              error={tooShort(familyName)}
               returnKeyType="next"
               testID="onboarding-family-name"
             />
@@ -198,6 +217,8 @@ export default function Onboarding() {
               onChangeText={setGuardianName}
               placeholder="Ex.: Marina"
               autoCapitalize="words"
+              maxLength={80}
+              error={tooShort(guardianName)}
               returnKeyType="next"
               onSubmitEditing={() => void handleNext()}
               helper="É assim que a criança e os outros responsáveis vão ver você."
@@ -213,6 +234,7 @@ export default function Onboarding() {
               onChangeText={(text) => { setChildName(text); setSubmitError(null); }}
               placeholder="Ex.: Leo"
               autoCapitalize="words"
+              maxLength={50}
               testID="onboarding-child-name"
             />
             <AuthField

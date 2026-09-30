@@ -22,7 +22,8 @@ export function bannerUnitId(testId: string): string | null {
 
 /** Mostrar anúncio para esta família agora? (plano grátis e passada a carência) */
 export function shouldShowAds(overview?: FamilyOverview | null, now = Date.now()) {
-  if (!overview?.limits || overview.limits.features.adFree) return false;
+  // Dados de versão antiga (cache sem `features`) não quebram a tela: sem certeza, sem anúncio.
+  if (!overview?.limits?.features || overview.limits.features.adFree) return false;
   const createdAt = new Date(overview.family.createdAt).getTime();
   return now - createdAt >= AD_GRACE_DAYS * 24 * 3600_000;
 }

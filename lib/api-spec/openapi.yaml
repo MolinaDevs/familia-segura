@@ -588,6 +588,19 @@ paths:
         "204":
           description: Token registrado
         "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      operationId: unregisterGuardianPushToken
+      tags: [members]
+      description: Ao sair da conta, o aparelho deixa de receber os avisos da família.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/PushTokenRemoval" }
+      responses:
+        "204":
+          description: Token removido (ou já inexistente)
+        "401": { $ref: "#/components/responses/Unauthorized" }
   /family/reports/usage:
     get:
       operationId: getUsageReport
@@ -1017,6 +1030,11 @@ components:
       properties:
         token: { type: string, minLength: 10, maxLength: 300 }
         platform: { type: string, enum: [ios, android] }
+    PushTokenRemoval:
+      type: object
+      required: [token]
+      properties:
+        token: { type: string, minLength: 10, maxLength: 300 }
     AppRuleInput:
       type: object
       properties:

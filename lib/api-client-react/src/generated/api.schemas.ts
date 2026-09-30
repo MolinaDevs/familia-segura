@@ -351,6 +351,14 @@ export interface PushTokenInput {
   platform: PushTokenInputPlatform;
 }
 
+export interface PushTokenRemoval {
+  /**
+     * @minLength 10
+     * @maxLength 300
+     */
+  token: string;
+}
+
 export type AppRuleInputStatus = typeof AppRuleInputStatus[keyof typeof AppRuleInputStatus];
 
 

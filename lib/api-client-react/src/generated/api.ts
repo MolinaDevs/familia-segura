@@ -65,6 +65,7 @@ import type {
   PinVerifyInput,
   PinVerifyResult,
   PushTokenInput,
+  PushTokenRemoval,
   Routine,
   RoutineInput,
   RoutineUpdate,
@@ -2843,6 +2844,91 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getRegisterGuardianPushTokenMutationOptions(options));
+    }
+
+export const getUnregisterGuardianPushTokenUrl = () => {
+
+
+
+
+  return `/api/family/push-tokens`
+}
+
+/**
+ * Ao sair da conta, o aparelho deixa de receber os avisos da família.
+ */
+export const unregisterGuardianPushToken = async (pushTokenRemoval: PushTokenRemoval, options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return customFetch<void>(getUnregisterGuardianPushTokenUrl(),
+  {
+    ...options,
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pushTokenRemoval)
+  }
+);}
+
+
+
+
+
+export const getUnregisterGuardianPushTokenMutationKey = () => ['unregisterGuardianPushToken'] as const;
+
+export const getUnregisterGuardianPushTokenMutationOptions = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterGuardianPushToken>>, TError,UnregisterGuardianPushTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unregisterGuardianPushToken>>, TError,UnregisterGuardianPushTokenMutationVariables, TContext> => {
+
+const mutationKey = getUnregisterGuardianPushTokenMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unregisterGuardianPushToken>>, UnregisterGuardianPushTokenMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  unregisterGuardianPushToken(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnregisterGuardianPushTokenMutationResult = NonNullable<Awaited<ReturnType<typeof unregisterGuardianPushToken>>>
+    export type UnregisterGuardianPushTokenMutationBody = BodyType<PushTokenRemoval>
+    export type UnregisterGuardianPushTokenMutationError = ErrorType<UnauthorizedResponse>
+    export type UnregisterGuardianPushTokenMutationVariables = {data: BodyType<PushTokenRemoval>}
+
+    export const useUnregisterGuardianPushToken = <TError = ErrorType<UnauthorizedResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unregisterGuardianPushToken>>, TError,UnregisterGuardianPushTokenMutationVariables, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unregisterGuardianPushToken>>,
+        TError,
+        UnregisterGuardianPushTokenMutationVariables,
+        TContext
+      > => {
+      return useMutation(getUnregisterGuardianPushTokenMutationOptions(options));
     }
 
 export const getGetUsageReportUrl = (params?: GetUsageReportParams,) => {

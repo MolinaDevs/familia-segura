@@ -1,5 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, PropsWithChildren, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   useGetFamilyOverview,
   useUpdateAppRule,
@@ -16,8 +16,10 @@ import {
   type FamilyLimits,
   type TimeRequest,
 } from '@workspace/api-client-react';
+import { router } from 'expo-router';
 import { useAuth } from '@/lib/auth';
-import { showApiError } from '@/lib/apiErrors';
+import { apiStatus, showApiError } from '@/lib/apiErrors';
+import { forgetSessionData } from '@/lib/session';
 
 export type AppStatus = 'permitido' | 'atenção' | 'bloqueado';
 
@@ -104,6 +106,9 @@ type AppContextValue = {
   refetch: () => void;
 };
 
+/** Aumentar quando o formato de FamilyOverview mudar de um jeito que telas antigas não entendam. */
+const CACHE_VERSION = 2;
+
 const AppContext = createContext<AppContextValue | null>(null);
 
 const statusLabel = (status: string): AppStatus =>
@@ -158,10 +163,11 @@ export function AppProvider({ children }: PropsWithChildren) {
   const [cached, setCached] = useState<FamilyOverview | null>(null);
   const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
 
-  const cacheKey = `@familia-segura/overview_${userId || 'guest'}`;
+  // Versão no nome: depois de uma atualização do app, cache com formato antigo é ignorado (não quebra telas).
+  const cacheKey = `@familia-segura/overview_v${CACHE_VERSION}_${userId || 'guest'}`;
   const selectionKey = `@familia-segura/selected-child_${userId || 'guest'}`;
 
-  const { data: apiData, isLoading: apiLoading, isError, refetch } = useGetFamilyOverview({
+  const { data: apiData, isLoading: apiLoading, isError, error, refetch } = useGetFamilyOverview({
     query: {
       queryKey: getGetFamilyOverviewQueryKey(),
       enabled: !!isSignedIn,
@@ -190,7 +196,21 @@ export function AppProvider({ children }: PropsWithChildren) {
     if (apiData && userId) AsyncStorage.setItem(cacheKey, JSON.stringify(apiData)).catch(() => undefined);
   }, [apiData, cacheKey, userId]);
 
-  const overview = apiData ?? cached ?? undefined;
+  // 404 = a pessoa não participa mais da família (removida, família excluída): some o cache e volta à entrada.
+  // Só conta como "perdeu o vínculo" quem já tinha família aqui (no cadastro inicial o 404 é o normal).
+  const status = isError ? apiStatus(error) : undefined;
+  const hadFamily = useRef(false);
+  if (apiData || cached) hadFamily.current = true;
+  const membershipLost = status === 404;
+  useEffect(() => {
+    if (!membershipLost || !hadFamily.current) return;
+    hadFamily.current = false;
+    setCached(null);
+    void forgetSessionData();
+    router.replace('/(app)');
+  }, [membershipLost]);
+
+  const overview = membershipLost ? undefined : apiData ?? cached ?? undefined;
   const data = useMemo(() => mapOverview(overview, selectedChildId), [overview, selectedChildId]);
   const canEdit = data.role !== 'viewer';
 
@@ -199,17 +219,21 @@ export function AppProvider({ children }: PropsWithChildren) {
     AsyncStorage.setItem(selectionKey, childId).catch(() => undefined);
   }, [selectionKey]);
 
+  // "Sem conexão" só quando o problema é de rede/servidor; 4xx não é falta de internet.
+  const isOffline = isError && (status === undefined || status >= 500);
+
   const guard = useCallback(() => {
-    if (isError) { showApiError(null); return false; }
+    if (isOffline) { showApiError(null); return false; }
     if (!canEdit) { showApiError({ status: 403 }); return false; }
     if (!data.childId) return false;
     return true;
-  }, [isError, canEdit, data.childId]);
+  }, [isOffline, canEdit, data.childId]);
 
   const onDone = useMemo(() => ({ onSuccess: () => void refetch(), onError: (error: unknown) => showApiError(error) }), [refetch]);
 
+  // Toque duplo não manda duas alterações opostas (a segunda desfaria a primeira com o estado antigo).
   const toggleApp = useCallback((id: string) => {
-    if (!guard()) return;
+    if (updateAppRule.isPending || !guard()) return;
     const app = data.apps.find((a) => a.id === id);
     if (!app) return;
     const status = app.status === 'bloqueado' ? AppRuleUpdateStatus.allowed : AppRuleUpdateStatus.blocked;
@@ -229,7 +253,7 @@ export function AppProvider({ children }: PropsWithChildren) {
   }, [guard, data.childId, createGrant, onDone]);
 
   const toggleRoutine = useCallback((id: string) => {
-    if (!guard()) return;
+    if (updateRoutine.isPending || !guard()) return;
     const routine = data.routines.find((r) => r.id === id);
     if (!routine) return;
     updateRoutine.mutate({ routineId: id, data: { enabled: !routine.enabled } }, onDone);
@@ -242,7 +266,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     data,
     overview,
     isLoading: apiLoading && !cached,
-    isOffline: isError,
+    isOffline,
     canEdit,
     totalUsage,
     usagePercent: totalLimit ? Math.min(100, Math.round((totalUsage / totalLimit) * 100)) : 0,
@@ -252,7 +276,7 @@ export function AppProvider({ children }: PropsWithChildren) {
     addExtraTime,
     toggleRoutine,
     refetch: () => void refetch(),
-  }), [data, overview, apiLoading, cached, isError, canEdit, totalUsage, totalLimit, selectChild, toggleApp, setAppLimit, addExtraTime, toggleRoutine, refetch]);
+  }), [data, overview, apiLoading, cached, isOffline, canEdit, totalUsage, totalLimit, selectChild, toggleApp, setAppLimit, addExtraTime, toggleRoutine, refetch]);
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }

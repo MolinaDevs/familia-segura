@@ -7,24 +7,15 @@ import {
 } from '@/components/auth/AuthKit';
 
 import { goBack as navigateBack } from '@/lib/navigation';
+import { clerkErrorMessage, clerkFieldError } from '@/lib/clerkErrors';
 type Step = 'email' | 'code' | 'password';
 
+/** Na recuperação, "conta não encontrada" é dito com clareza (a pessoa precisa saber qual e-mail usou). */
 function errorMessage(error: unknown, fallback: string) {
-  const value = error as {
-    code?: string;
-    message?: string;
-    longMessage?: string;
-    errors?: Array<{ code?: string; message?: string; longMessage?: string }>;
-  };
-  const code = value.errors?.[0]?.code ?? value.code;
-  if (code === 'form_code_expired') return 'Este código expirou. Solicite um novo código para continuar.';
-  if (code === 'form_code_incorrect') return 'O código informado está incorreto.';
+  const value = error as { code?: string; errors?: Array<{ code?: string }> };
+  const code = value?.errors?.[0]?.code ?? value?.code;
   if (code === 'form_identifier_not_found') return 'Não encontramos uma conta com este e-mail.';
-  return value.errors?.[0]?.longMessage
-    ?? value.errors?.[0]?.message
-    ?? value.longMessage
-    ?? value.message
-    ?? fallback;
+  return clerkErrorMessage(error, fallback);
 }
 
 export default function ForgotPasswordPage() {
@@ -55,12 +46,12 @@ export default function ForgotPasswordPage() {
     try {
       const { error: createError } = await signIn.create({ identifier: normalizedEmail });
       if (createError) {
-        setLocalError(createError.longMessage || createError.message || 'Não foi possível localizar esta conta.');
+        setLocalError(errorMessage(createError, 'Não foi possível localizar esta conta.'));
         return;
       }
       const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
       if (sendError) {
-        setLocalError(sendError.longMessage || sendError.message || 'Não foi possível enviar o código.');
+        setLocalError(errorMessage(sendError, 'Não foi possível enviar o código.'));
         return;
       }
       setEmailAddress(normalizedEmail);
@@ -80,7 +71,7 @@ export default function ForgotPasswordPage() {
     try {
       const { error } = await signIn.resetPasswordEmailCode.verifyCode({ code: code.trim() });
       if (error) {
-        setLocalError(error.longMessage || error.message || 'Código inválido ou expirado.');
+        setLocalError(errorMessage(error, 'Código inválido ou expirado.'));
         return;
       }
       if (signIn.status !== 'needs_new_password') {
@@ -101,9 +92,7 @@ export default function ForgotPasswordPage() {
     });
     if (error) {
       setLocalError(
-        error.longMessage
-        || error.message
-        || 'Sua senha foi alterada, mas não foi possível abrir sua conta. Tente continuar novamente.',
+        errorMessage(error, 'Sua senha foi alterada, mas não foi possível abrir sua conta. Tente continuar novamente.'),
       );
       return false;
     }
@@ -118,6 +107,10 @@ export default function ForgotPasswordPage() {
     try {
       if (!passwordChanged) {
         if (!password || !passwordConfirmation) return;
+        if (password.length < 8) {
+          setLocalError('A senha precisa ter pelo menos 8 caracteres.');
+          return;
+        }
         if (password !== passwordConfirmation) {
           setLocalError('As senhas não coincidem.');
           return;
@@ -127,7 +120,7 @@ export default function ForgotPasswordPage() {
           signOutOfOtherSessions: true,
         });
         if (error) {
-          setLocalError(error.longMessage || error.message || 'Não foi possível alterar a senha.');
+          setLocalError(errorMessage(error, 'Não foi possível alterar a senha.'));
           return;
         }
         if (signIn.status !== 'complete') {
@@ -157,7 +150,7 @@ export default function ForgotPasswordPage() {
     try {
       const { error } = await signIn.resetPasswordEmailCode.sendCode();
       if (error) {
-        setLocalError(error.longMessage || error.message || 'Não foi possível reenviar o código.');
+        setLocalError(errorMessage(error, 'Não foi possível reenviar o código.'));
         return;
       }
       setNotice('Um novo código foi enviado.');
@@ -216,7 +209,7 @@ export default function ForgotPasswordPage() {
             textContentType="emailAddress"
             returnKeyType="send"
             onSubmitEditing={() => void sendCode()}
-            error={errors.fields.identifier?.message}
+            error={clerkFieldError(errors.fields.identifier)}
             testID="forgot-password-email"
           />
         ) : null}
@@ -234,7 +227,7 @@ export default function ForgotPasswordPage() {
             maxLength={6}
             returnKeyType="done"
             onSubmitEditing={() => void verifyCode()}
-            error={errors.fields.code?.message}
+            error={clerkFieldError(errors.fields.code)}
             style={styles.code}
             testID="forgot-password-code"
           />
@@ -251,7 +244,7 @@ export default function ForgotPasswordPage() {
               placeholder="Pelo menos 8 caracteres"
               autoComplete="new-password"
               textContentType="newPassword"
-              error={errors.fields.password?.message}
+              error={clerkFieldError(errors.fields.password)}
               testID="forgot-password-new-password"
             />
             <AuthField

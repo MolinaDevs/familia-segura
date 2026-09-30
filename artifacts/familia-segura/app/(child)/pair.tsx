@@ -66,7 +66,8 @@ export default function PairDeviceScreen() {
       const status = (err as { status?: number }).status;
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       setError(
-        status === 409 ? 'A família já está no limite de aparelhos. O responsável pode remover um aparelho antigo em Família.'
+        !status ? 'Sem conexão com o servidor. Confira a internet e tente de novo.'
+          : status === 409 ? 'A família já está no limite de aparelhos. O responsável pode remover um aparelho antigo em Família.'
           : status === 429 ? 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.'
           : 'Esse código não funcionou. Cada código vale 15 minutos e só uma vez: peça um novo ao responsável.',
       );

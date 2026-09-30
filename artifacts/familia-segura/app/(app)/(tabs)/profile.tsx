@@ -11,6 +11,7 @@ import { useFamily } from '@/context/AppContext';
 import { useSubscription } from '@/context/SubscriptionContext';
 import { useColors } from '@/hooks/useColors';
 import { textOn } from '@/lib/contrast';
+import { signOutCompletely } from '@/lib/session';
 import { showApiError } from '@/lib/apiErrors';
 import { openLegal } from '@/lib/legal';
 import { isStale } from '@/lib/deviceContact';
@@ -49,6 +50,7 @@ export default function FamilyScreen() {
             await deleteAccount.mutateAsync();
             const keys = (await AsyncStorage.getAllKeys()).filter((k) => k.startsWith('@familia-segura'));
             await AsyncStorage.multiRemove(keys);
+            // A conta já não existe no servidor (tokens de push apagados em cascata): só encerra a sessão.
             await signOut();
           } catch (error) {
             showApiError(error, 'Não foi possível excluir a conta.');
@@ -125,7 +127,7 @@ export default function FamilyScreen() {
           detail={isOwner ? 'Apaga a conta e todos os dados da família' : 'Apaga a sua conta e sai da família'} onPress={handleDelete} />
       </Card>
 
-      <Button label="Sair da conta" variant="secondary" icon="log-out" onPress={() => void signOut()} style={{ marginTop: 24 }} />
+      <Button label="Sair da conta" variant="secondary" icon="log-out" onPress={() => void signOutCompletely(signOut)} style={{ marginTop: 24 }} />
       {Platform.OS === 'web' && <Text style={[styles.empty, { color: colors.mutedForeground }]}>Versão web: use o app para parear aparelhos.</Text>}
     </Screen>
   );

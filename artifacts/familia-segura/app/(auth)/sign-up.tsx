@@ -9,6 +9,7 @@ import {
   AuthButton, AuthCard, AuthField, AuthHeader, AuthShell, AuthSwitch, DividerLabel, FormMessage, TrustNote,
 } from '@/components/auth/AuthKit';
 import { goBack } from '@/lib/navigation';
+import { clerkErrorMessage, clerkFieldError } from '@/lib/clerkErrors';
 
 export const useWarmUpBrowser = () => {
   useEffect(() => {
@@ -66,32 +67,39 @@ export default function SignUpPage() {
   const busy = loading || fetchStatus === 'fetching';
   const emailOk = EMAIL_RE.test(emailAddress.trim());
   const emailInvalid = emailTouched && emailAddress.trim().length > 0 && !emailOk;
+  // Mesmo mínimo do Clerk: a pessoa descobre antes de enviar, não depois.
+  const passwordOk = password.length >= 8;
+  const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown((value) => value - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
   const handleSubmit = async () => {
-    if (!isAuthLoaded || !emailOk || !password || busy) return;
+    if (!isAuthLoaded || !emailOk || !passwordOk || busy) return;
     setLoading(true);
     setLocalError(null);
     try {
       const { error } = await signUp.password({
-        emailAddress: emailAddress.trim(),
+        emailAddress: emailAddress.trim().toLowerCase(),
         password,
       });
 
       if (error) {
-        setLocalError(error.longMessage || error.message || 'Não foi possível criar a conta.');
-        setLoading(false);
+        setLocalError(clerkErrorMessage(error, 'Não foi possível criar a conta.'));
         return;
       }
 
-      await signUp.verifications.sendEmailCode();
-      setPendingVerification(true);
-    } catch (err: unknown) {
-      const clerkErrors = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors;
-      if (clerkErrors?.length) {
-        setLocalError(clerkErrors[0].longMessage || clerkErrors[0].message || 'Não foi possível criar a conta.');
-      } else {
-        setLocalError('Não foi possível criar a conta. Verifique sua conexão.');
+      const { error: sendError } = await signUp.verifications.sendEmailCode();
+      if (sendError) {
+        setLocalError(clerkErrorMessage(sendError, 'Não foi possível enviar o código de confirmação.'));
+        return;
       }
+      setPendingVerification(true);
+      setCooldown(30);
+    } catch (err: unknown) {
+      setLocalError(clerkErrorMessage(err, 'Não foi possível criar a conta. Verifique sua conexão.'));
     } finally {
       setLoading(false);
     }
@@ -103,7 +111,11 @@ export default function SignUpPage() {
     setLocalError(null);
     setNotice(null);
     try {
-      await signUp.verifications.verifyEmailCode({ code });
+      const { error } = await signUp.verifications.verifyEmailCode({ code });
+      if (error) {
+        setLocalError(clerkErrorMessage(error, 'Código inválido ou expirado.'));
+        return;
+      }
 
       if (signUp.status === 'complete') {
         await signUp.finalize({
@@ -113,26 +125,24 @@ export default function SignUpPage() {
         setLocalError('Não deu para confirmar. Confira o código e tente de novo.');
       }
     } catch (err: unknown) {
-      const clerkErrors = (err as { errors?: Array<{ longMessage?: string; message?: string }> }).errors;
-      if (clerkErrors?.length) {
-        setLocalError(clerkErrors[0].longMessage || clerkErrors[0].message || 'Código inválido ou expirado.');
-      } else {
-        setLocalError('Código inválido ou expirado.');
-      }
+      setLocalError(clerkErrorMessage(err, 'Código inválido ou expirado.'));
     } finally {
       setLoading(false);
     }
   };
 
   const resend = async () => {
+    if (busy || cooldown > 0) return;
     setLoading(true);
     setLocalError(null);
     setNotice(null);
     try {
-      await signUp.verifications.sendEmailCode();
+      const { error } = await signUp.verifications.sendEmailCode();
+      if (error) { setLocalError(clerkErrorMessage(error, 'Não foi possível reenviar o código.')); return; }
       setNotice('Enviamos um novo código.');
-    } catch {
-      setLocalError('Não foi possível reenviar o código.');
+      setCooldown(30);
+    } catch (err: unknown) {
+      setLocalError(clerkErrorMessage(err, 'Não foi possível reenviar o código.'));
     } finally {
       setLoading(false);
     }
@@ -160,7 +170,7 @@ export default function SignUpPage() {
           {notice ? <FormMessage tone="info">{notice}</FormMessage> : null}
           {localError ? <FormMessage tone="error">{localError}</FormMessage> : null}
           <AuthButton label="Confirmar conta" onPress={() => void handleVerify()} loading={busy} disabled={code.length < 6} testID="signup-verify-button" />
-          <AuthButton label="Reenviar código" variant="quiet" onPress={() => void resend()} disabled={busy} testID="signup-resend" />
+          <AuthButton label={cooldown > 0 ? `Reenviar código (${cooldown}s)` : 'Reenviar código'} variant="quiet" onPress={() => void resend()} disabled={busy || cooldown > 0} testID="signup-resend" />
         </AuthCard>
         <TrustNote />
       </AuthShell>
@@ -187,7 +197,7 @@ export default function SignUpPage() {
           returnKeyType="next"
           onChangeText={(text) => { setEmailAddress(text); setLocalError(null); }}
           onBlur={() => setEmailTouched(true)}
-          error={emailInvalid ? 'Confira o e-mail: parece faltar algo.' : errors.fields.emailAddress?.message}
+          error={emailInvalid ? 'Confira o e-mail: parece faltar algo.' : clerkFieldError(errors.fields.emailAddress)}
           testID="signup-email"
         />
 
@@ -203,7 +213,7 @@ export default function SignUpPage() {
             returnKeyType="go"
             onChangeText={(text) => { setPassword(text); setLocalError(null); }}
             onSubmitEditing={() => void handleSubmit()}
-            error={errors.fields.password?.message}
+            error={password.length > 0 && !passwordOk ? 'Use pelo menos 8 caracteres.' : clerkFieldError(errors.fields.password)}
             helper="Misture letras, números e símbolos."
             testID="signup-password"
           />
@@ -212,7 +222,7 @@ export default function SignUpPage() {
 
         {localError ? <FormMessage tone="error">{localError}</FormMessage> : null}
 
-        <AuthButton label="Criar conta" onPress={() => void handleSubmit()} loading={busy} disabled={!emailOk || !password} testID="signup-button" />
+        <AuthButton label="Criar conta" onPress={() => void handleSubmit()} loading={busy} disabled={!emailOk || !passwordOk} testID="signup-button" />
 
         <DividerLabel>ou continue com</DividerLabel>
         <SocialButtons />

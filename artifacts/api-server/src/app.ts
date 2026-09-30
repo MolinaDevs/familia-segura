@@ -41,7 +41,7 @@ app.use(
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 // Apps nativos não enviam Origin; navegadores só são aceitos se listados em CORS_ORIGINS.
 const allowedOrigins = (process.env.CORS_ORIGINS ?? "").split(",").map((o) => o.trim()).filter(Boolean);
-app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)) }));
+app.use(cors({ origin: (origin, cb) => cb(null, !origin || allowedOrigins.includes(origin)), exposedHeaders: ["X-Request-Id"] }));
 app.set("trust proxy", 1);
 app.disable("x-powered-by");
 app.use((_req, res, next) => {
