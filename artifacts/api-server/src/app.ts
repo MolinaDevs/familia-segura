@@ -85,9 +85,14 @@ app.use("/api", rateLimit({
 }));
 // Inventário Android (até 600 apps) passa do limite padrão de 100 KB. A API só aceita JSON.
 app.use(express.json({ limit: "512kb" }));
+// Chave pública do Clerk: a configurada. Derivar do Host do pedido (modelo do Replit, com proxy do Clerk no mesmo
+// domínio) só com CLERK_KEY_FROM_HOST=true — fora dele, com chave de produção, montaria um domínio inexistente.
+const keyFromHost = process.env.CLERK_KEY_FROM_HOST === "true";
 app.use(
   clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(getClerkProxyHost(req) ?? "", process.env.CLERK_PUBLISHABLE_KEY),
+    publishableKey: keyFromHost
+      ? publishableKeyFromHost(getClerkProxyHost(req) ?? "", process.env.CLERK_PUBLISHABLE_KEY)
+      : process.env.CLERK_PUBLISHABLE_KEY,
   })),
 );
 

@@ -22,6 +22,8 @@ timeoutMs = 20000
 [userenv]
 
 [userenv.shared]
+# No Replit o proxy do Clerk fica no mesmo domínio da API: chave derivada do Host (artifacts/api-server/src/app.ts).
+CLERK_KEY_FROM_HOST = "true"
 EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY = "goog_yAqlztcMGMxHdxVnnNfyhlztrLy"
 EXPO_PUBLIC_REVENUECAT_IOS_API_KEY = "appl_LZRBMzqNBosjGVlOKEJrayEcsti"
 EXPO_PUBLIC_REVENUECAT_TEST_API_KEY = "test_pRKLGFDorIsnwVPwagHiNVgbHuF"
