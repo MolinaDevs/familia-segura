@@ -7,7 +7,7 @@ services:
     name: familia-segura-api
     runtime: node
     region: virginia
-    plan: starter            # plano pago: o grátis desliga quando parado (quebraria alertas e sincronização)
+    plan: 0.5c-512mb         # 0,5 CPU / 512 MB, pago: o grátis desliga quando parado (quebraria alertas e sincronização)
     branch: main
     autoDeployTrigger: checksPass   # só publica depois que o CI do GitHub passar
     buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @workspace/api-server run build
@@ -50,6 +50,6 @@ databases:
     databaseName: familia_segura
     user: familia
     region: virginia
-    plan: basic-256mb
+    plan: 0.1c-256mb         # menor plano pago (com backup); subir quando o banco crescer
     postgresMajorVersion: "16"
     ipAllowList: []          # sem acesso pela internet: só a API, pela rede privada do Render
