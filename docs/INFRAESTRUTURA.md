@@ -80,8 +80,8 @@ migrar depois, se necessário, é simples: a API é um servidor Node comum e o b
    Cloudflare.
 2. **Banco**: criar o Postgres no Render (plano com backup); copiar a URL interna.
 3. **API**: criar o Web Service no Render ligado ao GitHub (branch `main`), com:
-   - instalação/build: `corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @workspace/api-server run build`
-   - antes de cada deploy: `pnpm --filter @workspace/db run migrate`
+   - instalação/build: `corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter @workspace/api-server run build`
+   - antes de cada deploy: `corepack pnpm --filter @workspace/db run migrate`
    - início: `node --enable-source-maps artifacts/api-server/dist/index.mjs`
    - checagem de saúde: `/api/readyz`
    - variáveis: as de `docs/ACOES_DO_DONO.md` §4.1 (`NODE_ENV=production`, `DATABASE_URL`,

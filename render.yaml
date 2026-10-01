@@ -10,13 +10,16 @@ services:
     plan: 0.5c-512mb         # 0,5 CPU / 512 MB, pago: o grátis desliga quando parado (quebraria alertas e sincronização)
     branch: main
     autoDeployTrigger: checksPass   # só publica depois que o CI do GitHub passar
-    buildCommand: corepack enable && pnpm install --frozen-lockfile --prod=false && pnpm --filter @workspace/api-server run build
-    preDeployCommand: pnpm --filter @workspace/db run migrate   # migrações antes de a versão nova receber tráfego
+    # "corepack pnpm" usa o pnpm fixado no package.json sem instalar atalho em /usr/bin (somente leitura no Render).
+    buildCommand: corepack pnpm install --frozen-lockfile --prod=false && corepack pnpm --filter @workspace/api-server run build
+    preDeployCommand: corepack pnpm --filter @workspace/db run migrate   # migrações antes de a versão nova receber tráfego
     startCommand: node --enable-source-maps artifacts/api-server/dist/index.mjs
     healthCheckPath: /api/readyz
     envVars:
       - key: NODE_VERSION
         value: "24"
+      - key: COREPACK_ENABLE_DOWNLOAD_PROMPT   # baixa o pnpm sem pedir confirmação
+        value: "0"
       - key: NODE_ENV
         value: production
       - key: TRUST_PROXY_HOPS
