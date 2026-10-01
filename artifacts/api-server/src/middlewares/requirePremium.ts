@@ -1,4 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
+import { logger } from "../lib/logger";
 
 /**
  * Verificação do entitlement Premium direto na API REST v2 da RevenueCat.
@@ -63,6 +64,52 @@ function remember(userId: string, entry: CachedEntitlement) {
 export function clearEntitlementCache() {
   accessCache.clear();
   inFlight.clear();
+  resolvedEntitlement = null;
+}
+
+/**
+ * A API v2 identifica o entitlement pelo id interno ("entl…"), nunca pelo nome ("premium") que o painel e o
+ * SDK mostram. O id vem de REVENUECAT_PREMIUM_ENTITLEMENT_ID ou é descoberto pelo nome na lista de
+ * entitlements do projeto (a chave precisa de leitura em "Project configuration"); fica 1 h em memória.
+ */
+const ENTITLEMENT_ID_TTL_MS = 60 * 60 * 1000;
+const ENTITLEMENT_ID_RETRY_MS = 5 * 60 * 1000;
+let resolvedEntitlement: { id: string | null; at: number } | null = null;
+
+async function premiumEntitlementId(projectId: string, secretKey: string): Promise<string | null> {
+  const configured = process.env.REVENUECAT_PREMIUM_ENTITLEMENT_ID;
+  if (configured) return configured;
+  const now = Date.now();
+  if (resolvedEntitlement && now - resolvedEntitlement.at < (resolvedEntitlement.id ? ENTITLEMENT_ID_TTL_MS : ENTITLEMENT_ID_RETRY_MS)) {
+    return resolvedEntitlement.id;
+  }
+  let id: string | null = null;
+  try {
+    const response = await fetch(`${REVENUECAT_API}/v2/projects/${encodeURIComponent(projectId)}/entitlements?limit=100`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${secretKey}`, Accept: "application/json" },
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+    });
+    if (response.ok) {
+      const payload = (await response.json()) as { items?: Array<{ id?: string; lookup_key?: string }> };
+      id = payload.items?.find((item) => item.lookup_key === PREMIUM_ENTITLEMENT)?.id ?? null;
+      if (!id) logger.warn({ entitlement: PREMIUM_ENTITLEMENT }, "RevenueCat: entitlement não encontrado no projeto; ninguém será Premium");
+    } else {
+      logger.warn({ status: response.status },
+        "RevenueCat: não foi possível listar os entitlements (dê leitura de Project configuration à chave ou defina REVENUECAT_PREMIUM_ENTITLEMENT_ID)");
+    }
+  } catch (err) {
+    logger.warn({ err: err instanceof Error ? err.message : String(err) }, "RevenueCat: falha ao buscar o id do entitlement");
+  }
+  resolvedEntitlement = { id, at: now };
+  return id;
+}
+
+/** O item é o Premium? Aceita o nome (lookup_key) e o id interno. */
+function isPremiumEntitlement(item: { id?: string; entitlement_id?: string; lookup_key?: string }, entitlementId: string | null) {
+  if (item.lookup_key === PREMIUM_ENTITLEMENT) return true;
+  const id = item.entitlement_id ?? item.id;
+  return Boolean(id) && (id === PREMIUM_ENTITLEMENT || id === entitlementId);
 }
 
 /**
@@ -74,11 +121,9 @@ function realPurchasesOnly(): boolean {
   return process.env.NODE_ENV === "production" && process.env.PREMIUM_ACCEPT_SANDBOX !== "true";
 }
 
-const matchesEntitlement = (item: { id?: string; lookup_key?: string }) =>
-  item.lookup_key === PREMIUM_ENTITLEMENT || item.id === PREMIUM_ENTITLEMENT;
 
 /** Há assinatura real (loja de verdade, ambiente de produção) que dá acesso ao Premium? */
-async function hasRealSubscription(projectId: string, secretKey: string, userId: string) {
+async function hasRealSubscription(projectId: string, secretKey: string, userId: string, entitlementId: string | null) {
   const response = await fetch(
     `${REVENUECAT_API}/v2/projects/${encodeURIComponent(projectId)}/customers/${encodeURIComponent(userId)}/subscriptions`,
     {
@@ -94,7 +139,7 @@ async function hasRealSubscription(projectId: string, secretKey: string, userId:
     sub.gives_access === true
     && sub.environment === "production"
     && sub.store !== "test_store"
-    && (sub.entitlements?.items ?? []).some(matchesEntitlement));
+    && (sub.entitlements?.items ?? []).some((item) => isPremiumEntitlement(item, entitlementId)));
 }
 
 export function premiumBypassEnabled(): boolean {
@@ -148,11 +193,10 @@ async function checkEntitlement(projectId: string, secretKey: string, userId: st
     }
     if (!response.ok) throw new Error(`RevenueCat entitlement check failed (${response.status})`);
     const payload = (await response.json()) as ActiveEntitlementsResponse;
-    const entitlement = payload.items?.find(
-      (item) => item.lookup_key === PREMIUM_ENTITLEMENT || item.entitlement_id === PREMIUM_ENTITLEMENT,
-    );
+    const entitlementId = payload.items?.length ? await premiumEntitlementId(projectId, secretKey) : null;
+    const entitlement = payload.items?.find((item) => isPremiumEntitlement(item, entitlementId));
     // Em produção o direito precisa vir de assinatura real (loja de verdade, ambiente de produção).
-    if (entitlement && realPurchasesOnly() && !(await hasRealSubscription(projectId, secretKey, userId))) {
+    if (entitlement && realPurchasesOnly() && !(await hasRealSubscription(projectId, secretKey, userId, entitlementId))) {
       remember(userId, { active: false, checkedAt: now, validUntil: now });
       return false;
     }

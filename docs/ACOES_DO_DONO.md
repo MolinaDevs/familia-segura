@@ -44,7 +44,9 @@ Siga `docs/TESTE_BETA.md`.
 - `DATABASE_URL` com `?sslmode=require` (conexão criptografada com o banco).
 - `TRUST_PROXY_HOPS`: `1` atrás de proxy/balanceador; `0` sem proxy.
 - `CORS_ORIGINS`: só o domínio web oficial (ou vazio).
-- `REVENUECAT_PROJECT_ID` e `REVENUECAT_SECRET_API_KEY` (sem eles todos ficam no plano grátis).
+- `REVENUECAT_PROJECT_ID` e `REVENUECAT_SECRET_API_KEY` (sem eles todos ficam no plano grátis). A chave secreta v2
+  precisa de leitura em **Customer information** e em **Project configuration** (o servidor descobre o id interno do
+  entitlement `premium`); alternativa: definir `REVENUECAT_PREMIUM_ENTITLEMENT_ID` com o id `entl…`.
 - `PREMIUM_ACCEPT_SANDBOX=true` **só durante o beta** (compras de teste do TestFlight/teste fechado); no lançamento, `false` ou ausente.
 - `DB_POOL_MAX` (padrão 10) × número de instâncias abaixo do limite de conexões do Postgres.
 - Nunca definir `DEV_AUTH` nem `PREMIUM_BYPASS`.

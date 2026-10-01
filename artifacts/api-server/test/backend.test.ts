@@ -145,4 +145,26 @@ describe("backend (revisão 2026-09-30)", () => {
     subs = subscription("play_store", "production");
     expect(await hasPremium("assinante")).toBe(true);
   });
+
+  it("S18: reconhece o Premium pelo id interno do entitlement (formato real da API v2)", async () => {
+    setPremium(false);
+    vi.stubEnv("REVENUECAT_PROJECT_ID", "proj");
+    vi.stubEnv("REVENUECAT_SECRET_API_KEY", "sk_test");
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      calls.push(url);
+      if (url.includes("/entitlements?")) {
+        return new Response(JSON.stringify({ items: [{ id: "entl_outro", lookup_key: "extra" }, { id: "entlabc123", lookup_key: "premium" }] }), { status: 200 });
+      }
+      const active = url.includes("/customers/assinante/") ? [{ object: "customer.active_entitlement", entitlement_id: "entlabc123", expires_at: null }]
+        : url.includes("/customers/outro_direito/") ? [{ object: "customer.active_entitlement", entitlement_id: "entl_outro", expires_at: null }]
+        : [];
+      return new Response(JSON.stringify({ items: active }), { status: 200 });
+    }));
+    expect(await hasPremium("assinante")).toBe(true);
+    expect(await hasPremium("outro_direito")).toBe(false);
+    expect(await hasPremium("gratis")).toBe(false);
+    // O id é buscado uma vez só e reaproveitado.
+    expect(calls.filter((url) => url.includes("/entitlements?"))).toHaveLength(1);
+  });
 });
