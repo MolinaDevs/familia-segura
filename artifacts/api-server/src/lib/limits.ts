@@ -1,6 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db, membershipsTable, usersTable } from "@workspace/db";
 import { hasPremium } from "../middlewares/requirePremium";
+import { logger } from "./logger";
 
 /**
  * Limites por plano. Requisito do dono: até 10 crianças e 10 aparelhos por família no Premium.
@@ -21,6 +22,14 @@ export const PLAN_LIMITS = {
 
 export type Plan = keyof typeof PLAN_LIMITS;
 
+let lastPlanWarning = 0;
+/** No máximo um aviso por minuto (a verificação roda a cada sincronização). */
+function warnPlanCheckFailed(err: unknown) {
+  if (Date.now() - lastPlanWarning < 60_000) return;
+  lastPlanWarning = Date.now();
+  logger.warn({ err: err instanceof Error ? err.message : String(err) }, "Verificação de assinatura (RevenueCat) falhou; aplicando plano gratuito");
+}
+
 /** O plano vem da assinatura do titular: co-responsáveis herdam o Premium da família. */
 export async function familyPlan(familyId: string): Promise<Plan> {
   const [owner] = await db.select({ clerkUserId: usersTable.clerkUserId })
@@ -30,8 +39,10 @@ export async function familyPlan(familyId: string): Promise<Plan> {
   if (!owner) return "free";
   try {
     return (await hasPremium(owner.clerkUserId)) ? "premium" : "free";
-  } catch {
-    // Falha temporária na verificação: não derruba a família, aplica o plano gratuito para novas criações.
+  } catch (err) {
+    // Falha na verificação: não derruba a família, aplica o plano gratuito — mas deixa rastro (chave ou projeto
+    // errado na RevenueCat aparecia só como "todo mundo no grátis").
+    warnPlanCheckFailed(err);
     return "free";
   }
 }
