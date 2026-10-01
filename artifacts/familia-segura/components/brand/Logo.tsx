@@ -3,6 +3,7 @@ import {
   AccessibilityInfo, Animated, Easing, Image, StyleSheet, Text, View, type StyleProp, type ViewStyle,
 } from 'react-native';
 import { useColors } from '@/hooks/useColors';
+import { oneLine, spaced } from '@/lib/text';
 
 /** Emblema do logo (escudo, casa e família). Fonte: assets/brand/emblem.png (fundo creme do logo). */
 const EMBLEM = require('@/assets/brand/emblem.png');
@@ -70,13 +71,20 @@ export function Logo({ size = 40, stacked, tagline }: { size?: number; stacked?:
   return (
     <View style={stacked ? styles.stacked : styles.row} accessible accessibilityRole="header" accessibilityLabel="Família Segura">
       <Emblem size={size} />
-      <View style={stacked ? { alignItems: 'center' } : null}>
-        <Text style={[styles.word, { color: colors.navy, fontSize, lineHeight: fontSize * 1.1, textAlign: stacked ? 'center' : 'left' }]}>
-          {stacked ? 'FAMÍLIA\nSEGURA' : 'FAMÍLIA SEGURA'}
-        </Text>
+      {/* Empilhado: largura do pai; em linha: uma linha só com folga no fim (medida curta no Android, lib/text.ts). */}
+      <View style={stacked ? { alignSelf: 'stretch' } : null}>
+        {stacked ? (
+          <Text textBreakStrategy="simple" style={[styles.word, { color: colors.navy, fontSize, lineHeight: fontSize * 1.1, textAlign: 'center' }]}>
+            {'FAMÍLIA\nSEGURA'}
+          </Text>
+        ) : (
+          <Text {...oneLine} style={[styles.word, { color: colors.navy, fontSize, lineHeight: fontSize * 1.1 }]}>
+            {spaced('FAMÍLIA SEGURA')}
+          </Text>
+        )}
         {tagline ? (
-          <Text style={[styles.tagline, { color: colors.mutedForeground, marginTop: stacked ? 10 : 2 }]}>
-            CONTROLE PARENTAL · IPHONE E ANDROID
+          <Text {...oneLine} style={[styles.tagline, { color: colors.mutedForeground, marginTop: stacked ? 10 : 2, textAlign: stacked ? 'center' : 'left' }]}>
+            {stacked ? 'CONTROLE PARENTAL · IPHONE E ANDROID' : spaced('CONTROLE PARENTAL · IPHONE E ANDROID')}
           </Text>
         ) : null}
       </View>
@@ -86,7 +94,7 @@ export function Logo({ size = 40, stacked, tagline }: { size?: number; stacked?:
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  stacked: { alignItems: 'center', gap: 16 },
+  stacked: { alignItems: 'center', alignSelf: 'stretch', gap: 16 },
   word: { fontFamily: 'Montserrat_800ExtraBold', letterSpacing: 0.4 },
   tagline: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 10.5, letterSpacing: 1.6 },
 });

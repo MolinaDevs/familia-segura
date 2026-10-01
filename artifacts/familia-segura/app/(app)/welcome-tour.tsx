@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
   skip: { fontFamily: 'NunitoSans_700Bold', fontSize: 15 },
   body: { flex: 1, justifyContent: 'center', alignItems: 'flex-start', gap: 12 },
   iconBubble: { width: 96, height: 96, borderRadius: 30, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  step: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 12, letterSpacing: 1.6, marginTop: 8 },
+  step: { alignSelf: 'stretch', fontFamily: 'NunitoSans_800ExtraBold', fontSize: 12, letterSpacing: 1.6, marginTop: 8 },
   title: { fontFamily: 'Montserrat_700Bold', fontSize: 26, lineHeight: 32, letterSpacing: -0.4 },
   text: { fontFamily: 'NunitoSans_500Medium', fontSize: 16.5, lineHeight: 25 },
   actions: { gap: 6 },

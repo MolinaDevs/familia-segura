@@ -76,7 +76,7 @@ export default function MembersScreen() {
           <Text style={[styles.detail, { color: colors.mutedForeground }]}>{ROLE_DETAIL[role]}</Text>
           {invite ? (
             <Card style={{ alignItems: 'center', gap: 8, marginTop: 12 }}>
-              <Text selectable style={[styles.code, { color: colors.foreground }]}>{invite.code}</Text>
+              <Text selectable numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6} style={[styles.code, { color: colors.foreground }]}>{invite.code}</Text>
               <Text style={[styles.detail, { color: colors.mutedForeground }]}>Válido até {new Date(invite.expiresAt).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} · uso único</Text>
               <Button label="Compartilhar convite" icon="share-2" variant="secondary" style={{ alignSelf: 'stretch' }}
                 onPress={() => void Share.share({ message: `Entre na nossa família no Família Segura: instale o app, crie sua conta e use o convite ${invite.code}` })} />
@@ -98,5 +98,5 @@ export default function MembersScreen() {
 const styles = StyleSheet.create({
   chips: { flexDirection: 'row', gap: 8 },
   detail: { fontFamily: 'NunitoSans_400Regular', fontSize: 13, lineHeight: 19, marginTop: 8 },
-  code: { fontFamily: 'Montserrat_700Bold', fontSize: 30, letterSpacing: 3 },
+  code: { alignSelf: 'stretch', textAlign: 'center', fontFamily: 'Montserrat_700Bold', fontSize: 30, letterSpacing: 3 },
 });

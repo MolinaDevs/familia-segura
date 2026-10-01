@@ -3,14 +3,19 @@ import { View, ActivityIndicator, Pressable, StyleSheet, Text } from 'react-nati
 import { getGetFamilyOverviewQueryKey, useGetFamilyOverview } from '@workspace/api-client-react';
 import { useColors } from '@/hooks/useColors';
 import { BrandLoading } from '@/components/brand/BrandLoading';
+import { useAuth } from '@/lib/auth';
+import { signOutCompletely } from '@/lib/session';
 
 export default function AppGateway() {
   const colors = useColors();
-  const { data, isLoading, error, refetch, isFetching } = useGetFamilyOverview({
+  const { signOut } = useAuth();
+  const { data, isPending, error, refetch, isFetching } = useGetFamilyOverview({
     query: { queryKey: getGetFamilyOverviewQueryKey(), staleTime: 30_000 },
   });
 
-  if (isLoading) {
+  // isPending (e não isLoading): pedido em pausa — sem foco/sem rede no meio das tentativas — ainda é "carregando".
+  // Sem isso, a pausa parecia "sem família" e a pessoa caía no cadastro inicial.
+  if (isPending) {
     return <BrandLoading detail="Carregando sua família..." />;
   }
 
@@ -20,12 +25,19 @@ export default function AppGateway() {
     return <Redirect href="/(app)/onboarding" />;
   }
 
+  // 401/403 com a pessoa logada: o servidor não aceitou a sessão (não é falta de internet).
+  const sessionRejected = errorStatus === 401 || errorStatus === 403;
+
   if (error) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>Não foi possível carregar sua família</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          {sessionRejected ? 'Sua sessão não foi reconhecida' : 'Não foi possível carregar sua família'}
+        </Text>
         <Text style={[styles.message, { color: colors.mutedForeground }]}>
-          Verifique sua conexão. Nenhuma configuração foi alterada.
+          {sessionRejected
+            ? 'Entre de novo para continuar. Nenhuma configuração foi alterada.'
+            : 'Verifique sua conexão. Nenhuma configuração foi alterada.'}
         </Text>
         <Pressable
           testID="gateway-retry"
@@ -37,6 +49,11 @@ export default function AppGateway() {
             <Text style={[styles.retryText, { color: colors.primaryForeground }]}>Tentar novamente</Text>
           )}
         </Pressable>
+        {sessionRejected ? (
+          <Pressable testID="gateway-sign-out" accessibilityRole="button" hitSlop={10} onPress={() => void signOutCompletely(signOut)}>
+            <Text style={[styles.signOut, { color: colors.primary }]}>Sair e entrar de novo</Text>
+          </Pressable>
+        ) : null}
       </View>
     );
   }
@@ -55,4 +72,5 @@ const styles = StyleSheet.create({
   retry: { height: 48, minWidth: 180, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginTop: 8 },
   retryText: { fontFamily: 'NunitoSans_600SemiBold', fontSize: 14 },
   pressed: { opacity: 0.72 },
+  signOut: { fontFamily: 'NunitoSans_700Bold', fontSize: 14, paddingVertical: 10 },
 });

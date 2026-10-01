@@ -81,7 +81,7 @@ export default function PairDeviceScreen() {
       <SectionTitle>Código para {data.childName}</SectionTitle>
       {code && !expired ? (
         <Card style={{ alignItems: 'center', gap: 8 }}>
-          <Text accessibilityLabel={`Código ${code.code.split('').join(' ')}`} style={[styles.code, { color: colors.foreground }]} selectable>{code.code}</Text>
+          <Text accessibilityLabel={`Código ${code.code.split('').join(' ')}`} style={[styles.code, { color: colors.foreground }]} selectable numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.6}>{code.code}</Text>
           <Text style={[styles.expiry, { color: colors.mutedForeground }]}>Válido por {mm}:{ss} · uso único</Text>
           <Button label="Compartilhar código" variant="secondary" icon="share-2" onPress={() => void Share.share({ message: `Código do Família Segura para ${code.childName}: ${code.code}` })} style={{ alignSelf: 'stretch', marginTop: 8 }} />
         </Card>
@@ -102,6 +102,6 @@ const styles = StyleSheet.create({
   stepNum: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center' },
   stepNumText: { fontFamily: 'NunitoSans_700Bold', fontSize: 13 },
   stepText: { flex: 1, fontFamily: 'NunitoSans_400Regular', fontSize: 14, lineHeight: 20 },
-  code: { fontFamily: 'Montserrat_700Bold', fontSize: 38, letterSpacing: 4 },
+  code: { alignSelf: 'stretch', textAlign: 'center', fontFamily: 'Montserrat_700Bold', fontSize: 38, letterSpacing: 4 },
   expiry: { fontFamily: 'NunitoSans_500Medium', fontSize: 13 },
 });

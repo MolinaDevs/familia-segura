@@ -1,3 +1,4 @@
+import { oneLine, spaced } from '@/lib/text';
 import { router } from 'expo-router';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -42,7 +43,7 @@ export function PremiumBadge() {
   return (
     <View style={[styles.badge, { backgroundColor: colors.peachSoft }]}>
       <Icon name="star" size={11} color={colors.accent} weight="fill" />
-      <Text style={[styles.badgeText, { color: colors.accent }]}>PREMIUM</Text>
+      <Text {...oneLine} style={[styles.badgeText, { color: colors.accent }]}>{spaced('PREMIUM')}</Text>
     </View>
   );
 }

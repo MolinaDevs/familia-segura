@@ -38,8 +38,10 @@ export function BrandLoading({ title, detail, action, showProgress = true }: {
     <BrandBackground>
       <View style={styles.center}>
         <BreathingEmblem size={150} />
-        <Text style={[styles.word, { color: colors.navy }]}>{'FAMÍLIA\nSEGURA'}</Text>
-        <Text style={[styles.tagline, { color: colors.mutedForeground }]}>CONTROLE PARENTAL · IPHONE E ANDROID</Text>
+        <Text textBreakStrategy="simple" style={[styles.word, { color: colors.navy }]}>{'FAMÍLIA\nSEGURA'}</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} textBreakStrategy="simple" style={[styles.tagline, { color: colors.mutedForeground }]}>
+          CONTROLE PARENTAL · IPHONE E ANDROID
+        </Text>
         <View style={styles.status}>
           {showProgress ? <SlideBar /> : null}
           {title ? <Text accessibilityLiveRegion="polite" style={[styles.title, { color: colors.foreground }]}>{title}</Text> : null}
@@ -53,8 +55,9 @@ export function BrandLoading({ title, detail, action, showProgress = true }: {
 
 const styles = StyleSheet.create({
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  word: { fontFamily: 'Montserrat_800ExtraBold', fontSize: 30, lineHeight: 33, letterSpacing: 0.6, textAlign: 'center', marginTop: 20 },
-  tagline: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 11, letterSpacing: 1.8, marginTop: 10 },
+  // Largura do pai (não a medida do texto): no Android a medida com espaçamento entre letras sai curta (lib/text.ts).
+  word: { alignSelf: 'stretch', fontFamily: 'Montserrat_800ExtraBold', fontSize: 30, lineHeight: 33, letterSpacing: 0.6, textAlign: 'center', marginTop: 20 },
+  tagline: { alignSelf: 'stretch', textAlign: 'center', fontFamily: 'NunitoSans_800ExtraBold', fontSize: 11, letterSpacing: 1.8, marginTop: 10 },
   status: { alignItems: 'center', gap: 10, marginTop: 36, minHeight: 90, maxWidth: 320 },
   track: { width: 160, height: 6, borderRadius: 3, overflow: 'hidden' },
   thumb: { width: 64, height: 6, borderRadius: 3 },

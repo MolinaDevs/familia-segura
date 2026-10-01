@@ -1,3 +1,4 @@
+import { oneLine, spaced } from '@/lib/text';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import mobileAds, { BannerAd, BannerAdSize, MaxAdContentRating, TestIds } from 'react-native-google-mobile-ads';
@@ -44,7 +45,7 @@ export function AdSlot() {
   if (!ready) return null;
   return (
     <View style={[styles.slot, { borderColor: colors.border }]} testID="ad-slot">
-      <Text style={[styles.label, { color: colors.mutedForeground }]}>Publicidade</Text>
+      <Text {...oneLine} style={[styles.label, { color: colors.mutedForeground }]}>{spaced('Publicidade')}</Text>
       <BannerAd
         unitId={unitId}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}

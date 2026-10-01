@@ -1,3 +1,4 @@
+import { oneLine, spaced } from '@/lib/text';
 import { Redirect, useRouter } from 'expo-router';
 import { useAuth } from '@/lib/auth';
 import React, { useEffect, useRef, useState } from 'react';
@@ -101,7 +102,7 @@ export default function Index() {
         <Animated.View style={rise[2]}>
           <View style={[styles.seal, { backgroundColor: colors.peachSoft }]}>
             <Icon name="shield" size={13} color={colors.accent} />
-            <Text style={[styles.sealText, { color: colors.accent }]}>ALINHADO AO ECA DIGITAL E À LGPD</Text>
+            <Text {...oneLine} style={[styles.sealText, { color: colors.accent }]}>{spaced('ALINHADO AO ECA DIGITAL E À LGPD')}</Text>
           </View>
           <Text accessibilityRole="header" style={[styles.title, { color: colors.foreground }]}>
             A vida digital da família, combinada e protegida
