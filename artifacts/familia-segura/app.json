@@ -2,6 +2,7 @@
   "expo": {
     "name": "Família Segura",
     "slug": "familia-segura",
+    "owner": "murilomolina1980s-team",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -140,6 +141,11 @@
       "typedRoutes": true,
       "reactCompiler": true
     },
-    "description": "Controle parental para iPhone e Android: limite o tempo de cada app, pause tudo na hora de dormir e aprove os downloads, com transparência para a criança."
+    "description": "Controle parental para iPhone e Android: limite o tempo de cada app, pause tudo na hora de dormir e aprove os downloads, com transparência para a criança.",
+    "extra": {
+      "eas": {
+        "projectId": "1fd325cc-9fce-408a-abe6-d93cda0de58b"
+      }
+    }
   }
 }
