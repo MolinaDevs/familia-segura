@@ -36,6 +36,9 @@ services:
         sync: false
       - key: REVENUECAT_SECRET_API_KEY
         sync: false
+      # Id interno do entitlement "premium" (não é segredo): a API v2 da RevenueCat só devolve este id.
+      - key: REVENUECAT_PREMIUM_ENTITLEMENT_ID
+        value: entlfc138e56ed
       - key: LEGAL_CONTROLLER_NAME
         sync: false
       - key: LEGAL_CONTROLLER_CNPJ
