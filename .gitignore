@@ -62,3 +62,6 @@ artifacts/familia-segura/android/
 
 # Configuração local de pré-visualização
 .claude/
+
+# Visual Studio
+.vs/
