@@ -41,3 +41,8 @@ yarn-error.*
 .vercel
 
 .env
+
+# Firebase (vem do EAS; não versionar em repositório público)
+google-services.json
+GoogleService-Info.plist
+*-firebase-adminsdk-*.json
