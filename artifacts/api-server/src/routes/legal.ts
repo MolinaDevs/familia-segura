@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Response } from "express";
 
 const router: IRouter = Router();
-const updatedAt = "24 de setembro de 2026";
+const updatedAt = "1º de outubro de 2026";
 
 type LegalPage = {
   title: string;
@@ -13,6 +13,8 @@ type LegalPage = {
 const controller = process.env.LEGAL_CONTROLLER_NAME ?? "[razão social a definir]";
 const controllerId = process.env.LEGAL_CONTROLLER_CNPJ ?? "[CNPJ a definir]";
 const dpoEmail = process.env.LEGAL_DPO_EMAIL ?? "[e-mail do encarregado a definir]";
+// Canal de atendimento mostrado em Suporte e Exclusão (exigência das lojas); sem valor próprio, usa o do encarregado.
+const supportEmail = process.env.LEGAL_SUPPORT_EMAIL ?? dpoEmail;
 
 const pages: Record<string, LegalPage> = {
   privacy: {
@@ -49,7 +51,7 @@ const pages: Record<string, LegalPage> = {
       },
       {
         title: "Com quem compartilhamos",
-        body: "Apenas com operadores necessários ao serviço: provedor de autenticação (Clerk), gestão de assinaturas (RevenueCat, Apple e Google), envio de notificações (Expo), anúncios não personalizados no app do responsável no plano grátis (Google AdMob) e infraestrutura de hospedagem e banco de dados. Cada um trata só o necessário à sua função. Pode haver transferência internacional para esses prestadores, com as salvaguardas contratuais previstas na LGPD.",
+        body: "Apenas com operadores necessários ao serviço: provedor de autenticação (Clerk), gestão de assinaturas (RevenueCat, Apple e Google), envio de notificações (Expo e Google Firebase Cloud Messaging), diagnóstico de erros e travamentos do aplicativo e do servidor, sem conteúdo das telas nem dados pessoais (Sentry), anúncios não personalizados no app do responsável no plano grátis (Google AdMob) e infraestrutura de hospedagem e banco de dados (Render, nos Estados Unidos). Cada um trata só o necessário à sua função. Há transferência internacional de dados para esses prestadores, com as salvaguardas contratuais previstas na LGPD.",
       },
       {
         title: "Retenção",
@@ -119,6 +121,10 @@ const pages: Record<string, LegalPage> = {
     summary: "Orientações para assinatura, proteção, dados e acesso à conta.",
     sections: [
       {
+        title: "Fale conosco",
+        body: `Escreva para ${supportEmail}. Respondemos em até 2 dias úteis. Para pedidos sobre dados pessoais (acesso, correção, exclusão), o mesmo canal atende em nome do encarregado.`,
+      },
+      {
         title: "Assinatura e cobrança",
         body: "Use Configurações > Família Segura Premium para restaurar compras ou abrir o gerenciamento da assinatura na loja. Reembolsos e cobranças são analisados pela App Store ou Google Play, conforme a plataforma da compra.",
       },
@@ -147,6 +153,10 @@ const pages: Record<string, LegalPage> = {
       {
         title: "Assinatura",
         body: "Excluir a conta não cancela automaticamente uma assinatura da App Store ou Google Play. Cancele a renovação na loja (Família > Premium > Gerenciar assinatura). Antes de excluir, desvincule os aparelhos das crianças pela Área do responsável para remover a proteção contra desinstalação.",
+      },
+      {
+        title: "Sem o aplicativo",
+        body: `Se você não tem mais o app instalado, envie um e-mail para ${supportEmail} a partir do endereço usado na conta, com o assunto "Excluir minha conta". Confirmamos a titularidade e apagamos a conta e os dados da família em até 15 dias, avisando por e-mail quando concluir.`,
       },
       {
         title: "O que pode permanecer",

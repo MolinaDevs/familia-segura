@@ -9,8 +9,7 @@ acesso"), nunca neste repositório. Se possível, deixar um aparelho de teste j�
 ## Texto sugerido para o campo de notas (colar e ajustar)
 
 > Família Segura is a parental-control app. The parent app (sign in with the demo account) manages children,
-> devices, app limits, schedules and approvals. The child device is set up by choosing "Configurar este aparelho
-> para a criança" on the first screen and entering a pairing code generated in the parent app
+> devices, app limits, schedules and approvals. The child device is set up by choosing "Este é o celular do seu filho?" on the first screen and entering a pairing code generated in the parent app
 > (Família → Aparelhos → Parear). Guardian PIN for protected actions on the child device: see private field.
 > The child always sees which rules are active and what data is shared; emergency calls are never blocked.
 
@@ -18,7 +17,7 @@ acesso"), nunca neste repositório. Se possível, deixar um aparelho de teste j�
 
 1. Entrar como responsável (conta de revisão).
 2. Família → Parear aparelho → gerar código.
-3. Em outro aparelho: primeira tela → "Configurar este aparelho para a criança" → informar o código.
+3. Em outro aparelho: primeira tela → "Este é o celular do seu filho?" → informar o código.
 4. No aparelho da criança: Área do responsável (PIN) → Configurar a proteção → conceder permissões.
 5. No responsável: Apps → Adicionar app → escolher um app e um limite; Rotina → Nova rotina.
 6. No aparelho da criança: conferir as regras visíveis e fazer "Pedir mais tempo".
@@ -39,7 +38,8 @@ acesso"), nunca neste repositório. Se possível, deixar um aparelho de teste j�
   bloqueios e rotinas; nas telas de Configurações/instalador verifica apenas se tratam de desligar ou
   desinstalar o Família Segura ou apps, para exigir o PIN do responsável. Não lê mensagens, senhas nem o que é
   digitado. Divulgação proeminente exibida antes de abrir as configurações (gravar vídeo dela).
-- **Device Admin**: impede desinstalar o app sem o PIN do responsável. Nenhuma outra política é usada.
+- **Device Admin**: política `force-lock` (travar a tela na rotina de dormir) e, por estar ativo, impede
+  desinstalar o app sem o PIN do responsável. Nenhuma outra política (apagar dados, senha, câmera) é usada.
 - **Package visibility**: `<queries>` com LAUNCHER; **não** usamos `QUERY_ALL_PACKAGES`.
 - **Usage access** (`PACKAGE_USAGE_STATS`): tempo por app para limites e relatórios.
 - Público-alvo: adultos (responsáveis). O modo criança só funciona após pareamento feito por um adulto.

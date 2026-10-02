@@ -1,6 +1,7 @@
 # Privacidade, Data Safety e classificação
 
-Este documento é um roteiro para preenchimento nas lojas. Confirmar as respostas no build candidato e submeter à revisão jurídica.
+Este documento é o resumo; as respostas campo a campo estão em `GOOGLE_PLAY_PASSO_A_PASSO.md` e
+`APP_STORE_PASSO_A_PASSO.md`. Confirmar as respostas no build candidato e submeter à revisão jurídica.
 
 ## Apple App Privacy
 
@@ -14,6 +15,8 @@ Este documento é um roteiro para preenchimento nas lojas. Confirmar as resposta
 | Apps instalados (somente Android) | Sim | Sim | Aprovação de apps novos pelo responsável |
 | Eventos do aparelho (reinício, tentativa de desligar a proteção) | Sim | Sim | Segurança da proteção |
 | Diagnóstico de proteção | Sim | Sim | Segurança e suporte |
+| Registros de falhas e desempenho (Sentry) | Sim | Não | Correção de erros |
+| E-mail do responsável | Sim | Sim | Login (Clerk) |
 | Mensagens, fotos, contatos, localização precisa | Não | Não | Não tratados |
 
 Não usar os dados para rastreamento entre empresas ou publicidade direcionada.
@@ -29,14 +32,14 @@ personalizados. O aparelho da criança nunca inicializa o SDK.
 - Dados criptografados em trânsito: sim.
 - Exclusão disponível: sim, no aplicativo e em `/api/legal/delete-account`.
 - Conta obrigatória para responsável: sim.
-- Dados compartilhados com prestadores: Clerk (autenticação), RevenueCat/Google Play (assinatura), Expo (notificações) e a hospedagem, somente para prestação do serviço.
+- Operadores (prestadores de serviço, não contam como "compartilhamento" na Play): Clerk (autenticação), RevenueCat/Google Play (assinatura), Expo e Google Firebase Cloud Messaging (notificações), Sentry (registros de falhas e diagnóstico, sem dados pessoais nem conteúdo de tela) e Render (hospedagem, EUA).
 - **Contém anúncios: sim** (plano grátis, só no app do responsável, não personalizados). Declarar o Google
   AdMob como destinatário dos dados que o SDK coleta para publicidade, conforme a página de divulgação de
   dados do AdMob para o Play. A permissão `AD_ID` é bloqueada no build.
 - Público-alvo na Play Console: **adultos (18+)** — o app é operado pelo responsável; o modo criança não mostra
   anúncios. Revisar com o jurídico antes de enviar (política Families e ECA Digital, art. 22 e 26).
 - Coleta de atividade em apps: minutos por app e lista de apps instalados, para controle parental, aprovação de apps e relatórios.
-- Device Admin: usado apenas para impedir a desinstalação sem o PIN do responsável (declarar na Play Console).
+- Device Admin: política `force-lock` (travar a tela na rotina de dormir) e bloqueio da desinstalação sem o PIN do responsável (declarar na Play Console).
 - Retenção: dados de uso por até 12 meses; exclusão completa ao excluir a família.
 - AccessibilityService: detecta o pacote em primeiro plano para aplicar bloqueios e, nas telas de Configurações/instalador, verifica apenas se tratam de desligar/desinstalar o Família Segura ou apps (para exigir o PIN). Não lê mensagens, senhas ou o que é digitado, e nada disso sai do aparelho.
 - Não declarar o app como ferramenta de acessibilidade. Usar a divulgação proeminente já exibida antes da ativação.
