@@ -13,6 +13,8 @@ import { useFamily } from '@/context/AppContext';
 import type { PurchasesPackage } from 'react-native-purchases';
 
 import { goBack } from '@/lib/navigation';
+import { openLegal } from '@/lib/legal';
+import { Alert } from '@/lib/alert';
 /** Período da loja em ISO 8601 (P1M, P3M, P1Y, P1W) → texto em português. */
 function periodLabel(period?: string | null) {
   if (!period) return '';
@@ -95,11 +97,15 @@ export default function SubscriptionScreen() {
     }
   }, [packages, selectedPackage]);
 
-  const domain = process.env.EXPO_PUBLIC_DOMAIN;
-
-  const handleLink = (path: string) => {
-    if (!domain) return;
-    Linking.openURL(`https://${domain}${path}`).catch(() => undefined);
+  const handleManage = async () => {
+    const result = await manageSubscription();
+    if (result === 'opened') return;
+    Alert.alert(
+      'Gerenciar assinatura',
+      result === 'none'
+        ? 'Este Premium não está ligado a uma assinatura da loja neste aparelho (cortesia ou compra feita em outro aparelho/loja). Para cancelar ou trocar o plano, abra as assinaturas da Google Play ou da App Store na conta que fez a compra.'
+        : 'Não foi possível abrir a página de assinaturas. Abra a Google Play ou a App Store e procure "Assinaturas" na sua conta.',
+    );
   };
 
   const handlePurchasePress = (pkg: PurchasesPackage) => {
@@ -210,7 +216,7 @@ export default function SubscriptionScreen() {
               { backgroundColor: colors.foreground },
               pressed && styles.pressed
             ]}
-            onPress={manageSubscription}
+            onPress={() => void handleManage()}
           >
             <Text style={[styles.actionButtonText, { color: colors.background }]}>Gerenciar assinatura</Text>
           </Pressable>
@@ -346,11 +352,11 @@ export default function SubscriptionScreen() {
         {renderContent()}
 
         <View style={styles.legalLinks}>
-          <Pressable onPress={() => handleLink('/api/legal/terms')}><Text style={[styles.legalText, { color: colors.mutedForeground }]}>Termos</Text></Pressable>
+          <Pressable onPress={() => void openLegal('terms')}><Text style={[styles.legalText, { color: colors.mutedForeground }]}>Termos</Text></Pressable>
           <Text style={[styles.legalDot, { color: colors.mutedForeground }]}>•</Text>
-          <Pressable onPress={() => handleLink('/api/legal/privacy')}><Text style={[styles.legalText, { color: colors.mutedForeground }]}>Privacidade</Text></Pressable>
+          <Pressable onPress={() => void openLegal('privacy')}><Text style={[styles.legalText, { color: colors.mutedForeground }]}>Privacidade</Text></Pressable>
           <Text style={[styles.legalDot, { color: colors.mutedForeground }]}>•</Text>
-          <Pressable onPress={() => handleLink('/api/legal/support')}><Text style={[styles.legalText, { color: colors.mutedForeground }]}>Suporte</Text></Pressable>
+          <Pressable onPress={() => void openLegal('support')}><Text style={[styles.legalText, { color: colors.mutedForeground }]}>Suporte</Text></Pressable>
         </View>
       </ScrollView>
 

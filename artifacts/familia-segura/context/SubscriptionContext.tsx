@@ -3,7 +3,7 @@ import { useAuth } from '@/lib/auth';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Constants from 'expo-constants';
 import React, { createContext, type PropsWithChildren, useContext, useEffect, useMemo, useState } from 'react';
-import { AppState, Platform } from 'react-native';
+import { AppState, Linking, Platform } from 'react-native';
 import Purchases, {
   LOG_LEVEL,
   type CustomerInfo,
@@ -37,7 +37,7 @@ export type SubscriptionContextValue = {
   errorMessage: string | null;
   purchase: (item: PurchasesPackage) => Promise<CustomerInfo>;
   restore: () => Promise<CustomerInfo>;
-  manageSubscription: () => Promise<void>;
+  manageSubscription: () => Promise<'opened' | 'none' | 'failed'>;
   refresh: () => Promise<void>;
 };
 
@@ -270,8 +270,16 @@ export function SubscriptionProvider({ children }: PropsWithChildren) {
     purchase: purchaseMutation.mutateAsync,
     restore: restoreMutation.mutateAsync,
     manageSubscription: async () => {
-      configureRevenueCat();
-      await Purchases.showManageSubscriptions();
+      // Assinatura de loja: abre a página dela. Premium de cortesia (concedido pela equipe) ou comprado em outra
+      // plataforma não tem o que gerenciar aqui — o app explica em vez de não fazer nada.
+      const managementURL = customerInfoQuery.data?.managementURL;
+      if (!managementURL) return 'none' as const;
+      try {
+        await Linking.openURL(managementURL);
+        return 'opened' as const;
+      } catch {
+        return 'failed' as const;
+      }
     },
     refresh: async () => {
       await Promise.all([customerInfoQuery.refetch(), offeringsQuery.refetch()]);
