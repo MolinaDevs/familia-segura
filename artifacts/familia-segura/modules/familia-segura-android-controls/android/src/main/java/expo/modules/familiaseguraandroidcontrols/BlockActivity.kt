@@ -22,6 +22,13 @@ class BlockActivity : Activity() {
   companion object {
     const val EXTRA_REASON = "reason"
     const val EXTRA_APP_NAME = "appName"
+    /** Última vez que a tela de pausa ficou visível (o assistente confere se o teste apareceu de verdade). */
+    @Volatile var lastShownAt = 0L
+  }
+
+  override fun onResume() {
+    super.onResume()
+    lastShownAt = System.currentTimeMillis()
   }
 
   /** Paleta da marca nos dois temas (contraste AA medido). No escuro o emblema fica sobre placa creme. */

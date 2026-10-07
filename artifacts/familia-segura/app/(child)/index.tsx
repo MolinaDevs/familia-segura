@@ -17,6 +17,7 @@ import { pauseLabel } from '@/components/PauseCard';
 import { loadCachedOverview, runChildSync, type SyncStatus } from '@/services/childSync';
 import { registerChildBackgroundSync } from '@/services/backgroundSync';
 import { registerChildPush } from '@/services/push';
+import { getAndroidProtectionSummary } from '@/services/androidParentalControls';
 
 const FOREGROUND_REFRESH_MS = 60_000;
 type Feedback = { tone: 'success' | 'danger'; text: string } | null;
@@ -75,6 +76,8 @@ export default function ChildDashboard() {
 
   const [overview, setOverview] = useState<ChildOverview | null>(null);
   const [status, setStatus] = useState<SyncStatus | 'loading'>('loading');
+  // Android: sem acesso ao uso ou sem o serviço de proteção, nenhuma regra vale neste aparelho.
+  const [protectionIncomplete, setProtectionIncomplete] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(false);
   const [appId, setAppId] = useState('');
@@ -93,6 +96,10 @@ export default function ChildDashboard() {
     }
     if (result.overview) setOverview(result.overview);
     setStatus(result.status);
+    if (Platform.OS === 'android') {
+      const protection = getAndroidProtectionSummary();
+      setProtectionIncomplete(protection.state !== 'unavailable' && !(protection.status?.accessibilityEnabled && protection.status?.usageAccessGranted));
+    }
   }, [router]);
 
   useEffect(() => {
@@ -206,6 +213,24 @@ export default function ChildDashboard() {
             </Text>
           </View>
         </View>
+
+        {protectionIncomplete ? (
+          <Pressable
+            testID="child-protection-incomplete"
+            accessibilityRole="button"
+            onPress={() => router.push('/(child)/guardian')}
+            style={({ pressed }) => [styles.protection, { backgroundColor: colors.card, borderColor: colors.accent }, pressed && { opacity: 0.8 }]}
+          >
+            <Icon name="alert-triangle" size={22} color={colors.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.protectionTitle, { color: colors.foreground }]}>A proteção deste aparelho não está completa</Text>
+              <Text style={[styles.protectionDetail, { color: colors.mutedForeground }]}>
+                Os combinados ainda não estão valendo aqui. Peça ao seu responsável para tocar aqui e concluir.
+              </Text>
+            </View>
+            <Icon name="chevron-right" size={18} color={colors.mutedForeground} />
+          </Pressable>
+        ) : null}
 
         {isOffline ? (
           <View style={{ marginBottom: 12 }}>
@@ -403,6 +428,9 @@ const styles = StyleSheet.create({
   subtitle: { fontFamily: 'NunitoSans_500Medium', fontSize: 14.5, lineHeight: 20, marginTop: 2 },
 
   now: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  protection: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1.5, borderRadius: 18, padding: 14, marginBottom: 12 },
+  protectionTitle: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 15 },
+  protectionDetail: { fontFamily: 'NunitoSans_500Medium', fontSize: 13.5, lineHeight: 19, marginTop: 2 },
   nowIcon: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   nowTitle: { fontFamily: 'NunitoSans_800ExtraBold', fontSize: 16 },
   nowDetail: { fontFamily: 'NunitoSans_500Medium', fontSize: 13.5, lineHeight: 19, marginTop: 2 },

@@ -3,6 +3,7 @@ import type { AppRule, ChildPolicy, Routine } from '@workspace/api-client-react'
 import AndroidControls, {
   type AndroidInstalledApp,
   type AndroidProtectionStatus,
+  type AndroidSetupInfo,
   type AndroidQueuedEvent,
 } from '@/modules/familia-segura-android-controls/src/FamiliaSeguraAndroidControlsModule';
 
@@ -71,6 +72,15 @@ export const openAndroidUsageSettings = () => AndroidControls?.openUsageAccessSe
 export const openAndroidAccessibilitySettings = () => AndroidControls?.openAccessibilitySettings();
 export const openAndroidBatterySettings = () => AndroidControls?.openBatteryOptimizationSettings();
 export const openAndroidNetworkSettings = () => AndroidControls?.openNetworkSettings();
+
+export type { AndroidSetupInfo };
+/** Fabricante, origem da instalação e o que o serviço guardou (assistente de configuração). */
+export const getAndroidSetupInfo = (): AndroidSetupInfo | null => AndroidControls?.getSetupInfo() ?? null;
+export const openAndroidAppDetails = () => AndroidControls?.openAppDetails() ?? false;
+export const openAndroidAutostartSettings = () => AndroidControls?.openAutostartSettings() ?? false;
+export const openAndroidPopupPermissionSettings = () => AndroidControls?.openPopupPermissionSettings() ?? false;
+/** Vai para a tela inicial e mostra a tela de pausa de teste. false = serviço de proteção desligado. */
+export const testAndroidBlock = () => AndroidControls?.testBlock() ?? false;
 export const requestAndroidDeviceAdmin = () => AndroidControls?.requestDeviceAdmin(
   'Impede que o Família Segura seja desinstalado sem o PIN do responsável e permite travar a tela na hora de dormir. Desativar esta proteção avisa a família.',
 );

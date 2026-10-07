@@ -28,7 +28,22 @@ import java.util.Calendar
 class FamiliaSeguraAccessibilityService : AccessibilityService() {
   companion object {
     @Volatile var running = false
+    @Volatile private var instance: FamiliaSeguraAccessibilityService? = null
     private const val TICK_MS = 30_000L
+    /** Tempo para a tela inicial assumir antes do teste (o app sai do primeiro plano, como num bloqueio real). */
+    private const val TEST_BLOCK_DELAY_MS = 1_200L
+
+    /** Teste pedido pelo assistente de configuração. false = serviço desligado. */
+    fun showTestBlock(): Boolean {
+      val service = instance ?: return false
+      service.handler.post {
+        service.performGlobalAction(GLOBAL_ACTION_HOME)
+        service.handler.postDelayed({
+          service.showBlock(service.getString(R.string.block_reason_test), service.getString(R.string.block_app_test), service.packageName, force = true)
+        }, TEST_BLOCK_DELAY_MS)
+      }
+      return true
+    }
 
     private val SETTINGS_PACKAGES = setOf(
       "com.android.settings", "com.google.android.settings", "com.samsung.android.settings",
@@ -134,6 +149,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
 
   override fun onServiceConnected() {
     running = true
+    instance = this
     appLabelLower = applicationInfo.loadLabel(packageManager).toString().lowercase()
     val filter = IntentFilter().apply {
       addAction(Intent.ACTION_PACKAGE_ADDED)
@@ -152,6 +168,7 @@ class FamiliaSeguraAccessibilityService : AccessibilityService() {
 
   override fun onDestroy() {
     running = false
+    instance = null
     handler.removeCallbacks(ticker)
     handler.removeCallbacks(bedtimeLock)
     try { unregisterReceiver(packageReceiver) } catch (_: Exception) {}

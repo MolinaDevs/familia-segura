@@ -1,6 +1,8 @@
 <resources>
   <string name="block_app_generic">Este aplicativo</string>
   <string name="block_app_generic_device">Este aparelho</string>
+  <string name="block_app_test">Teste da proteção</string>
+  <string name="block_reason_test">Funcionou! É esta tela que aparece quando um app está em pausa. Toque em “Pedir mais tempo” para voltar ao Família Segura e concluir.</string>
   <string name="block_app_protection">Proteção do Família Segura</string>
   <string name="accessibility_service_label">Proteção Família Segura</string>
   <string name="accessibility_service_description">Vê qual aplicativo está aberto para aplicar os limites, bloqueios e rotinas combinados com a família, e impede que a proteção seja desligada sem o PIN do responsável. Não lê mensagens, senhas nem o que é digitado.</string>

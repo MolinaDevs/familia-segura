@@ -9,6 +9,7 @@ import Constants from 'expo-constants';
 import { useColors } from '@/hooks/useColors';
 import { AuthButton, AuthCard, AuthField, AuthHeader, AuthShell, FormMessage, TrustNote } from '@/components/auth/AuthKit';
 import { goBack } from '@/lib/navigation';
+import { setAndroidGuardianUnlock } from '@/services/androidParentalControls';
 
 /** "abcd2345" → "ABCD-2345" enquanto digita (o código tem 8 caracteres). */
 function formatCode(value: string) {
@@ -61,7 +62,13 @@ export default function PairDeviceScreen() {
       }
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       // Próximo passo: o responsável conclui a configuração da proteção neste aparelho.
-      router.replace('/(child)/guardian');
+      // Android: direto ao assistente, com 30 min de Configurações liberadas (quem pareou é o adulto, com o código da família).
+      if (Platform.OS === 'android') {
+        setAndroidGuardianUnlock(30);
+        router.replace('/(child)/android-controls');
+      } else {
+        router.replace('/(child)/guardian');
+      }
     } catch (err) {
       const status = (err as { status?: number }).status;
       void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);

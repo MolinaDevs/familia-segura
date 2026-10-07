@@ -45,7 +45,24 @@ export type AndroidPolicy = {
     startTime: string;
     endTime: string;
     enabled: boolean;
+    lockScreen?: boolean;
   }>;
+};
+
+/** Dados do assistente de configuração (fabricante, origem da instalação, o que o serviço guardou). */
+export type AndroidSetupInfo = {
+  manufacturer: string;
+  brand: string;
+  androidApiLevel: number;
+  installer: string;
+  /** Instalado por uma loja: não cai em "configuração restrita" do Android 13+. */
+  fromStore: boolean;
+  policyPresent: boolean;
+  rulesCount: number;
+  routinesCount: number;
+  tamperProtection: boolean;
+  /** Epoch ms da última vez que a tela de pausa ficou visível (0 = nunca). */
+  lastBlockShownAt: number;
 };
 
 export type AndroidQueuedEvent = { type: string; detail: string; at: number };
@@ -57,6 +74,11 @@ type AndroidControlsModule = {
   openUsageAccessSettings(): void;
   openAccessibilitySettings(): void;
   openBatteryOptimizationSettings(): void;
+  getSetupInfo(): AndroidSetupInfo;
+  openAppDetails(): boolean;
+  openAutostartSettings(): boolean;
+  openPopupPermissionSettings(): boolean;
+  testBlock(): boolean;
   openNetworkSettings(): void;
   requestDeviceAdmin(explanation: string): void;
   removeDeviceAdmin(): void;

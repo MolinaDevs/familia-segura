@@ -7,8 +7,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.net.ConnectivityManager
+import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
+import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
 import expo.modules.kotlin.modules.Module
@@ -16,6 +18,22 @@ import expo.modules.kotlin.modules.ModuleDefinition
 import org.json.JSONObject
 
 class FamiliaSeguraAndroidControlsModule : Module() {
+  companion object {
+    /** Lojas: apps instalados por elas não caem em "configuração restrita". */
+    private val STORE_INSTALLERS = setOf(
+      "com.android.vending", "com.sec.android.app.samsungapps", "com.xiaomi.mipicks", "com.xiaomi.market",
+      "com.huawei.appmarket", "com.amazon.venezia", "com.oppo.market", "com.heytap.market", "com.vivo.appstore",
+    )
+    private val AUTOSTART_SCREENS = listOf(
+      "com.miui.securitycenter" to "com.miui.permcenter.autostart.AutoStartManagementActivity",
+      "com.coloros.safecenter" to "com.coloros.safecenter.permission.startup.StartupAppListActivity",
+      "com.oppo.safe" to "com.oppo.safe.permission.startup.StartupAppListActivity",
+      "com.vivo.permissionmanager" to "com.vivo.permissionmanager.activity.BgStartUpManagerActivity",
+      "com.huawei.systemmanager" to "com.huawei.systemmanager.startupmgr.ui.StartupNormalAppListActivity",
+      "com.samsung.android.lool" to "com.samsung.android.sm.battery.ui.BatteryActivity",
+    )
+  }
+
   private val context: Context get() = requireNotNull(appContext.reactContext)
   private val adminComponent: ComponentName get() = ComponentName(context, FamiliaSeguraDeviceAdminReceiver::class.java)
 
@@ -52,8 +70,66 @@ class FamiliaSeguraAndroidControlsModule : Module() {
       )
     }
 
-    Function("openUsageAccessSettings") { context.startActivity(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
-    Function("openAccessibilitySettings") { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    /**
+     * Dados para o assistente de configuração: fabricante (os caminhos mudam), de onde o app foi instalado
+     * (fora da loja o Android 13+ restringe acessibilidade) e o que o serviço tem guardado.
+     */
+    Function("getSetupInfo") {
+      val installer = installerPackage()
+      val policy = PolicyStore.readIgnoringLease(context)
+      mapOf(
+        "manufacturer" to Build.MANUFACTURER.lowercase(),
+        "brand" to Build.BRAND.lowercase(),
+        "androidApiLevel" to Build.VERSION.SDK_INT,
+        "installer" to (installer ?: ""),
+        "fromStore" to (installer != null && STORE_INSTALLERS.contains(installer)),
+        "policyPresent" to (policy != null),
+        "rulesCount" to PolicyStore.apps(policy).length(),
+        "routinesCount" to PolicyStore.routines(policy).length(),
+        "tamperProtection" to PolicyStore.tamperProtectionEnabled(policy),
+        "lastBlockShownAt" to BlockActivity.lastShownAt.toDouble(),
+      )
+    }
+
+    /** Tenta abrir direto a tela do Família Segura em "Acesso ao uso"; alguns aparelhos só têm a lista. */
+    Function("openUsageAccessSettings") {
+      val direct = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS, Uri.parse("package:${context.packageName}"))
+      tryStart(direct) || tryStart(Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS))
+    }
+
+    /** Abre Acessibilidade pedindo para destacar o nosso serviço na lista (funciona na maioria dos aparelhos). */
+    Function("openAccessibilitySettings") {
+      val component = ComponentName(context, FamiliaSeguraAccessibilityService::class.java).flattenToString()
+      val args = Bundle().apply { putString(":settings:fragment_args_key", component) }
+      val highlighted = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+        .putExtra(":settings:fragment_args_key", component)
+        .putExtra(":settings:show_fragment_args", args)
+      tryStart(highlighted) || tryStart(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    /** "Informações do app": onde fica "Permitir configurações restritas" (menu de três pontos) em apps de fora da loja. */
+    Function("openAppDetails") {
+      tryStart(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:${context.packageName}")))
+    }
+
+    /** Tela de "início automático" do fabricante (Xiaomi, Oppo, Vivo, Huawei, Samsung). false = não existe. */
+    Function("openAutostartSettings") {
+      AUTOSTART_SCREENS.any { (pkg, cls) -> tryStart(Intent().setComponent(ComponentName(pkg, cls))) }
+    }
+
+    /** Xiaomi/Redmi/POCO: "Outras permissões" do app, onde fica "Exibir janelas pop-up em segundo plano". */
+    Function("openPopupPermissionSettings") {
+      val editor = Intent("miui.intent.action.APP_PERM_EDITOR").putExtra("extra_pkgname", context.packageName)
+      tryStart(Intent(editor).setClassName("com.miui.securitycenter", "com.miui.permcenter.permissions.PermissionsEditorActivity")) ||
+        tryStart(editor)
+    }
+
+    /**
+     * Teste real: vai para a tela inicial e mostra a tela de pausa com o app em segundo plano (é assim que o
+     * bloqueio acontece no dia a dia). false = serviço de proteção desligado.
+     */
+    Function("testBlock") { FamiliaSeguraAccessibilityService.showTestBlock() }
+
     /** Configurações de rede, onde fica "DNS privado" (o caminho exato varia por fabricante). */
     Function("openNetworkSettings") {
       context.startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
@@ -86,7 +162,10 @@ class FamiliaSeguraAndroidControlsModule : Module() {
     Function("setGuardianUnlock") { minutes: Int ->
       val until = if (minutes <= 0) 0L else System.currentTimeMillis() + minutes.coerceAtMost(60) * 60_000L
       PolicyStore.setGuardianUnlock(context, until)
-      if (minutes > 0) PolicyStore.appendEvent(context, "protection_disabled", "Proteção liberada pelo responsável por $minutes min")
+      // Só avisa a família se havia proteção ligada (na primeira configuração ainda não há o que liberar).
+      if (minutes > 0 && FamiliaSeguraAccessibilityService.running) {
+        PolicyStore.appendEvent(context, "protection_disabled", "Proteção liberada pelo responsável por $minutes min")
+      }
     }
 
     Function("drainEvents") {
@@ -144,6 +223,16 @@ class FamiliaSeguraAndroidControlsModule : Module() {
       }
     } catch (_: Exception) { "unknown" to "" }
   }
+
+  private fun tryStart(intent: Intent): Boolean = try {
+    context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    true
+  } catch (_: Exception) { false }
+
+  private fun installerPackage(): String? = try {
+    if (Build.VERSION.SDK_INT >= 30) context.packageManager.getInstallSourceInfo(context.packageName).installingPackageName
+    else @Suppress("DEPRECATION") context.packageManager.getInstallerPackageName(context.packageName)
+  } catch (_: Exception) { null }
 
   private fun isAdminActive(): Boolean =
     context.getSystemService(DevicePolicyManager::class.java).isAdminActive(adminComponent)
