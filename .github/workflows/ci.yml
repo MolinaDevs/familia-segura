@@ -31,7 +31,7 @@ jobs:
       DATABASE_URL: postgres://familia:familia@localhost:5432/familia_segura
       TEST_DATABASE_URL: postgres://familia:familia@localhost:5432/familia_segura_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -46,7 +46,7 @@ jobs:
     # Compila o módulo nativo Android (Kotlin) do controle parental. Os runners do GitHub já têm o Android SDK.
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
@@ -69,7 +69,7 @@ jobs:
     runs-on: macos-26
     timeout-minutes: 75
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Selecionar Xcode mais novo
         # Expo 57 (expo-modules-jsi) é feito para o Xcode 27; o 26.3 rejeita as anotações de interop C++.
         run: |
